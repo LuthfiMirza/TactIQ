@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL 16 Database
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: tactiq-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tactiq_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tactiq_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-tactiq_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tactiq_user} -d ${POSTGRES_DB:-tactiq_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tactiq-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Redis 7 Alpine (Pub/Sub & Cache)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: tactiq-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - tactiq-network
+
+  # ----------------------------------------------------------------------------
+  # 3. Machine Learning Microservice (Python 3.11 + FastAPI)
+  # ----------------------------------------------------------------------------
+  ml-service:
+    build:
+      context: ./services/ml
+      dockerfile: Dockerfile
+    container_name: tactiq-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_CHANNEL=tactiq_tracking_stream
+      - ML_HOST=0.0.0.0
+      - ML_PORT=8000
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tactiq-network
+
+  # ----------------------------------------------------------------------------
+  # 4. Central API Gateway (Node.js + Express + Prisma + Socket.io)
+  # ----------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    container_name: tactiq-api-gateway
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - API_PORT=4000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-tactiq_user}:${POSTGRES_PASSWORD:-tactiq_secure_password}@postgres:5432/${POSTGRES_DB:-tactiq_db}?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_CHANNEL=tactiq_tracking_stream
+      - ML_SERVICE_URL=http://ml-service:8000
+      - API_CORS_ORIGIN=*
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+    networks:
+      - tactiq-network
+
+  # ----------------------------------------------------------------------------
+  # 5. Front-End Web Application (Next.js 14 App Router)
+  # ----------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    container_name: tactiq-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+      - NEXT_PUBLIC_WS_URL=http://localhost:4000
+      - NEXT_PUBLIC_ML_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+    networks:
+      - tactiq-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  tactiq-network:
+    driver: bridge

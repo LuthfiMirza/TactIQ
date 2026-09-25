@@ -1,0 +1,36 @@
+{
+  "name": "tactiq-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TactIQ - Data-Driven Football Analytics & Tactical Tracking Platform",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api",
+    "dev:all": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspaces --if-present",
+    "prisma:generate": "npm run prisma:generate --workspace=apps/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=apps/api",
+    "prisma:seed": "npm run prisma:seed --workspace=apps/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "football",
+    "analytics",
+    "tactics",
+    "computer-vision",
+    "machine-learning",
+    "nextjs",
+    "fastapi",
+    "express",
+    "prisma"
+  ],
+  "author": "TactIQ Team",
+  "license": "MIT"
+}
