@@ -231,6 +231,7 @@ class DirectTrackVideoResponse(BaseModel):
     frames_processed: int
     unique_tracks_count: int
     tracker: str
+    team_summary: Optional[Dict[str, Any]] = None
     annotated_output: Optional[str] = None
 
 

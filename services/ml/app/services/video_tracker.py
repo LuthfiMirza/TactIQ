@@ -14,6 +14,7 @@ from typing import List, Dict, Optional, Tuple, Any
 import numpy as np
 
 from app.core.config import settings
+from app.services.team_classifier import TeamKMeansClassifier
 
 logger = logging.getLogger("tactiq.video_tracker")
 
@@ -75,6 +76,7 @@ class TacticalVideoTracker:
         # Track history cache for velocity smoothing: track_id -> [(timestamp_s, x_norm, y_norm)]
         self._track_history: Dict[int, List[Tuple[float, float, float]]] = {}
         self._track_teams: Dict[int, str] = {}
+        self.team_classifier = TeamKMeansClassifier()
 
         self._initialize_model()
 
@@ -128,14 +130,22 @@ class TacticalVideoTracker:
         speed_kmh = min(36.0, max(0.0, speed_kmh))
         return round(speed_kmh, 1)
 
-    def determine_entity_team(self, track_id: int, cls_id: int, x_norm: float) -> str:
+    def determine_entity_team(
+        self,
+        track_id: int,
+        cls_id: int,
+        x_norm: float,
+        frame: Optional[np.ndarray] = None,
+        bbox: Optional[Tuple[float, float, float, float]] = None,
+    ) -> str:
         """
-        Assigns team ('home', 'away', or 'ball').
-        For TSK-30, uses persistent track association and field hemisphere heuristic.
-        TSK-31 will upgrade this to automated jersey K-Means clustering.
+        Assigns team ('home', 'away', or 'ball') using automated K-Means jersey color clustering (TSK-31).
         """
         if cls_id == 32:  # Sports ball
             return "ball"
+
+        if frame is not None and bbox is not None:
+            return self.team_classifier.classify_player(track_id, frame, bbox, x_norm)
 
         if track_id in self._track_teams:
             return self._track_teams[track_id]
@@ -277,7 +287,9 @@ class TacticalVideoTracker:
                     norm_x = round(float(np.clip(cx / orig_width, 0.0, 1.0)), 4)
                     norm_y = round(float(np.clip(cy / orig_height, 0.0, 1.0)), 4)
 
-                    team = self.determine_entity_team(det.track_id, det.cls_id, norm_x)
+                    team = self.determine_entity_team(
+                        det.track_id, det.cls_id, norm_x, frame=frame, bbox=(det.x1, det.y1, det.x2, det.y2)
+                    )
                     speed_kmh = self.calculate_velocity_kmh(det.track_id, norm_x, norm_y, timestamp_s)
 
                     entity_dict = {
@@ -348,6 +360,7 @@ class TacticalVideoTracker:
             "frames_processed": emitted_frame_count,
             "unique_tracks_count": len(unique_track_ids),
             "tracker": self.tracker_config,
+            "team_summary": self.team_classifier.get_team_summary(),
             "annotated_output": output_annotated_path if output_annotated_path else None,
         }
 
