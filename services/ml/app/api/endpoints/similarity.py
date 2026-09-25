@@ -128,10 +128,10 @@ def load_players_dataset() -> List[PlayerDTO]:
                         )
                     )
                 if len(loaded) >= 100:
-                    print(f"📦 [SimilarityEngine] Loaded {len(loaded)} players from FBref dataset ({json_path}).")
+                    print(f"[SimilarityEngine] Loaded {len(loaded)} players from FBref dataset ({os.path.basename(json_path)}).")
                     return loaded
         except Exception as e:
-            print(f"⚠️ Failed to load 500+ dataset: {e}")
+            print(f"[SimilarityEngine WARNING] Failed to load 500+ dataset: {e}")
 
     return REFERENCE_BENCHMARKS
 
