@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0B0E14;
+  --foreground: #F8FAFC;
+}
+
+body {
+  background-color: #0B0E14;
+  color: #F8FAFC;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0E14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #253046;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(19, 25, 35, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(37, 48, 70, 0.8);
+}
