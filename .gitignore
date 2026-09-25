@@ -25,6 +25,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pt
+*.pth
+*.onnx
+*.mp4
 .Python
 env/
 venv/

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_CHANNEL: str = "tactiq_tracking_stream"
     ALLOWED_ORIGINS: List[str] = ["*"]
+    YOLO_MODEL_PATH: str = "yolov8n.pt"
+    DEFAULT_TRACKER: str = "bytetrack.yaml"
 
     class Config:
         case_sensitive = True

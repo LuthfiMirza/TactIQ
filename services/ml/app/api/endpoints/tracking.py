@@ -1,22 +1,32 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Dict, Any
 import asyncio
 import json
 import math
+import os
 try:
     import redis.asyncio as aioredis
 except ImportError:
     aioredis = None
 import numpy as np
 from app.core.config import settings
+from app.services.video_tracker import (
+    TacticalVideoTracker,
+    generate_synthetic_soccer_video,
+    ULTRALYTICS_AVAILABLE,
+)
 
 router = APIRouter()
 
 
 class TrackingStartRequest(BaseModel):
-    youtube_url: str = Field(..., example="https://www.youtube.com/watch?v=sample_match")
+    youtube_url: Optional[str] = Field(None, example="https://www.youtube.com/watch?v=sample_match")
+    video_path: Optional[str] = Field(None, example="data/sample_crossing.mp4", description="Local MP4 video path for YOLOv8+ByteTrack tracking")
     session_id: str = Field(..., example="demo-session-tactical-001")
+    fps_sample_rate: Optional[int] = Field(10, ge=1, le=30, description="Processing sample rate in FPS")
+    max_frames: Optional[int] = Field(None, description="Maximum frames to process (None for full video)")
+    save_annotated_video: Optional[bool] = Field(False, description="Whether to write annotated debug MP4 to disk")
 
 
 class TrackingStartResponse(BaseModel):
@@ -24,6 +34,8 @@ class TrackingStartResponse(BaseModel):
     session_id: str
     message: str
     estimated_frames: int
+    tracker: str = "bytetrack"
+    mode: str = "simulation"
 
 
 class TrackingEntity(BaseModel):
@@ -135,20 +147,151 @@ async def run_tracking_simulation(session_id: str, total_frames: int = 100):
     print(f"🏁 [CV Worker] Finished streaming {total_frames} tracking frames for session: {session_id}")
 
 
+async def run_video_tracking_worker(
+    video_path: str,
+    session_id: str,
+    fps_sample_rate: int = 10,
+    max_frames: Optional[int] = None,
+    save_annotated_video: bool = False,
+):
+    """
+    Background worker running YOLOv8 + ByteTrack multi-object tracking (TSK-30)
+    on local MP4 video file and streaming stabilized 2D tracking payloads to Redis Pub/Sub.
+    """
+    output_path = None
+    if save_annotated_video:
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "data")
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"annotated_{session_id}.mp4")
+
+    tracker = TacticalVideoTracker()
+    try:
+        await tracker.stream_video_tracking(
+            video_path=video_path,
+            session_id=session_id,
+            fps_sample_rate=fps_sample_rate,
+            stream_to_redis=True,
+            max_frames=max_frames,
+            output_annotated_path=output_path,
+        )
+    except Exception as exc:
+        print(f"❌ [VideoTrackingWorker] Tracking error for session {session_id}: {exc}")
+
+
 @router.post("/start-tracking", response_model=TrackingStartResponse)
 async def start_tracking_pipeline(payload: TrackingStartRequest, background_tasks: BackgroundTasks):
     """
-    Accepts youtube_url and session_id, starts background worker producing mock coordinates (10 frames/sec),
-    and continuously publishes them to Redis channel 'tactiq_tracking_stream'.
+    Accepts video_path (or youtube_url) and session_id.
+    If a local MP4 video is provided, runs YOLOv8 + ByteTrack multi-object tracking (TSK-30).
+    Otherwise, runs realistic tactical simulation streaming at 10 FPS to Redis.
     """
+    if payload.video_path:
+        target_video = payload.video_path
+        if not os.path.isabs(target_video):
+            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+            candidate = os.path.join(base_dir, target_video)
+            if os.path.exists(candidate):
+                target_video = candidate
+
+        if os.path.exists(target_video):
+            background_tasks.add_task(
+                run_video_tracking_worker,
+                video_path=target_video,
+                session_id=payload.session_id,
+                fps_sample_rate=payload.fps_sample_rate or 10,
+                max_frames=payload.max_frames,
+                save_annotated_video=payload.save_annotated_video or False,
+            )
+            return TrackingStartResponse(
+                status="PROCESSING",
+                session_id=payload.session_id,
+                message=f"YOLOv8 + ByteTrack tracking worker dispatched on {os.path.basename(target_video)}.",
+                estimated_frames=payload.max_frames or 100,
+                tracker="bytetrack",
+                mode="yolov8_bytetrack",
+            )
+
+    # Fallback to simulation if no local video provided or file not found
     background_tasks.add_task(run_tracking_simulation, payload.session_id, total_frames=100)
 
     return TrackingStartResponse(
         status="PROCESSING",
         session_id=payload.session_id,
         message="Computer vision tactical tracking worker dispatched in background. Streaming at 10 FPS.",
-        estimated_frames=100
+        estimated_frames=100,
+        tracker="simulation",
+        mode="simulation",
     )
+
+
+class DirectTrackVideoResponse(BaseModel):
+    session_id: str
+    status: str
+    video_path: str
+    frames_processed: int
+    unique_tracks_count: int
+    tracker: str
+    annotated_output: Optional[str] = None
+
+
+@router.post("/track-video", response_model=DirectTrackVideoResponse)
+async def track_video_endpoint(
+    video_path: str,
+    session_id: str = "tactiq-session-direct",
+    fps_sample_rate: int = 10,
+    max_frames: Optional[int] = 50,
+    save_annotated: bool = False,
+):
+    """
+    Direct synchronous endpoint for YOLOv8 + ByteTrack video tracking (TSK-30).
+    Processes video and returns tracking execution summary.
+    """
+    target_video = video_path
+    if not os.path.isabs(target_video):
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        candidate = os.path.join(base_dir, target_video)
+        if os.path.exists(candidate):
+            target_video = candidate
+
+    if not os.path.exists(target_video):
+        raise HTTPException(status_code=404, detail=f"Video file not found at: {video_path}")
+
+    out_annotated = None
+    if save_annotated:
+        data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data")
+        os.makedirs(data_dir, exist_ok=True)
+        out_annotated = os.path.join(data_dir, f"annotated_{session_id}.mp4")
+
+    tracker = TacticalVideoTracker()
+    summary = await tracker.stream_video_tracking(
+        video_path=target_video,
+        session_id=session_id,
+        fps_sample_rate=fps_sample_rate,
+        stream_to_redis=False,
+        max_frames=max_frames,
+        output_annotated_path=out_annotated,
+    )
+
+    return DirectTrackVideoResponse(**summary)
+
+
+@router.post("/generate-sample-match-video")
+async def generate_sample_video_endpoint(duration_sec: int = 4, fps: int = 20):
+    """
+    Generates a synthetic MP4 soccer video with players crossing paths on the pitch.
+    Useful for testing ByteTrack ID persistence and occlusion recovery locally.
+    """
+    data_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data")
+    os.makedirs(data_dir, exist_ok=True)
+    out_path = os.path.join(data_dir, "sample_crossing.mp4")
+    generate_synthetic_soccer_video(out_path, duration_sec=duration_sec, fps=fps)
+    return {
+        "status": "SUCCESS",
+        "message": "Sample crossing MP4 video generated successfully.",
+        "video_path": out_path,
+        "duration_sec": duration_sec,
+        "fps": fps,
+    }
 
 
 class HomographyPoint(BaseModel):
