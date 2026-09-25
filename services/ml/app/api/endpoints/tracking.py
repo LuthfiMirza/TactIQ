@@ -4,7 +4,10 @@ from typing import List, Literal, Optional
 import asyncio
 import json
 import math
-import redis.asyncio as aioredis
+try:
+    import redis.asyncio as aioredis
+except ImportError:
+    aioredis = None
 import numpy as np
 from app.core.config import settings
 
@@ -47,12 +50,17 @@ async def run_tracking_simulation(session_id: str, total_frames: int = 100):
     print(f"🎯 [CV Worker] Commencing tactical vision tracking for session: {session_id}")
 
     redis_client = None
-    try:
-        redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
-        await redis_client.ping()
-        print(f"📡 [CV Worker] Connected to Redis stream bus at {settings.REDIS_URL}")
-    except Exception as exc:
-        print(f"⚠️ [CV Worker] Redis not connected ({exc}). Simulating local worker execution.")
+    redis_client = None
+    if aioredis is not None:
+        try:
+            redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+            await redis_client.ping()
+            print(f"📡 [CV Worker] Connected to Redis stream bus at {settings.REDIS_URL}")
+        except Exception as exc:
+            print(f"⚠️ [CV Worker] Redis not connected ({exc}). Simulating local worker execution.")
+            redis_client = None
+    else:
+        print("ℹ️ [CV Worker] redis-py not installed in current environment. Simulating tracking coordinates locally.")
 
     # Base formation entities: 6 home, 6 away, 1 ball
     base_players = [
