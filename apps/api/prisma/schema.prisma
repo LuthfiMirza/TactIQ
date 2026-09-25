@@ -45,6 +45,7 @@ model Team {
   awayFixtures Fixture[] @relation("AwayTeamFixtures")
   homeH2H      H2H[]     @relation("HomeTeamH2H")
   awayH2H      H2H[]     @relation("AwayTeamH2H")
+  standing     Standing?
 
   @@index([name])
   @@index([league])
@@ -156,4 +157,25 @@ model TrackingCoordinate {
   @@index([sessionId, frameNumber])
   @@index([sessionId, timestampMs])
   @@map("tracking_coordinates")
+}
+
+model Standing {
+  id             String   @id @default(uuid())
+  teamId         String   @unique
+  position       Int
+  played         Int      @default(0)
+  won            Int      @default(0)
+  drawn          Int      @default(0)
+  lost           Int      @default(0)
+  goalsFor       Int      @default(0)
+  goalsAgainst   Int      @default(0)
+  goalDifference Int      @default(0)
+  points         Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([position])
+  @@map("league_standings")
 }

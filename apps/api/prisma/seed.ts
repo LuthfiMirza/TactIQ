@@ -10,6 +10,7 @@ async function main() {
   await prisma.videoTrackingSession.deleteMany({});
   await prisma.h2H.deleteMany({});
   await prisma.fixture.deleteMany({});
+  await prisma.standing.deleteMany({});
   await prisma.playerAttributes.deleteMany({});
   await prisma.player.deleteMany({});
   await prisma.team.deleteMany({});
@@ -387,6 +388,18 @@ async function main() {
   });
 
   console.log('✅ Seeded H2H Records for fixtures.');
+
+  // 6. Seed League Standings Table
+  await prisma.standing.createMany({
+    data: [
+      { id: 'std-mci', teamId: mci.id, position: 1, played: 28, won: 20, drawn: 5, lost: 3, goalsFor: 68, goalsAgainst: 26, goalDifference: 42, points: 65 },
+      { id: 'std-ars', teamId: ars.id, position: 2, played: 28, won: 20, drawn: 4, lost: 4, goalsFor: 70, goalsAgainst: 24, goalDifference: 46, points: 64 },
+      { id: 'std-liv', teamId: liv.id, position: 3, played: 28, won: 19, drawn: 6, lost: 3, goalsFor: 65, goalsAgainst: 27, goalDifference: 38, points: 63 },
+      { id: 'std-rma', teamId: rma.id, position: 1, played: 28, won: 21, drawn: 5, lost: 2, goalsFor: 64, goalsAgainst: 18, goalDifference: 46, points: 68 },
+    ],
+  });
+
+  console.log('✅ Seeded League Standings.');
 
   // 6. Seed 1 Pre-calculated Mock Video Session (10s @ 10fps = 100 frames)
   const session = await prisma.videoTrackingSession.create({

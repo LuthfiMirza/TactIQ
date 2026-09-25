@@ -101,6 +101,21 @@ export interface H2HDTO {
   draws: number;
 }
 
+export interface StandingDTO {
+  id: string;
+  teamId: string;
+  team?: TeamDTO;
+  position: number;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+}
+
 export interface WinProbabilities {
   homeWin: number; // e.g. 54.5%
   draw: number;    // e.g. 23.0%

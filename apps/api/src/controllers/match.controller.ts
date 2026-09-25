@@ -4,12 +4,66 @@ import { MLService } from '../services/ml.service.js';
 import type {
   FixtureDTO,
   H2HDTO,
+  StandingDTO,
   ApiResponse,
   MatchPredictionResponse,
   MatchPredictRequest,
 } from '@tactiq/shared-types';
 
 export class MatchController {
+  /**
+   * GET /api/v1/matches/standings
+   * Returns league table standings
+   */
+  public static async getStandings(_req: Request, res: Response): Promise<void> {
+    try {
+      const standings = await prisma.standing.findMany({
+        include: {
+          team: true,
+        },
+        orderBy: {
+          position: 'asc',
+        },
+      });
+
+      const dtos: StandingDTO[] = standings.map((s) => ({
+        id: s.id,
+        teamId: s.teamId,
+        team: s.team,
+        position: s.position,
+        played: s.played,
+        won: s.won,
+        drawn: s.drawn,
+        lost: s.lost,
+        goalsFor: s.goalsFor,
+        goalsAgainst: s.goalsAgainst,
+        goalDifference: s.goalDifference,
+        points: s.points,
+      }));
+
+      const response: ApiResponse<StandingDTO[]> = {
+        success: true,
+        data: dtos,
+        timestamp: new Date().toISOString(),
+        meta: {
+          total: dtos.length,
+        },
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error('Error fetching standings:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'STANDINGS_FETCH_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
   /**
    * GET /api/v1/matches/fixtures
    * Returns list of scheduled and recent fixtures with home/away teams
