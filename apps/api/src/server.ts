@@ -4,6 +4,7 @@ import { config } from './config/index.js';
 import { connectDatabase } from './services/prisma.service.js';
 import { initRedisClients } from './services/redis.service.js';
 import { setupSocketServer } from './websocket/socket.server.js';
+import { etlService } from './services/etl.service.js';
 
 async function bootstrap() {
   console.log('🚀 Booting TactIQ API Gateway & Socket Server...');
@@ -23,6 +24,9 @@ async function bootstrap() {
   // Connect to PostgreSQL database via Prisma
   await connectDatabase();
 
+  // Initialize Background ETL Ingestion Scheduler (TSK-02)
+  etlService.startETLCronJob();
+
   // Start listening
   httpServer.listen(config.port, () => {
     console.log(`=======================================================`);
@@ -36,6 +40,7 @@ async function bootstrap() {
   // Graceful shutdown
   const shutdown = async () => {
     console.log('🛑 Shutting down TactIQ API Gateway gracefully...');
+    etlService.stopETLCronJob();
     httpServer.close(() => {
       console.log('✅ HTTP and WebSocket server closed.');
       process.exit(0);
