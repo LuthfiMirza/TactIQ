@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { RadarChart } from '@/components/radar-chart';
 import type { PlayerDTO, PlayerPosition, PlayerSimilarityResponse } from '@tactiq/shared-types';
-import { Search, Filter, Sparkles, UserCheck, Shield, ChevronRight, Sliders } from 'lucide-react';
+import { Search, Filter, Sparkles, UserCheck, Shield, ChevronRight, Sliders, ExternalLink } from 'lucide-react';
 
 // Fallback initial dataset in case API is bootstrapping
 const DEFAULT_PLAYERS: PlayerDTO[] = [
@@ -357,15 +358,25 @@ export default function ScoutingPage() {
                 </div>
               </div>
 
-              {/* Trigger Similar Players Button */}
-              <button
-                onClick={() => handleFindSimilar(selectedPlayer)}
-                disabled={isLoadingSimilar}
-                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-tactiq-emerald to-tactiq-cyan text-tactiq-bg font-bold text-xs hover:opacity-90 transition-all shadow-glow-emerald disabled:opacity-50"
-              >
-                <Sparkles size={14} />
-                <span>{isLoadingSimilar ? 'Calculating Vectors...' : 'Find Similar Players'}</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/scouting/${selectedPlayer.id}`}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl bg-tactiq-surface border border-tactiq-border text-slate-200 font-semibold text-xs hover:border-tactiq-cyan hover:text-white transition-all"
+                >
+                  <ExternalLink size={13} />
+                  <span>View Full Dossier</span>
+                </Link>
+
+                {/* Trigger Similar Players Button */}
+                <button
+                  onClick={() => handleFindSimilar(selectedPlayer)}
+                  disabled={isLoadingSimilar}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-tactiq-emerald to-tactiq-cyan text-tactiq-bg font-bold text-xs hover:opacity-90 transition-all shadow-glow-emerald disabled:opacity-50"
+                >
+                  <Sparkles size={14} />
+                  <span>{isLoadingSimilar ? 'Calculating Vectors...' : 'Find Similar Players'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Radar Chart Display */}
