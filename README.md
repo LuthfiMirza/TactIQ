@@ -1,12 +1,49 @@
-# ⚽ TactIQ: Data-Driven Football Analytics & Tactical Tracking Platform
+<div align="center">
 
-TactIQ is an enterprise-grade football intelligence platform that combines multi-dimensional player radar analytics, statistical match outcome forecasting, and real-time computer vision 2D tactical tracking.
+# ⚽ TactIQ
+### Enterprise-Grade Football Intelligence & Tactical Tracking Platform
+
+[![Next.js](https://img.shields.io/badge/Next.js-14_App_Router-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Express.js](https://img.shields.io/badge/Express.js-4.19+-000000?style=for-the-badge&logo=express)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7.2_Streams-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+
+<p align="center">
+  <b>TactIQ</b> is an advanced sports analytics and tactical computer vision ecosystem designed for modern football clubs, performance analysts, and scouting departments. It unifies high-dimensional player radar profiles, bivariate statistical match forecasting, and real-time 2D pitch tracking streamed directly to interactive HTML5 overlays.
+</p>
+
+[Key Features](#-key-capabilities) • [System Architecture](#-system-architecture) • [Microservices](#-monorepo-services) • [Quick Start](#-quick-start-with-docker) • [API & WebSockets](#-api--websocket-specification) • [Audit & Verification](#-system-quality-audit)
 
 ---
 
-## 🏛️ System Architecture & Team Collaboration
+</div>
 
-The platform operates across 3 decoupled microservices developed by 3 collaborating engineers:
+## 🌟 Key Capabilities
+
+### 1. 🔍 Advanced Scouting & Metric Radar Dossiers
+- **7-Axis Skill Profiling:** Visualizes physical and technical traits (Pace, Shooting, Passing, Dribbling, Defending, Physical, Vision) via normalized interactive radar charts.
+- **High-Dimensional Similarity Engine:** Employs blended Cosine Similarity (directional alignment) and Euclidean proximity (trait magnitude) to surface statistical counterparts across European leagues.
+- **Multi-Criteria Query Pipeline:** High-performance filtering across positions, domestic leagues, market valuation thresholds, and minimum attribute floors.
+
+### 2. 🔮 Match Center & Predictive Intelligence
+- **Probabilistic Outcome Modeling:** Computes balanced Home Win / Draw / Away Win distributions that mathematically sum to 100%, weighted by rolling form momentum and venue advantage.
+- **Head-to-Head (H2H) Historical Analysis:** Synthesizes past encounters, goal disparities, and tactical matchup tendencies.
+- **Bivariate Scoreline Forecasting:** Estimates expected goals ($xG$) and projects the most probable final scoreline distribution.
+
+### 3. 🎯 Computer Vision Tactical Tracking (2D Pitch Overlay)
+- **High-Frequency Ingestion Pipeline:** Streams player and ball coordinates at 10 frames per second over Redis Pub/Sub directly to connected web clients via Socket.io rooms.
+- **Perspective Homography Correction:** Maps broadcast camera angles and perspective distortions onto FIFA-standard canonical 2D pitch coordinates ($105\text{m} \times 68\text{m}$).
+- **Kinematic Visualizer:** Renders entity velocities, dynamic motion trails, tactical formations, and event timeline markers over YouTube or custom match feeds.
+
+---
+
+## 🏛️ System Architecture
+
+TactIQ is engineered as a loosely coupled, event-driven monorepo architecture. Shared domain models guarantee end-to-end type safety between the TypeScript API Gateway, Next.js frontend, and the Python FastAPI ML microservice.
 
 ```
                                   [ Browser / Client ]
@@ -16,8 +53,8 @@ The platform operates across 3 decoupled microservices developed by 3 collaborat
                              ▼                             ▼
                     ┌─────────────────┐           ┌─────────────────┐
                     │    apps/web     │           │    apps/api     │
-                    │  (Lead: Ferrel) │           │  (Lead: Luthfi) │
-                    │ Next.js 14 / UI │           │ Node/Express/Pr │
+                    │  (Next.js 14)   │           │ (Express/Prisma)│
+                    │   Client UI     │           │   API Gateway   │
                     └─────────────────┘           └────────┬────────┘
                                                            │
                                       ┌────────────────────┴────────────────────┐
@@ -30,127 +67,85 @@ The platform operates across 3 decoupled microservices developed by 3 collaborat
                                                                                 │
                                                                        ┌────────┴────────┐
                                                                        │   services/ml   │
-                                                                       │  (Lead: Fuad)   │
-                                                                       │ Python/FastAPI  │
+                                                                       │ (FastAPI Engine)│
+                                                                       │  Scikit / NumPy │
                                                                        └─────────────────┘
 ```
 
-### Team Responsibilities & Ownership Matrix
-| Service | Lead Engineer | Technology Stack | Key Responsibilities |
+### Data & Event Flow
+1. **Scouting Flow:** Web client requests player profile $\rightarrow$ API Gateway queries PostgreSQL $\rightarrow$ Dispatches vector computation to FastAPI $\rightarrow$ Returns top 5 statistical twins.
+2. **Match Analyst Flow:** User selects fixture $\rightarrow$ Fetches H2H record $\rightarrow$ API proxies parameters to ML prediction engine $\rightarrow$ Visualizes win probability distribution and tactical insights.
+3. **Tactical Tracking Flow:** User starts video session $\rightarrow$ ML worker processes detection coordinates $\rightarrow$ Coordinates publish to Redis channel `tactiq_tracking_stream` $\rightarrow$ Node.js Socket.io broadcasts to subscribers $\rightarrow$ HTML5 Canvas draws 16:9 pitch overlay.
+
+---
+
+## 📦 Monorepo Services
+
+| Directory | Service Name | Tech Stack | Primary Responsibility |
 | :--- | :--- | :--- | :--- |
-| **`apps/api`** | **Luthfi** (Back-End) | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL, Redis, Socket.io | Central Gateway, relational schema, multi-criteria filtering, Redis subscriber, WebSocket hub |
-| **`services/ml`** | **Fuad** (Machine Learning) | Python 3.11, FastAPI, Scikit-learn, NumPy, Redis-py | Player similarity vectors, Poisson/Elo match forecasting, background CV tracking worker |
-| **`apps/web`** | **Ferrel** (Front-End) | Next.js 14 (App Router), Tailwind CSS, Chart.js, HTML5 Canvas | Dark-mode sports analytics UI, interactive radar charts, real-time 2D pitch overlay canvas |
-| **`packages/shared-types`** | **Shared** | TypeScript | Synchronized DTOs, API response wrappers, and WebSocket payload contracts |
+| **`apps/web`** | **TactIQ Web UI** | Next.js 14, Tailwind CSS, Chart.js, Lucide Icons | Responsive sports analyst dashboard, radar charts, video canvas |
+| **`apps/api`** | **Central API Gateway** | Node.js, Express, TypeScript, Prisma ORM, Socket.io | Relational schema, ETL cron pipelines, WebSocket streaming hub |
+| **`services/ml`** | **ML Intelligence Engine** | Python 3.11, FastAPI, Scikit-learn, NumPy | Vector similarity, match prediction models, field homography |
+| **`packages/shared-types`** | **Domain Contracts** | TypeScript (ESNext / CJS) | Synchronized DTOs, API contracts, WebSocket event maps |
 
 ---
 
-## 📂 Repository Directory Structure
+## ⚡ Quick Start with Docker
 
-```text
-TactIQ/
-├── apps/
-│   ├── api/                 # Node.js + TypeScript (Express/Prisma)
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma # PostgreSQL schema (Team, Player, Attributes, Fixture, H2H, Tracking)
-│   │   │   └── seed.ts       # 4 Clubs, 20 Players, 2 Fixtures, 100 Frames of tracking data
-│   │   ├── src/
-│   │   │   ├── config/       # Environment & server settings
-│   │   │   ├── controllers/  # Player, Match, and Tracking controllers
-│   │   │   ├── routes/       # Express route handlers
-│   │   │   ├── services/     # Prisma, Redis Pub/Sub, and ML service clients
-│   │   │   ├── websocket/    # Socket.io WebSocket Hub & Redis stream consumer
-│   │   │   ├── app.ts        # Express app configuration (Helmet, CORS, Morgan)
-│   │   │   └── server.ts     # Server entrypoint
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   └── web/                 # Next.js 14 App Router + Tailwind CSS
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── (modules)/
-│       │   │   │   ├── scouting/          # Multi-criteria scouting & similar players table
-│       │   │   │   ├── match-center/      # Fixtures, H2H, and ML match predictor
-│       │   │   │   └── tactical-tracker/  # Video container & real-time canvas visualizer
-│       │   │   ├── globals.css            # Dark sports analytics theme & custom scrollbar
-│       │   │   ├── layout.tsx             # Root layout with navigation
-│       │   │   └── page.tsx               # Executive dashboard
-│       │   ├── components/
-│       │   │   ├── ui/                    # Navbar, StatCard, and reusable UI
-│       │   │   ├── radar-chart.tsx        # Chart.js 7-axis radar chart with comparisons
-│       │   │   └── video-overlay-canvas.tsx# HTML5 16:9 Canvas overlay for real-time tracking
-│       │   └── lib/
-│       │       └── socket.ts              # Socket.io client listener
-│       ├── package.json
-│       └── tailwind.config.ts
-├── services/
-│   └── ml/                  # Python 3.11 + FastAPI microservice
-│       ├── app/
-│       │   ├── api/
-│       │   │   ├── endpoints/
-│       │   │   │   ├── similarity.py      # Cosine similarity vector search
-│       │   │   │   ├── prediction.py      # Logistic/Poisson win probabilities
-│       │   │   │   └── tracking.py        # Background CV coordinate stream worker
-│       │   │   └── router.py
-│       │   ├── core/config.py
-│       │   └── main.py                    # FastAPI application & OpenAPI Swagger docs
-│       ├── requirements.txt
-│       └── Dockerfile
-├── packages/
-│   └── shared-types/        # Shared DTOs & Contracts (TypeScript)
-│       ├── index.ts         # Strictly-typed interfaces (no 'any')
-│       └── package.json
-├── docker-compose.yml       # Production-ready compose file (Postgres, Redis, ML, API, Web)
-├── .env.example             # Global environment configuration template
-├── .gitignore
-└── README.md
-```
-
----
-
-## ⚡ Quick Start with Docker (Recommended)
-
-Boot the entire platform including PostgreSQL 16, Redis 7, FastAPI ML service, Node.js API Gateway, and Next.js Web:
+The fastest way to spin up the entire production-ready TactIQ platform:
 
 ```bash
-# 1. Clone repository & configure environment
+# 1. Clone repository
+git clone https://github.com/LuthfiMirza/TactIQ.git
+cd TactIQ
+
+# 2. Configure environment variables
 cp .env.example .env
 
-# 2. Build and launch all containers
-docker compose up --build
+# 3. Build and launch all microservices in background
+docker compose up --build -d
 ```
 
-### Active Ports & Services
-| Service | URL | Description |
-| :--- | :--- | :--- |
-| **Web Frontend** | `http://localhost:3000` | Next.js Tactical Dashboard |
-| **API Gateway** | `http://localhost:4000` | Node.js Express REST API |
-| **API Health** | `http://localhost:4000/api/v1/health` | Gateway status & uptime |
-| **WebSocket Hub** | `ws://localhost:4000` | Socket.io tracking room hub |
-| **ML Microservice** | `http://localhost:8000` | FastAPI service |
-| **ML Swagger Docs** | `http://localhost:8000/docs` | Interactive OpenAPI documentation |
-| **PostgreSQL** | `localhost:5432` | Database (`tactiq_db`) |
-| **Redis** | `localhost:6379` | Cache & Pub/Sub stream bus |
+### Service Health & Port Mapping
+
+| Service | Port | Endpoint URL | Status / Notes |
+| :--- | :---: | :--- | :--- |
+| **Web Frontend** | `3000` | `http://localhost:3000` | Tactical Analytics Dashboard |
+| **API Gateway** | `4000` | `http://localhost:4000/api/v1` | Express REST Endpoints |
+| **Gateway Health** | `4000` | `http://localhost:4000/api/v1/health` | Gateway status & uptime |
+| **WebSocket Hub** | `4000` | `ws://localhost:4000` | Socket.io Live Stream Hub |
+| **ML Microservice** | `8000` | `http://localhost:8000` | FastAPI Inference Engine |
+| **OpenAPI Docs** | `8000` | `http://localhost:8000/docs` | Interactive Swagger UI |
+| **PostgreSQL 16** | `5432` | `localhost:5432` | Database (`tactiq_db`) |
+| **Redis 7.2** | `6379` | `localhost:6379` | In-memory message bus |
 
 ---
 
-## 💻 Local Development Setup (Step-by-Step)
+## 💻 Local Development Setup
 
-If you prefer running services directly in your host environment:
+For local step-by-step development across decoupled terminals:
 
-### 1. Install Node.js Workspaces
+### Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **Python**: v3.10 or v3.11
+- **PostgreSQL**: v15 or higher
+- **Redis**: v6 or higher
+
+### 1. Workspace Installation
 ```bash
+# Install root and workspace dependencies
 npm install
 ```
 
-### 2. Setup PostgreSQL & Prisma ORM
+### 2. Database Migration & Seeding
 ```bash
-# Generate Prisma Client
+# Generate Prisma client
 npm run prisma:generate
 
-# Push schema to database
+# Push schema directly to PostgreSQL
 npm run prisma:push
 
-# Seed sample data (4 clubs, 20 players with radar stats, fixtures, H2H, and 100 tracking frames)
+# Seed database (4 top European clubs, 20 players with radar attributes, fixtures, and 100 tracking frames)
 npm run prisma:seed
 ```
 
@@ -165,101 +160,91 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### 4. Run API Gateway
 ```bash
-# In another terminal window at root:
+# In another terminal window:
 npm run dev:api
 ```
 
-### 5. Run Next.js Web Application
+### 5. Run Next.js Web App
 ```bash
-# In another terminal window at root:
+# In another terminal window:
 npm run dev:web
 ```
 
 ---
 
-## 📡 API Endpoints Reference
+## 📡 API & WebSocket Specification
 
-### 1. Player Scouting (`apps/api`)
-- `GET /api/v1/players` - Query players with multi-criteria filters:
-  - `?position=MID`
-  - `?league=Premier+League`
-  - `?minPassing=85`
-  - `?search=Kevin`
-- `GET /api/v1/players/:id` - Fetch player details & 7-axis radar stats.
-- `GET /api/v1/players/:id/similar` - Calculates statistical counterparts via FastAPI cosine similarity (includes graceful fallback if ML is offline).
+### 1. Player Scouting Endpoints
+```http
+GET  /api/v1/players                # Query players with filters: ?position=MID&league=Premier+League&minPassing=85&search=Kevin
+GET  /api/v1/players/:id            # Fetch player bio and 7-axis radar metrics
+GET  /api/v1/players/:id/similar    # Compute top 5 statistical counterparts via ML similarity
+```
 
-### 2. Match Center & Prediction (`apps/api`)
-- `GET /api/v1/matches/fixtures` - List scheduled fixtures with team records.
-- `GET /api/v1/matches/h2h/:homeId/:awayId` - Historical head-to-head metrics.
-- `POST /api/v1/matches/predict` - Proxies to ML model to compute Home Win / Draw / Away Win probabilities summing to 100% and predicted score.
+### 2. Match Center Endpoints
+```http
+GET  /api/v1/matches/fixtures       # List scheduled and past match fixtures
+GET  /api/v1/matches/standings      # Retrieve official league standings table
+GET  /api/v1/matches/h2h/:hId/:aId  # Query Head-to-Head record between two teams
+POST /api/v1/matches/predict        # Predict win probabilities (Home, Draw, Away) and scoreline
+```
 
-### 3. Tactical Tracking Stream (`apps/api` & `services/ml`)
-- `GET /api/v1/tracking/sessions` - List recorded tactical video sessions.
-- `GET /api/v1/tracking/sessions/:id` - Retrieve session metadata & stored frames.
-- `POST /api/v1/tracking/start` - Dispatches background CV tracking simulation streaming at 10 FPS over Redis channel `tactiq_tracking_stream`.
+### 3. Tactical Tracking Endpoints & WebSocket Events
+```http
+GET  /api/v1/tracking/sessions      # List recorded tactical camera sessions
+GET  /api/v1/tracking/sessions/:id  # Retrieve session metadata and stored frame coordinates
+POST /api/v1/tracking/start         # Trigger background CV tracking stream at 10 FPS
+```
 
-### 4. WebSocket Protocol (`apps/api/src/websocket`)
-- Connect to `ws://localhost:4000` via Socket.io.
-- **Client to Server:**
-  - `join_session({ sessionId: string })` - Join room `session_${sessionId}`.
-  - `leave_session({ sessionId: string })` - Leave session room.
-  - `ping_stream()` - Latency measurement.
-- **Server to Client:**
-  - `frame_update(payload: TrackingFramePayload)` - Broadcasts real-time 2D coordinates `[{ id, team, x, y, speedKmh }]`.
-  - `session_status({ sessionId, status })` - Stream state updates.
+#### WebSocket Interface (`ws://localhost:4000`)
+```typescript
+// Client -> Server
+socket.emit('join_session', { sessionId: string });
+socket.emit('leave_session', { sessionId: string });
+socket.emit('ping_stream');
+
+// Server -> Client
+socket.on('frame_update', (payload: TrackingFramePayload) => {
+  // payload.entities: Array<{ id, team, x, y, speedKmh, jerseyNumber }>
+});
+socket.on('session_status', ({ sessionId, status }) => { ... });
+```
 
 ---
 
-## 🧪 Testing and Verification
+## 🧪 Testing & Code Quality
 
-To execute automated test suites and verify compilation across all microservices:
 ```bash
 # Run unit & integration test suite (apps/api)
 npm test --workspace=apps/api
 
-# Run ML benchmarking & evaluation suite (services/ml)
+# Run ML benchmarking & model verification (services/ml)
 python3 services/ml/scripts/benchmark.py
 
-# Build all TypeScript workspaces (types, api, web)
+# Verify TypeScript compilation across all packages
 npm run build --workspaces --if-present
 ```
 
 ---
 
-## 📋 Sprint Backlog Implementation Matrix (TSK-01 to TSK-25)
+## 🛡️ System Quality Audit
 
-All 25 tasks from the official Sprint Backlog have been executed, verified, and pushed to `main`:
+A comprehensive 5-layer engineering audit was executed across Data, ML Algorithms, Backend Gateway, Frontend UI, and End-to-End integration scenarios.
 
-| Task ID | Task Title | Owner / Lead | Status | Commit Reference |
-| :--- | :--- | :--- | :---: | :--- |
-| **TSK-01** | Setup Prisma ORM & Database Schema | Luthfi (Back-End) | ✅ Completed | `ea98f81` `feat(api): define PostgreSQL schema with Prisma ORM` |
-| **TSK-02** | Data Ingestion Pipeline (API-Football) | Luthfi (Back-End) | ✅ Completed | `d1ed4a8` `feat(api): implement automated ETL pipeline and cron ingestion` |
-| **TSK-03** | REST API: Player Scouting Endpoints | Luthfi (Back-End) | ✅ Completed | `4d1ffa1` `feat(api): add player scouting REST endpoints with filtering` |
-| **TSK-04** | REST API: Match Fixtures & H2H | Luthfi (Back-End) | ✅ Completed | `9e6a160` `feat(api): add match fixtures and head-to-head REST endpoints` |
-| **TSK-05** | WebSocket Server: Live Tracking Gateway | Luthfi (Back-End) | ✅ Completed | `ee35da0` `feat(api): implement Redis pub/sub listener and Socket.io gateway` |
-| **TSK-06** | API Client & Data Fetching Layer | Ferrel (Front-End) | ✅ Completed | `97e25b5` `feat(scouting): implement dedicated player dossier & API client` |
-| **TSK-07** | Error Handling & Security Middleware | Luthfi (Back-End) | ✅ Completed | `91850e3` `feat(api): initialize express server architecture & env config` |
-| **TSK-08** | Docker Compose Setup (PostgreSQL + Redis) | Luthfi (Back-End) | ✅ Completed | `5a09cb4` `chore(root): setup monorepo root config, docker-compose` |
-| **TSK-09** | Unit & Integration Tests (Back-End) | Luthfi (Back-End) | ✅ Completed | `a1e7abc` `test(api): add unit and integration test suite for gateway & etl` |
-| **TSK-10** | CI/CD Pipeline Setup (GitHub Actions) | Luthfi (Back-End) | ✅ Completed | `c926319` `ci(github-actions): setup monorepo continuous integration pipeline` |
-| **TSK-11** | UI/UX: Design System & Theme Setup | Ferrel (Front-End) | ✅ Completed | `9db801f` `feat(web): initialize Next.js app with Tailwind dark-mode theme` |
-| **TSK-12** | UI: Player Scouting Dashboard & Dossier | Ferrel (Front-End) | ✅ Completed | `97e25b5` `feat(scouting): implement dedicated player dossier profile page` |
-| **TSK-13** | UI: Match Center & Standings Table | Ferrel (Front-End) | ✅ Completed | `197fb29` `feat(match-center): add league standings API and interactive UI` |
-| **TSK-14** | UI: Tactical CV Tracker Page | Ferrel (Front-End) | ✅ Completed | `85b0bef` `feat(tactical-tracker): add 2D minimap, homography, & YouTube embed` |
-| **TSK-15** | Responsive Navigation & Layout | Ferrel (Front-End) | ✅ Completed | `9db801f` `feat(web): initialize Next.js app with Tailwind dark-mode theme` |
-| **TSK-16** | Component: Interactive Radar Chart | Ferrel (Front-End) | ✅ Completed | `815bd1b` `feat(web): build interactive Radar Chart and HTML5 Canvas` |
-| **TSK-17** | Player Similarity Engine (Cosine Metric) | Fuad (ML) | ✅ Completed | `9c56c61` `feat(ml): implement player similarity and match prediction` |
-| **TSK-18** | Match Prediction Model (Poisson / Win Prob) | Fuad (ML) | ✅ Completed | `9c56c61` `feat(ml): implement player similarity and match prediction` |
-| **TSK-19** | Computer Vision: YOLO Detection Payload | Fuad (ML) | ✅ Completed | `5e8cbb8` `feat(ml): add background tracking coordinate streamer with Redis` |
-| **TSK-20** | CV: Perspective Transform & Homography | Fuad (ML) | ✅ Completed | `85b0bef` `feat(tactical-tracker): add 2D minimap, homography, & YouTube embed` |
-| **TSK-21** | Video Processing Pipeline (YouTube / Stream) | Ferrel / Fuad | ✅ Completed | `85b0bef` `feat(tactical-tracker): add 2D minimap, homography, & YouTube embed` |
-| **TSK-22** | ML Model Serving API (FastAPI) | Fuad (ML) | ✅ Completed | `c9275b0` `feat(ml): scaffold FastAPI microservice structure & requirements` |
-| **TSK-23** | Real-Time Coordinate Streaming to Redis | Fuad (ML) | ✅ Completed | `5e8cbb8` `feat(ml): add background tracking coordinate streamer with Redis` |
-| **TSK-24** | Model Evaluation & Performance Benchmark | Fuad (ML) | ✅ Completed | `a5ac56e` `feat(ml): add model evaluation and performance benchmarking suite` |
-| **TSK-25** | Documentation & API Reference | Shared (All) | ✅ Completed | `6b68288` `docs(readme): add architecture diagram and local quickstart` |
+Detailed findings, mathematical root causes, cross-service contract matrices, and concrete code patches are documented in:  
+👉 **[View the Complete System Audit Report (`AUDIT_REPORT.md`)](./AUDIT_REPORT.md)**
+
+---
+
+## 👥 Engineering Team & Architecture Ownership
+
+- **Luthfi** — *Back-End Architecture & Database Systems* (`apps/api`, Prisma ORM, PostgreSQL, ETL Pipelines, WebSocket Gateway)
+- **Fuad** — *Machine Learning & Computer Vision* (`services/ml`, Cosine Similarity, Match Outcome Modeling, Homography)
+- **Ferrel** — *Front-End Engineering & Visualizations* (`apps/web`, Next.js 14, Radar Visualizations, HTML5 Canvas Overlay)
 
 ---
 
 ## 📜 License
-MIT © 2026 TactIQ Platform Contributors.
 
+This project is licensed under the terms of the **MIT License**.  
+© 2026 TactIQ Platform Contributors.
