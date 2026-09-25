@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { VideoOverlayCanvas } from '@/components/video-overlay-canvas';
+import { TacticalMinimap } from '@/components/tactical-minimap';
 import type { TrackingFramePayload } from '@tactiq/shared-types';
 import { Crosshair, Play, Radio, Activity, Cpu, Film, Sparkles, AlertCircle } from 'lucide-react';
 
@@ -92,8 +93,11 @@ export default function TacticalTrackerPage() {
           </div>
         </div>
 
-        {/* Right Column: Live Detection Telemetry Table */}
+        {/* Right Column: Live 2D Minimap & Detection Telemetry */}
         <div className="lg:col-span-4 space-y-4">
+          {/* 2D Planar Pitch Minimap */}
+          <TacticalMinimap entities={latestFrame?.entities} />
+
           <div className="p-5 bg-tactiq-card border border-tactiq-border rounded-2xl shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-tactiq-border/60 pb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">

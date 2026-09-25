@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getSocket, joinTrackingSession, leaveTrackingSession } from '@/lib/socket';
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
-import { Activity, Radio, Play, Pause, RotateCcw } from 'lucide-react';
+import { Activity, Radio, Play, Pause, RotateCcw, Video, Eye, Flag, Target, Award } from 'lucide-react';
 
 interface VideoOverlayCanvasProps {
   sessionId?: string;
@@ -12,9 +12,24 @@ interface VideoOverlayCanvasProps {
   onFrameUpdate?: (frame: TrackingFramePayload) => void;
 }
 
+interface MatchEventMoment {
+  minute: number;
+  label: string;
+  type: 'goal' | 'shot' | 'card' | 'chance';
+  timestampMs: number;
+}
+
+const MATCH_TIMELINE_EVENTS: MatchEventMoment[] = [
+  { minute: 14, label: 'Saka Cut-back Cross', type: 'chance', timestampMs: 1400 },
+  { minute: 28, label: 'Haaland Counter Goal', type: 'goal', timestampMs: 2800 },
+  { minute: 42, label: 'Saliba Tactical Foul', type: 'card', timestampMs: 4200 },
+  { minute: 67, label: 'De Bruyne Volley Shot', type: 'shot', timestampMs: 6700 },
+  { minute: 88, label: 'Raya Critical Save', type: 'chance', timestampMs: 8800 },
+];
+
 export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   sessionId = 'demo-session-tactical-001',
-  youtubeUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0',
+  youtubeUrl = 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
   className = '',
   onFrameUpdate,
 }) => {
@@ -22,9 +37,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const [currentFrame, setCurrentFrame] = useState<TrackingFramePayload | null>(null);
-  const [fps, setFps] = useState<number>(10);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isSimulatingLocal, setIsSimulatingLocal] = useState<boolean>(false);
+  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(true);
+  const [activeMoment, setActiveMoment] = useState<MatchEventMoment | null>(null);
   const [entityStats, setEntityStats] = useState<{ homeCount: number; awayCount: number; ballSpeed: number }>({
     homeCount: 0,
     awayCount: 0,
@@ -44,23 +60,24 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   }, []);
 
   // Draw Tactical Football Pitch Lines
-  const drawPitch = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Pitch background with subtle dark grass stripe texture
-    ctx.fillStyle = '#0B1410';
-    ctx.fillRect(0, 0, width, height);
+  const drawPitch = (ctx: CanvasRenderingContext2D, width: number, height: number, isTransparent: boolean) => {
+    if (!isTransparent) {
+      // Pitch background with dark grass texture
+      ctx.fillStyle = '#0B1410';
+      ctx.fillRect(0, 0, width, height);
 
-    // Subtle stripes
-    const stripeCount = 10;
-    const stripeWidth = width / stripeCount;
-    for (let i = 0; i < stripeCount; i++) {
-      if (i % 2 === 0) {
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.025)';
-        ctx.fillRect(i * stripeWidth, 0, stripeWidth, height);
+      const stripeCount = 10;
+      const stripeWidth = width / stripeCount;
+      for (let i = 0; i < stripeCount; i++) {
+        if (i % 2 === 0) {
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.025)';
+          ctx.fillRect(i * stripeWidth, 0, stripeWidth, height);
+        }
       }
     }
 
     // Pitch Line Styles
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.strokeStyle = isTransparent ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.22)';
     ctx.lineWidth = 1.5;
 
     const padX = width * 0.04;
@@ -98,15 +115,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
 
     // Right Penalty Box
     ctx.strokeRect(padX + pWidth - penW, penY, penW, penH);
-
-    // Left Goal
-    ctx.strokeRect(padX - 8, padY + (pHeight - penH * 0.4) / 2, 8, penH * 0.4);
-    // Right Goal
-    ctx.strokeRect(padX + pWidth, padY + (pHeight - penH * 0.4) / 2, 8, penH * 0.4);
   };
 
   // Render tracking entities onto canvas
-  const renderFrame = useCallback((frame: TrackingFramePayload) => {
+  const renderFrame = useCallback((frame: TrackingFramePayload, isVideoBg: boolean) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -118,7 +130,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     // 1. Draw pitch foundation
-    drawPitch(ctx, width, height);
+    drawPitch(ctx, width, height, isVideoBg);
 
     // 2. Track entity counts
     let homeC = 0;
@@ -134,7 +146,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       if (entity.team === 'away') awayC++;
       if (entity.team === 'ball') bSpeed = entity.speedKmh || 22.4;
 
-      // Update historic trail for smooth tactical tails
+      // Update historic trail
       let trail = trailsRef.current.get(entity.id);
       if (!trail) {
         trail = [];
@@ -152,46 +164,50 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         }
         ctx.strokeStyle =
           entity.team === 'home'
-            ? 'rgba(56, 189, 248, 0.25)'
+            ? 'rgba(56, 189, 248, 0.4)'
             : entity.team === 'away'
-            ? 'rgba(244, 63, 94, 0.25)'
-            : 'rgba(250, 204, 21, 0.4)';
-        ctx.lineWidth = entity.team === 'ball' ? 2 : 1.5;
+            ? 'rgba(244, 63, 94, 0.4)'
+            : 'rgba(250, 204, 21, 0.6)';
+        ctx.lineWidth = entity.team === 'ball' ? 2.5 : 1.5;
         ctx.stroke();
       }
 
-      // Draw Entity Circle
+      // Draw Entity Circle / Bounding Halo
       if (entity.team === 'ball') {
-        // Glowing Neon Ball
         ctx.save();
         ctx.shadowColor = '#FACC15';
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 14;
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#FACC15';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.restore();
       } else {
         const isHome = entity.team === 'home';
         const primaryColor = isHome ? '#38BDF8' : '#F43F5E';
-        const glowColor = isHome ? 'rgba(56, 189, 248, 0.4)' : 'rgba(244, 63, 94, 0.4)';
+        const glowColor = isHome ? 'rgba(56, 189, 248, 0.5)' : 'rgba(244, 63, 94, 0.5)';
 
-        // Subtle glow halo
+        // Computer Vision Bounding Halo / Spotlight
         ctx.save();
         ctx.shadowColor = primaryColor;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = glowColor;
+        ctx.beginPath();
+        ctx.ellipse(px, py + 4, 12, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Player Circle Dot
         ctx.fillStyle = primaryColor;
         ctx.beginPath();
         ctx.arc(px, py, 9, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
 
-        // Inner core border
-        ctx.strokeStyle = '#0B0E14';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
         // Jersey / ID label inside entity
@@ -202,7 +218,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         const label = entity.jerseyNumber ? String(entity.jerseyNumber) : String(entity.id);
         ctx.fillText(label, px, py);
 
-        // Velocity / Speed badge underneath
+        // Speed badge
         if (entity.speedKmh && entity.speedKmh > 18) {
           ctx.fillStyle = glowColor;
           ctx.beginPath();
@@ -238,7 +254,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
     const handleFrame = (payload: TrackingFramePayload) => {
       if (payload.sessionId === sessionId) {
         setCurrentFrame(payload);
-        renderFrame(payload);
+        renderFrame(payload, showVideoBackground);
         if (onFrameUpdate) onFrameUpdate(payload);
       }
     };
@@ -258,9 +274,9 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       socket.off('frame_update', handleFrame);
       leaveTrackingSession(sessionId);
     };
-  }, [sessionId, handleResize, renderFrame, onFrameUpdate]);
+  }, [sessionId, handleResize, renderFrame, showVideoBackground, onFrameUpdate]);
 
-  // Client-side simulation fallback generator for offline preview
+  // Client-side simulation fallback generator
   const generateSimulatedFrame = (fIdx: number): TrackingFramePayload => {
     const base = [
       { id: 1, team: 'home' as const, x: 0.12, y: 0.50, num: 1 },
@@ -315,7 +331,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         localFrameCounterRef.current += 1;
         const frame = generateSimulatedFrame(localFrameCounterRef.current);
         setCurrentFrame(frame);
-        renderFrame(frame);
+        renderFrame(frame, showVideoBackground);
         if (onFrameUpdate) onFrameUpdate(frame);
       }, 100);
     }
@@ -326,21 +342,49 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
     trailsRef.current.clear();
     const frame = generateSimulatedFrame(0);
     setCurrentFrame(frame);
-    renderFrame(frame);
+    renderFrame(frame, showVideoBackground);
+  };
+
+  const seekToMoment = (moment: MatchEventMoment) => {
+    setActiveMoment(moment);
+    localFrameCounterRef.current = Math.floor(moment.timestampMs / 100);
+    const frame = generateSimulatedFrame(localFrameCounterRef.current);
+    setCurrentFrame(frame);
+    renderFrame(frame, showVideoBackground);
+    if (onFrameUpdate) onFrameUpdate(frame);
   };
 
   return (
     <div className={`relative flex flex-col w-full bg-tactiq-card border border-tactiq-border rounded-2xl overflow-hidden shadow-2xl ${className}`}>
       {/* Top Stream Status Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-tactiq-card/90 border-b border-tactiq-border backdrop-blur-md">
+      <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-tactiq-card/90 border-b border-tactiq-border backdrop-blur-md gap-3">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <span className={`inline-block w-2.5 h-2.5 rounded-full ${isLiveConnected || isSimulatingLocal ? 'bg-tactiq-emerald animate-ping' : 'bg-tactiq-muted'}`} />
             <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-              {isLiveConnected ? 'Live Socket.io Stream' : isSimulatingLocal ? 'Local Simulation (10 FPS)' : 'Stream Idle'}
+              {isLiveConnected ? 'Live Socket.io Stream' : isSimulatingLocal ? 'Local Simulation (10 FPS)' : 'Stream Ready'}
             </span>
           </div>
-          <span className="text-xs text-tactiq-muted font-mono">Room: session_{sessionId}</span>
+          <span className="text-xs text-tactiq-muted font-mono hidden sm:inline">Room: session_{sessionId}</span>
+        </div>
+
+        {/* View Mode Toggle: Pitch vs Video Stream (TSK-21) */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => {
+              const nextState = !showVideoBackground;
+              setShowVideoBackground(nextState);
+              if (currentFrame) renderFrame(currentFrame, nextState);
+            }}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              showVideoBackground
+                ? 'bg-tactiq-cyan/20 text-tactiq-cyan border border-tactiq-cyan/40'
+                : 'bg-tactiq-surface text-slate-300 border border-tactiq-border hover:text-white'
+            }`}
+          >
+            {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
+            <span>{showVideoBackground ? 'YouTube Video Feed' : 'Tactical Pitch Mode'}</span>
+          </button>
         </div>
 
         {/* Entity Telemetry Counters */}
@@ -360,24 +404,64 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         </div>
       </div>
 
-      {/* 16:9 Aspect Ratio Container */}
+      {/* 16:9 Aspect Ratio Container with YouTube Embed + Transparent Canvas Overlay (TSK-21, TSK-22) */}
       <div ref={containerRef} className="relative w-full aspect-video bg-tactiq-bg flex items-center justify-center overflow-hidden">
-        {/* Fallback Tactical Video Layer or Background Pattern */}
-        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#1E293B_1px,transparent_1px)] [background-size:16px_16px]" />
+        {/* Underlying YouTube Embed Video Player (TSK-21) */}
+        {showVideoBackground && (
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            <iframe
+              className="w-full h-full scale-[1.05] opacity-80"
+              src={youtubeUrl}
+              title="Tactical Match Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
 
         {/* Absolutely positioned HTML5 Overlay Canvas */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
+          className="absolute inset-0 z-10 w-full h-full cursor-crosshair pointer-events-none"
         />
 
         {/* HUD Watermark & Timestamp */}
         <div className="absolute bottom-3 left-4 z-20 flex items-center space-x-3 pointer-events-none">
-          <div className="px-2.5 py-1 bg-black/60 border border-white/10 rounded-md backdrop-blur-md">
+          <div className="px-2.5 py-1 bg-black/70 border border-white/10 rounded-md backdrop-blur-md">
             <span className="text-[11px] font-mono text-tactiq-cyan">
               Frame: {currentFrame?.frameNumber ?? 0} | T: {((currentFrame?.timestampMs ?? 0) / 1000).toFixed(1)}s
             </span>
           </div>
+
+          {activeMoment && (
+            <div className="px-2.5 py-1 bg-tactiq-card/90 border border-tactiq-emerald/50 rounded-md backdrop-blur-md text-[11px] text-tactiq-emerald font-semibold flex items-center gap-1.5">
+              <Award size={12} />
+              <span>{activeMoment.minute}' {activeMoment.label}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Event Timeline Bar (TSK-21 / F-3.4 Event Timeline Navigation) */}
+      <div className="px-4 py-2 bg-tactiq-surface/90 border-t border-tactiq-border/80 flex items-center justify-between text-xs">
+        <span className="text-[11px] font-bold text-tactiq-muted uppercase tracking-wider hidden sm:inline">
+          Match Event Timeline:
+        </span>
+        <div className="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto">
+          {MATCH_TIMELINE_EVENTS.map((moment) => (
+            <button
+              key={moment.minute}
+              onClick={() => seekToMoment(moment)}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-md text-[11px] font-mono transition-all ${
+                activeMoment?.minute === moment.minute
+                  ? 'bg-tactiq-emerald text-tactiq-bg font-bold shadow-glow-emerald/30'
+                  : 'bg-tactiq-card border border-tactiq-border text-slate-300 hover:border-tactiq-emerald/50'
+              }`}
+            >
+              <span>{moment.minute}'</span>
+              <span className="font-sans font-semibold">{moment.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -406,7 +490,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center space-x-2 text-tactiq-muted">
+        <div className="flex items-center space-x-2 text-tactiq-muted hidden md:flex">
           <Activity size={14} className="text-tactiq-emerald" />
           <span>Real-time YOLOv8 Computer Vision Pipeline</span>
         </div>

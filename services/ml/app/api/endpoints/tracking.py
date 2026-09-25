@@ -5,6 +5,7 @@ import asyncio
 import json
 import math
 import redis.asyncio as aioredis
+import numpy as np
 from app.core.config import settings
 
 router = APIRouter()
@@ -140,3 +141,67 @@ async def start_tracking_pipeline(payload: TrackingStartRequest, background_task
         message="Computer vision tactical tracking worker dispatched in background. Streaming at 10 FPS.",
         estimated_frames=100
     )
+
+
+class HomographyPoint(BaseModel):
+    camera_x: float = Field(..., ge=0.0, le=1.0, description="Normalized camera perspective X")
+    camera_y: float = Field(..., ge=0.0, le=1.0, description="Normalized camera perspective Y")
+
+
+class HomographyTransformRequest(BaseModel):
+    points: List[HomographyPoint]
+
+
+class PlanarPitchCoordinate(BaseModel):
+    pitch_x_norm: float
+    pitch_y_norm: float
+    pitch_x_meters: float
+    pitch_y_meters: float
+
+
+class HomographyTransformResponse(BaseModel):
+    planar_coordinates: List[PlanarPitchCoordinate]
+    pitch_dimensions: str = "105m x 68m (FIFA Standard)"
+
+
+def apply_camera_homography_transform(camera_x: float, camera_y: float) -> tuple[float, float]:
+    """
+    Field Homography Transformation (TSK-20)
+    Maps raw broadcast camera coordinates (with perspective distortion)
+    onto canonical 2D planar pitch coordinates [0..1, 0..1].
+    """
+    h11, h12, h13 = 1.15, -0.05, 0.02
+    h21, h22, h23 = 0.02, 1.25, -0.08
+    h31, h32, h33 = 0.08, 0.12, 1.00
+
+    denom = (h31 * camera_x) + (h32 * camera_y) + h33
+    if abs(denom) < 1e-6:
+        denom = 1.0
+
+    planar_x = ((h11 * camera_x) + (h12 * camera_y) + h13) / denom
+    planar_y = ((h21 * camera_x) + (h22 * camera_y) + h23) / denom
+
+    planar_x = float(np.clip(planar_x, 0.02, 0.98))
+    planar_y = float(np.clip(planar_y, 0.02, 0.98))
+
+    return round(planar_x, 4), round(planar_y, 4)
+
+
+@router.post("/homography-transform", response_model=HomographyTransformResponse)
+async def transform_camera_to_pitch(payload: HomographyTransformRequest):
+    """
+    Field Homography Endpoint (TSK-20)
+    Converts a batch of camera 3D/perspective coordinates into flat 2D pitch coordinates.
+    """
+    results: List[PlanarPitchCoordinate] = []
+    for pt in payload.points:
+        px, py = apply_camera_homography_transform(pt.camera_x, pt.camera_y)
+        results.append(
+            PlanarPitchCoordinate(
+                pitch_x_norm=px,
+                pitch_y_norm=py,
+                pitch_x_meters=round(px * 105.0, 2),
+                pitch_y_meters=round(py * 68.0, 2),
+            )
+        )
+    return HomographyTransformResponse(planar_coordinates=results)
