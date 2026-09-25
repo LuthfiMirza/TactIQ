@@ -16,17 +16,17 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-tactiq-border/80 bg-tactiq-bg/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-tactiq-border bg-tactiq-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center space-x-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-tactiq-emerald to-tactiq-cyan flex items-center justify-center shadow-glow-emerald transition-transform group-hover:scale-105">
+          <div className="w-9 h-9 rounded-lg bg-tactiq-emerald flex items-center justify-center transition-transform group-hover:scale-105">
             <span className="font-extrabold text-tactiq-bg text-lg tracking-tighter">TQ</span>
           </div>
           <div className="flex flex-col">
             <span className="font-black text-lg tracking-tight text-white flex items-center gap-1.5">
               Tact<span className="text-tactiq-emerald">IQ</span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-tactiq-emerald/10 text-tactiq-emerald border border-tactiq-emerald/30">
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-tactiq-surface text-tactiq-emerald border border-tactiq-border">
                 PRO
               </span>
             </span>
@@ -47,8 +47,8 @@ export const Navbar: React.FC = () => {
                 href={item.href}
                 className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-tactiq-surface text-tactiq-emerald border border-tactiq-emerald/30 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-tactiq-surface/50'
+                    ? 'bg-tactiq-surface text-white border border-tactiq-emerald'
+                    : 'text-tactiq-muted hover:text-white hover:bg-tactiq-surface'
                 }`}
               >
                 <Icon size={15} />

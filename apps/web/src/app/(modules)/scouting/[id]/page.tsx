@@ -75,10 +75,8 @@ export default function PlayerProfilePage() {
         </Link>
       </div>
 
-      {/* Main Dossier Header */}
-      <div className="relative p-6 sm:p-8 bg-gradient-to-br from-tactiq-card via-tactiq-card to-tactiq-surface border border-tactiq-border rounded-3xl overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-tactiq-emerald/10 rounded-full blur-3xl pointer-events-none" />
-
+      {/* Main Dossier Header (Flat Solid Matte) */}
+      <div className="relative p-6 sm:p-8 bg-tactiq-card border border-tactiq-border rounded-xl">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center space-x-5">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-tactiq-surface border-2 border-tactiq-border flex-shrink-0 shadow-lg">
@@ -215,8 +213,8 @@ export default function PlayerProfilePage() {
                   onClick={() => setComparisonPlayer(item.player)}
                   className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                     isComparing
-                      ? 'bg-tactiq-surface border-tactiq-cyan shadow-glow-cyan/20'
-                      : 'bg-tactiq-surface/30 border-tactiq-border hover:border-tactiq-border/80'
+                      ? 'bg-tactiq-surface border-tactiq-sky'
+                      : 'bg-tactiq-card border-tactiq-border hover:border-tactiq-borderHover'
                   }`}
                 >
                   <div className="flex items-center space-x-3">

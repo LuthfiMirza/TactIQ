@@ -46,13 +46,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     {
       label: playerName,
       data: targetData,
-      backgroundColor: 'rgba(16, 185, 129, 0.25)', // Neon emerald fill
-      borderColor: '#10B981', // Neon emerald border
-      borderWidth: 2.5,
-      pointBackgroundColor: '#10B981',
+      backgroundColor: 'rgba(0, 223, 89, 0.18)',
+      borderColor: '#00DF59',
+      borderWidth: 2,
+      pointBackgroundColor: '#00DF59',
       pointBorderColor: '#0B0E14',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#10B981',
+      pointHoverBorderColor: '#00DF59',
       pointRadius: 4,
       pointHoverRadius: 6,
     },
@@ -72,13 +72,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     datasets.push({
       label: comparisonPlayerName,
       data: compData,
-      backgroundColor: 'rgba(6, 182, 212, 0.25)', // Cyan fill
-      borderColor: '#06B6D4', // Cyan border
+      backgroundColor: 'rgba(56, 189, 248, 0.18)',
+      borderColor: '#38BDF8',
       borderWidth: 2,
-      pointBackgroundColor: '#06B6D4',
+      pointBackgroundColor: '#38BDF8',
       pointBorderColor: '#0B0E14',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#06B6D4',
+      pointHoverBorderColor: '#38BDF8',
       pointRadius: 4,
       pointHoverRadius: 6,
     });
@@ -95,10 +95,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     scales: {
       r: {
         angleLines: {
-          color: 'rgba(255, 255, 255, 0.08)',
+          color: '#222B3D',
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.06)',
+          color: '#1C2432',
           circular: true,
         },
         pointLabels: {
@@ -111,7 +111,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
         ticks: {
           backdropColor: 'transparent',
-          color: 'rgba(148, 163, 184, 0.6)',
+          color: '#64748B',
           stepSize: 20,
           font: {
             size: 9,
@@ -137,10 +137,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
       },
       tooltip: {
-        backgroundColor: '#1E2638',
-        titleColor: '#F8FAFC',
-        bodyColor: '#38BDF8',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: '#121820',
+        titleColor: '#FFFFFF',
+        bodyColor: '#10B981',
+        borderColor: '#253142',
         borderWidth: 1,
         padding: 10,
         displayColors: true,
@@ -149,7 +149,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   };
 
   return (
-    <div className={`relative flex items-center justify-center p-3 bg-tactiq-card/80 border border-tactiq-border rounded-xl backdrop-blur-md ${className}`}>
+    <div className={`relative flex items-center justify-center p-3 bg-tactiq-card border border-tactiq-border rounded-xl ${className}`}>
       <div className="w-full max-w-[380px] h-[340px]">
         <Radar data={chartData} options={options} />
       </div>

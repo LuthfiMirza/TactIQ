@@ -13,6 +13,7 @@
     "@tactiq/shared-types": "*",
     "chart.js": "^4.4.7",
     "clsx": "^2.1.1",
+    "framer-motion": "^13.4.4",
     "lucide-react": "^0.469.0",
     "next": "^14.2.23",
     "react": "^18.3.1",

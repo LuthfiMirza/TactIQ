@@ -3,38 +3,134 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B0E14;
-  --foreground: #F8FAFC;
+  --base: #0B0E14;
+  --surface: #141A24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: #0B0E14;
-  color: #F8FAFC;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Tactical Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Scrollbar — discrete FotMob dark */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #222B3D; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #35425C; }
+
+/* Scrollbar utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-::-webkit-scrollbar-track {
-  background: #0B0E14;
+.slim-scrollbar::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+.slim-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb {
+  background: #222B3D;
+  border-radius: 4px;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #35425C;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #253046;
-  border-radius: 9999px;
+/* Selection — FotMob green tint */
+::selection {
+  background: rgba(0, 223, 89, 0.25);
+  color: #00DF59;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+/* FotMob Signature Rating Badges */
+.fm-rating-high {
+  background-color: #00DF59;
+  color: #000000;
+  font-weight: 800;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono, monospace);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(19, 25, 35, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(37, 48, 70, 0.8);
+.fm-rating-good {
+  background-color: #10B981;
+  color: #000000;
+  font-weight: 800;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono, monospace);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fm-rating-avg {
+  background-color: #F59E0B;
+  color: #000000;
+  font-weight: 800;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono, monospace);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Form indicators */
+.fm-form-w {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #00DF59;
+  color: #000000;
+  font-weight: 800;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fm-form-d {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #64748B;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fm-form-l {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #EF4444;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
