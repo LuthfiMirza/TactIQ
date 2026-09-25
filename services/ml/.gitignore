@@ -2,7 +2,6 @@
 *.pt
 *.pth
 *.onnx
-data/
-*.mp4
+data/*.mp4
 __pycache__/
 *.pyc
