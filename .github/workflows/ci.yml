@@ -1,0 +1,47 @@
+name: TactIQ Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-build:
+    name: Build & Verify Monorepo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Shared Types Contract
+        run: npm run build --workspace=packages/shared-types
+
+      - name: Build Back-End Central Gateway
+        run: npm run build --workspace=apps/api
+
+      - name: Build Front-End Next.js Dashboard
+        run: npm run build --workspace=apps/web
+
+      - name: Validate Python ML Service Syntax
+        run: |
+          python -m py_compile services/ml/app/main.py \
+            services/ml/app/api/endpoints/similarity.py \
+            services/ml/app/api/endpoints/prediction.py \
+            services/ml/app/api/endpoints/tracking.py
