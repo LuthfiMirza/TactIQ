@@ -1,0 +1,159 @@
+// TactIQ Database Schema
+// PostgreSQL 16 via Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Position {
+  GK
+  DEF
+  MID
+  FWD
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+}
+
+enum TrackingStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Team {
+  id           String    @id @default(uuid())
+  name         String
+  code         String    @unique
+  logoUrl      String
+  league       String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  players      Player[]
+  homeFixtures Fixture[] @relation("HomeTeamFixtures")
+  awayFixtures Fixture[] @relation("AwayTeamFixtures")
+  homeH2H      H2H[]     @relation("HomeTeamH2H")
+  awayH2H      H2H[]     @relation("AwayTeamH2H")
+
+  @@index([name])
+  @@index([league])
+  @@map("teams")
+}
+
+model Player {
+  id          String            @id @default(uuid())
+  teamId      String
+  name        String
+  position    Position
+  nationality String
+  age         Int
+  marketValue Float             // In Euros (e.g. 80000000)
+  photoUrl    String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  attributes  PlayerAttributes?
+
+  @@index([name])
+  @@index([position])
+  @@index([teamId])
+  @@map("players")
+}
+
+model PlayerAttributes {
+  id        String   @id @default(uuid())
+  playerId  String   @unique
+  pace      Int      // 0 - 100
+  shooting  Int      // 0 - 100
+  passing   Int      // 0 - 100
+  dribbling Int      // 0 - 100
+  defending Int      // 0 - 100
+  physical  Int      // 0 - 100
+  vision    Int      // 0 - 100
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("player_attributes")
+}
+
+model Fixture {
+  id          String      @id @default(uuid())
+  homeTeamId  String
+  awayTeamId  String
+  matchDate   DateTime
+  status      MatchStatus @default(SCHEDULED)
+  homeScore   Int?
+  awayScore   Int?
+  venue       String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  homeTeam    Team        @relation("HomeTeamFixtures", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  awayTeam    Team        @relation("AwayTeamFixtures", fields: [awayTeamId], references: [id], onDelete: Cascade)
+
+  @@index([matchDate])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@map("fixtures")
+}
+
+model H2H {
+  id            String   @id @default(uuid())
+  teamHomeId    String
+  teamAwayId    String
+  matchesPlayed Int      @default(0)
+  homeWins      Int      @default(0)
+  awayWins      Int      @default(0)
+  draws         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  homeTeam      Team     @relation("HomeTeamH2H", fields: [teamHomeId], references: [id], onDelete: Cascade)
+  awayTeam      Team     @relation("AwayTeamH2H", fields: [teamAwayId], references: [id], onDelete: Cascade)
+
+  @@unique([teamHomeId, teamAwayId])
+  @@map("h2h_records")
+}
+
+model VideoTrackingSession {
+  id              String               @id @default(uuid())
+  youtubeUrl      String
+  matchTitle      String
+  status          TrackingStatus       @default(PENDING)
+  durationSeconds Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  coordinates     TrackingCoordinate[]
+
+  @@map("video_tracking_sessions")
+}
+
+model TrackingCoordinate {
+  id          String               @id @default(uuid())
+  sessionId   String
+  timestampMs Int                  // Milliseconds into video
+  frameNumber Int                  // Frame sequence index
+  playersData Json                 // JSONB array: [{ id: number, teamSide: 'home' | 'away' | 'ball', xNorm: number, yNorm: number }]
+  createdAt   DateTime             @default(now())
+
+  session     VideoTrackingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, frameNumber])
+  @@index([sessionId, timestampMs])
+  @@map("tracking_coordinates")
+}
