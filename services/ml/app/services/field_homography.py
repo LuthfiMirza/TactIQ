@@ -165,6 +165,45 @@ class DynamicHomographyEstimator:
         if custom_h.shape == (3, 3):
             self.H = custom_h.copy()
 
+    def calibrate_from_4points(
+        self,
+        camera_points: List[Tuple[float, float]],
+        pitch_points: Optional[List[Tuple[float, float]]] = None,
+    ) -> np.ndarray:
+        """
+        [TSK-20, TSK-42 / DEF-08]
+        Direct Linear Transformation (DLT) 4-point homography estimation.
+        Calculates 3x3 homography matrix mapping 4 broadcast camera coordinates to 2D pitch coordinates.
+
+        Args:
+            camera_points: 4 (x, y) normalized camera coordinates [TL, TR, BR, BL]
+            pitch_points: Optional 4 target pitch planar coordinates [0..1, 0..1]
+        """
+        if len(camera_points) != 4:
+            raise ValueError("Exactly 4 camera coordinate points are required for planar homography.")
+
+        src = np.array(camera_points, dtype=np.float32)
+
+        if pitch_points is not None and len(pitch_points) == 4:
+            dst = np.array(pitch_points, dtype=np.float32)
+        else:
+            # Canonical standard pitch corners: TL, TR, BR, BL
+            dst = np.array([
+                [0.0, 0.0],
+                [1.0, 0.0],
+                [1.0, 1.0],
+                [0.0, 1.0],
+            ], dtype=np.float32)
+
+        H_computed = cv2.getPerspectiveTransform(src, dst)
+        if H_computed is not None:
+            if abs(H_computed[2, 2]) > 1e-6:
+                H_computed = H_computed / H_computed[2, 2]
+            self.H = H_computed.astype(np.float64)
+            return self.H
+
+        raise ValueError("Could not compute valid homography matrix from provided 4 points.")
+
     def update_with_frame(self, bgr_frame: np.ndarray) -> Dict[str, Any]:
         """
         Processes new broadcast frame, estimates camera pan/tilt/zoom via optical flow,

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
-from typing import Optional, List
-import numpy as np
+from typing import Optional, List, Dict, Any
+from app.services.match_predictor import match_predictor_engine
 
 router = APIRouter()
 
@@ -25,73 +25,76 @@ class WinProbabilities(BaseModel):
     awayWin: float
 
 
+class ExpectedGoals(BaseModel):
+    home_xg: float
+    away_xg: float
+
+
+class ScoreProbability(BaseModel):
+    score: str
+    home: int
+    away: int
+    probability: float
+
+
 class MatchPredictionResponse(BaseModel):
     fixtureId: str
     winProbabilities: WinProbabilities
     predictedScore: str
     insights: List[str]
+    expectedGoals: Optional[ExpectedGoals] = None
+    topScores: Optional[List[ScoreProbability]] = None
+    model: Optional[str] = "RandomForest + Bivariate Poisson"
 
 
 @router.post("/match-prediction", response_model=MatchPredictionResponse)
 async def predict_match_outcome(payload: MatchPredictRequest):
     """
-    Accepts home & away team statistics, computes win/draw/away probabilities
-    guaranteed to sum up to exactly 100.0%, and predicts final scoreline.
+    Accepts home & away team statistics, computes win/draw/away probabilities using a trained
+    RandomForestClassifier (TSK-14), and predicts final scoreline via Bivariate Poisson distribution (TSK-41 / DEF-07).
+    Guaranteed win + draw + away probabilities sum up to exactly 100.0%.
     """
     home = payload.homeTeamStats or TeamStats(recentFormPoints=11, goalsScoredAvg=2.2, goalsConcededAvg=0.9, possessionAvg=58.0)
     away = payload.awayTeamStats or TeamStats(recentFormPoints=10, goalsScoredAvg=1.9, goalsConcededAvg=1.1, possessionAvg=52.0)
 
-    # Tactical power ratings
-    # Home pitch advantage baseline = +1.8 rating points
-    home_rating = (home.recentFormPoints * 1.5) + (home.goalsScoredAvg * 3.0) - (home.goalsConcededAvg * 2.0) + (home.possessionAvg * 0.1) + 1.8
-    away_rating = (away.recentFormPoints * 1.5) + (away.goalsScoredAvg * 3.0) - (away.goalsConcededAvg * 2.0) + (away.possessionAvg * 0.1)
-
-    # Base expectations
-    diff = home_rating - away_rating
-
-    # Sigmoid logistic probability modeling
-    exp_factor = 1.0 / (1.0 + np.exp(-diff * 0.12))
-    
-    # Draw propensity is higher when teams are evenly matched
-    draw_base = max(18.0, 30.0 - abs(diff) * 1.2)
-    remaining = 100.0 - draw_base
-
-    home_win_raw = remaining * exp_factor
-    away_win_raw = remaining * (1.0 - exp_factor)
-
-    # Normalize to strictly ensure sum == 100.0%
-    total = home_win_raw + draw_base + away_win_raw
-    home_win = round(float((home_win_raw / total) * 100.0), 1)
-    away_win = round(float((away_win_raw / total) * 100.0), 1)
-    draw = round(float(100.0 - home_win - away_win), 1)
-
-    # Predicted Score Heuristic
-    if home_win >= 60.0:
-        predicted_score = "3 - 1"
-    elif home_win >= 48.0:
-        predicted_score = "2 - 1"
-    elif away_win >= 55.0:
-        predicted_score = "0 - 2"
-    elif away_win >= 45.0:
-        predicted_score = "1 - 2"
-    elif abs(home_win - away_win) <= 8.0:
-        predicted_score = "1 - 1"
-    else:
-        predicted_score = "2 - 1"
-
-    insights = [
-        f"TactIQ ML Model: Home advantage gives +{round(1.8 / home_rating * 100, 1)}% attacking momentum.",
-        f"Form differential: {home.recentFormPoints} pts vs {away.recentFormPoints} pts in previous 5 fixtures.",
-        f"Expected possession contest: {home.possessionAvg}% home control vs {away.possessionAvg}% away counter-press.",
-    ]
+    result = match_predictor_engine.predict_match(
+        fixture_id=payload.fixtureId,
+        home_form=home.recentFormPoints,
+        away_form=away.recentFormPoints,
+        home_scored=home.goalsScoredAvg,
+        away_scored=away.goalsScoredAvg,
+        home_conceded=home.goalsConcededAvg,
+        away_conceded=away.goalsConcededAvg,
+        home_poss=home.possessionAvg,
+        away_poss=away.possessionAvg,
+    )
 
     return MatchPredictionResponse(
-        fixtureId=payload.fixtureId,
-        winProbabilities=WinProbabilities(
-            homeWin=home_win,
-            draw=draw,
-            awayWin=away_win
-        ),
-        predictedScore=predicted_score,
-        insights=insights
+        fixtureId=result["fixtureId"],
+        winProbabilities=WinProbabilities(**result["winProbabilities"]),
+        predictedScore=result["predictedScore"],
+        insights=result["insights"],
+        expectedGoals=ExpectedGoals(**result["expectedGoals"]),
+        topScores=[ScoreProbability(**s) for s in result["topScores"]],
+        model=result["model"],
     )
+
+
+@router.get("/match-prediction/model-info")
+async def get_match_predictor_model_info():
+    """
+    Returns diagnostics and metadata on the trained Random Forest and Bivariate Poisson models (TSK-14).
+    """
+    return {
+        "status": "OPERATIONAL",
+        "modelType": "RandomForestClassifier with Sigmoid Probability Calibration",
+        "scorelineDistribution": "Dixon-Coles Bivariate Poisson",
+        "isTrained": match_predictor_engine.is_trained,
+        "features": match_predictor_engine.feature_names,
+        "classes": match_predictor_engine.classes_,
+        "tacticalParameters": {
+            "dixonColesRho": -0.10,
+            "leagueBaselineHomeXg": 1.45,
+            "leagueBaselineAwayXg": 1.15,
+        }
+    }

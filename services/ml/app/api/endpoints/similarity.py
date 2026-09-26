@@ -5,6 +5,7 @@ import numpy as np
 import os
 import json
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
 
 router = APIRouter()
 
@@ -37,6 +38,7 @@ class SimilarityRequest(BaseModel):
     candidatePool: Optional[List[PlayerDTO]] = None
     filterPosition: Optional[bool] = Field(False, description="Whether to restrict candidate comparisons to same position")
     limit: Optional[int] = Field(5, ge=1, le=50, description="Top K similar players to return")
+    algorithm: Optional[str] = Field("blended", description="Algorithm: 'blended' (60% cosine + 40% euclidean), 'cosine', 'knn', or 'euclidean'")
 
 
 class SimilarPlayerItem(BaseModel):
@@ -48,6 +50,7 @@ class SimilarityResponse(BaseModel):
     targetPlayer: PlayerDTO
     similarPlayers: List[SimilarPlayerItem]
     datasetPoolSize: int = 500
+    algorithmUsed: str = "blended"
 
 
 # Fallback benchmark reference players if dataset file is absent
@@ -180,17 +183,36 @@ async def calculate_player_similarity(payload: SimilarityRequest):
     # Vectorized computation across entire dataset in parallel
     cand_matrix = np.array([extract_vector(c.attributes) for c in candidates], dtype=np.float32)
 
-    # Cosine Similarity: shape (1, N)
-    cos_sims = cosine_similarity(target_vec, cand_matrix)[0]
+    # [DEF-05] Zero-vector safe handling preventing division by zero / NaN
+    target_norm = float(np.linalg.norm(target_vec))
+    cand_norms = np.linalg.norm(cand_matrix, axis=1)
+
+    cos_sims = np.zeros(len(candidates), dtype=np.float32)
+    if target_norm > 1e-6:
+        valid_cands = cand_norms > 1e-6
+        if np.any(valid_cands):
+            valid_sims = cosine_similarity(target_vec, cand_matrix[valid_cands])[0]
+            cos_sims[valid_cands] = np.nan_to_num(valid_sims, nan=0.0, posinf=1.0, neginf=0.0)
 
     # Euclidean proximity: shape (N,)
     euc_dists = np.linalg.norm(cand_matrix - target_vec, axis=1)
     max_dist = float(np.sqrt(7 * (100.0 ** 2)))
-    euc_sims = 1.0 - (euc_dists / max_dist)
+    euc_sims = np.clip(1.0 - (euc_dists / max_dist), 0.0, 1.0)
 
-    # Blend: 60% cosine similarity, 40% magnitude proximity
-    blended = (0.60 * cos_sims) + (0.40 * euc_sims)
-    percentages = np.round(np.clip(blended * 100.0, 45.0, 99.4), 1)
+    # Algorithm selector: blended, cosine, knn / euclidean
+    algo = (payload.algorithm or "blended").lower().strip()
+    if algo == "cosine":
+        score_metric = np.clip(cos_sims, 0.0, 1.0)
+    elif algo in ("knn", "euclidean"):
+        # KNN / Normalized Euclidean proximity
+        score_metric = euc_sims
+    else:
+        # Default blended (TSK-08): 60% cosine similarity, 40% magnitude proximity
+        algo = "blended"
+        score_metric = (0.60 * np.clip(cos_sims, 0.0, 1.0)) + (0.40 * euc_sims)
+
+    # [DEF-05] Remove artificial clipping 45.0 - 99.4%, scale naturally to [0.0, 100.0]
+    percentages = np.round(np.clip(score_metric * 100.0, 0.0, 100.0), 1)
 
     limit = payload.limit or 5
     # Argsort descending
@@ -208,7 +230,8 @@ async def calculate_player_similarity(payload: SimilarityRequest):
     return SimilarityResponse(
         targetPlayer=target,
         similarPlayers=results,
-        datasetPoolSize=len(pool)
+        datasetPoolSize=len(pool),
+        algorithmUsed=algo
     )
 
 

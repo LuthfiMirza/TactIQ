@@ -12,8 +12,12 @@ Benchmarks:
 
 import time
 import math
+import sys
 import numpy as np
 from typing import Dict, Any, List
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 def compute_cosine_similarity(v1: List[float], v2: List[float]) -> float:
     a = np.array(v1, dtype=np.float64)

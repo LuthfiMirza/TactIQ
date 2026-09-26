@@ -357,6 +357,69 @@ async def transform_camera_to_pitch(payload: HomographyTransformRequest):
     )
 
 
+class Point2D(BaseModel):
+    x: float = Field(..., ge=0.0, le=1.0)
+    y: float = Field(..., ge=0.0, le=1.0)
+
+
+class Calibrate4PointsRequest(BaseModel):
+    camera_points: List[Point2D] = Field(
+        ...,
+        min_length=4,
+        max_length=4,
+        description="4 normalized camera coordinates in order [Top-Left, Top-Right, Bottom-Right, Bottom-Left]"
+    )
+    pitch_points: Optional[List[Point2D]] = Field(
+        None,
+        description="Optional 4 target pitch canonical coordinates [0..1, 0..1]. Defaults to standard field rectangle."
+    )
+
+
+class Calibrate4PointsResponse(BaseModel):
+    status: str
+    message: str
+    homography_matrix: List[List[float]]
+    reprojection_error: float
+    is_active: bool
+
+
+@router.post("/calibrate-homography-4points", response_model=Calibrate4PointsResponse)
+async def calibrate_homography_4points_endpoint(payload: Calibrate4PointsRequest):
+    """
+    [TSK-20, TSK-42 / DEF-08]
+    Direct 4-point homography estimation endpoint for broadcast camera perspectives.
+    Calculates 3x3 homography matrix via Direct Linear Transformation and updates active engine.
+    """
+    if len(payload.camera_points) != 4:
+        raise HTTPException(status_code=400, detail="Exactly 4 camera coordinate points are required [TL, TR, BR, BL].")
+
+    cam_pts = [(pt.x, pt.y) for pt in payload.camera_points]
+    pitch_pts = [(pt.x, pt.y) for pt in payload.pitch_points] if payload.pitch_points else None
+
+    try:
+        new_H = adaptive_homography_engine.calibrate_from_4points(cam_pts, pitch_pts)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Homography calibration failed: {exc}")
+
+    # Evaluate reprojection error across calibration points
+    target_pitch = pitch_pts or [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+    errors = []
+    for (cx, cy), (tx, ty) in zip(cam_pts, target_pitch):
+        px, py = adaptive_homography_engine.transform_camera_to_pitch(cx, cy)
+        dist = math.hypot(px - tx, py - ty)
+        errors.append(dist)
+    mean_err = float(np.mean(errors))
+
+    h_matrix = [[round(float(v), 5) for v in row] for row in new_H]
+    return Calibrate4PointsResponse(
+        status="SUCCESS",
+        message="4-point broadcast perspective homography calibrated successfully.",
+        homography_matrix=h_matrix,
+        reprojection_error=round(mean_err, 5),
+        is_active=True,
+    )
+
+
 class FieldLineDetectionRequest(BaseModel):
     video_path: Optional[str] = Field("data/sample_crossing.mp4", description="Path to MP4 video")
     frame_index: Optional[int] = Field(0, description="Frame index to analyze")
