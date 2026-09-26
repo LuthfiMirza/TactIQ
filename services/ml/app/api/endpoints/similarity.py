@@ -21,10 +21,10 @@ class PlayerRadarMetrics(BaseModel):
 
 
 class PlayerDTO(BaseModel):
-    id: str
+    id: Optional[str] = "custom-player"
     teamId: Optional[str] = None
     name: str
-    position: str
+    position: Optional[str] = "MID"
     nationality: Optional[str] = "Unknown"
     age: Optional[int] = 25
     marketValue: Optional[float] = 50000000.0
@@ -164,8 +164,40 @@ async def calculate_player_similarity(payload: SimilarityRequest):
     and returns top similar players using vectorized high-dimensional cosine & Euclidean similarity.
     """
     target = payload.targetPlayer
+
+    # Auto-resolve player attributes & metadata from 550+ database if attributes are omitted
     if not target.attributes:
-        raise HTTPException(status_code=400, detail="Target player attributes are required for similarity calculation.")
+        target_name_clean = target.name.strip().lower()
+        matched = None
+
+        # 1. Try exact ID match
+        if target.id and target.id != "custom-player":
+            for p in EXTENDED_PLAYER_POOL:
+                if p.id.lower() == target.id.lower():
+                    matched = p
+                    break
+
+        # 2. Try exact Name match
+        if not matched and target_name_clean:
+            for p in EXTENDED_PLAYER_POOL:
+                if p.name.strip().lower() == target_name_clean:
+                    matched = p
+                    break
+
+        # 3. Try substring Name match
+        if not matched and target_name_clean and len(target_name_clean) >= 3:
+            for p in EXTENDED_PLAYER_POOL:
+                if target_name_clean in p.name.lower():
+                    matched = p
+                    break
+
+        if matched:
+            target = matched
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Player '{target.name}' not found in 550+ database. Provide radar attributes or use an existing player (e.g. 'Bukayo Saka', 'Rodri', 'Erling Haaland', 'Declan Rice')."
+            )
 
     target_vec = extract_vector(target.attributes).reshape(1, -1)
 
