@@ -375,44 +375,46 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   return (
     <div className={`relative flex flex-col w-full bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-xs transition-colors ${className}`}>
       {/* Top Stream Status Header with Club Matchup */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200/80 dark:border-[#27272A] gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200/80 dark:border-[#27272A] gap-2">
         {/* Matchup & Status */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 text-[10px] font-mono shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 text-[10px] font-mono shadow-xs shrink-0">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span className="font-semibold">LIVE CV STREAM</span>
+            <span className="font-semibold hidden sm:inline">LIVE CV STREAM</span>
+            <span className="font-semibold sm:hidden">LIVE</span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white font-mono">
-            <span className="px-1.5 py-0.5 rounded bg-[#EF0107] text-white text-[10px]">ARS</span>
-            <span>2 — 1</span>
-            <span className="px-1.5 py-0.5 rounded bg-[#6CABDD] text-white text-[10px]">MCI</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white font-mono shrink-0">
+            <span className="px-1.5 py-0.5 rounded bg-[#DA291C] text-white text-[9px] sm:text-[10px]">MUN</span>
+            <span className="tabular-nums">7 — 0</span>
+            <span className="px-1.5 py-0.5 rounded bg-[#6CABDD] text-white text-[9px] sm:text-[10px]">MCI</span>
           </div>
         </div>
 
         {/* View Mode Toggle: Pitch vs Video Stream */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => {
               const nextState = !showVideoBackground;
               setShowVideoBackground(nextState);
               if (currentFrame) renderFrame(currentFrame, nextState);
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[32px] ${
               showVideoBackground
                 ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                 : 'bg-white dark:bg-[#121215] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#27272A] hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
             }`}
           >
             {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
-            <span>{showVideoBackground ? 'High-Cam Broadcast' : '2D Pitch Plane'}</span>
+            <span className="hidden sm:inline">{showVideoBackground ? 'High-Cam Broadcast' : '2D Pitch Plane'}</span>
+            <span className="sm:hidden">{showVideoBackground ? 'High-Cam' : '2D Plane'}</span>
           </button>
 
           {/* Entity Telemetry Counters */}
-          <div className="hidden sm:flex items-center gap-3 text-xs font-mono">
+          <div className="hidden md:flex items-center gap-3 text-xs font-mono">
             <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
-              <span className="w-2 h-2 rounded-full bg-[#EF0107]" />
-              <span>ARS: {entityStats.homeCount}</span>
+              <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
+              <span>MUN: {entityStats.homeCount}</span>
             </div>
             <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
               <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />

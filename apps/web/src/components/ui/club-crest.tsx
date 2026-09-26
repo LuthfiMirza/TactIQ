@@ -191,9 +191,29 @@ export const CLUB_REGISTRY: Record<string, ClubInfo> = {
     logoUrl: 'https://media.api-sports.io/football/teams/79.png',
     color: '#E01E12',
   },
+  PSG: {
+    name: 'Paris Saint-Germain',
+    short: 'PSG',
+    logoUrl: 'https://media.api-sports.io/football/teams/85.png',
+    color: '#004170',
+  },
+  BVB: {
+    name: 'Borussia Dortmund',
+    short: 'BVB',
+    logoUrl: 'https://media.api-sports.io/football/teams/165.png',
+    color: '#FDE100',
+  },
 };
 
 export const CLUB_ALIASES: Record<string, string> = {
+  'PSG': 'PSG',
+  'PARIS': 'PSG',
+  'PARIS SG': 'PSG',
+  'PARIS SAINT-GERMAIN': 'PSG',
+  'PARIS SAINT GERMAIN': 'PSG',
+  'BVB': 'BVB',
+  'DORTMUND': 'BVB',
+  'BORUSSIA DORTMUND': 'BVB',
   'MAN CITY': 'MCI',
   'MANCHESTER CITY': 'MCI',
   'MAN UTD': 'MUN',
@@ -313,7 +333,7 @@ export function ClubCrest({
         height={size}
         loading="lazy"
         onError={() => setHasError(true)}
-        className={`object-contain shrink-0 drop-shadow-2xs select-none ${className}`}
+        className={`object-contain shrink-0 drop-shadow-2xs select-none transition-opacity duration-150 ${className}`}
         style={hasCustomSizing ? undefined : { width: `${size}px`, height: `${size}px` }}
       />
     );
@@ -431,7 +451,7 @@ export function LeagueLogo({
         height={size}
         loading="lazy"
         onError={() => setUseFallback(true)}
-        className="w-full h-full object-contain filter drop-shadow-2xs dark:hidden"
+        className="w-full h-full object-contain filter drop-shadow-2xs transition-opacity duration-150 dark:hidden"
       />
       <img
         src={fotmobDarkUrl}
@@ -440,7 +460,7 @@ export function LeagueLogo({
         height={size}
         loading="lazy"
         onError={() => setUseFallback(true)}
-        className="w-full h-full object-contain filter drop-shadow-2xs hidden dark:block"
+        className="w-full h-full object-contain filter drop-shadow-2xs transition-opacity duration-150 hidden dark:block"
       />
     </span>
   );

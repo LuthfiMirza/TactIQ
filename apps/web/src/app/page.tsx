@@ -60,26 +60,26 @@ const MATCHES: Match[] = [
     league: 'Premier League',
     leagueCountry: 'England',
     round: 'Gameweek 8',
-    home: 'Arsenal',
-    homeCode: 'ARS',
-    homeColor: '#EF0107',
+    home: 'Man United',
+    homeCode: 'MUN',
+    homeColor: '#DA291C',
     away: 'Man City',
     awayCode: 'MCI',
     awayColor: '#6CABDD',
-    homeScore: 2,
-    awayScore: 1,
-    xgHome: 2.31,
-    xgAway: 1.14,
+    homeScore: 7,
+    awayScore: 0,
+    xgHome: 4.62,
+    xgAway: 0.38,
     status: 'LIVE',
-    minute: "68'",
+    minute: "88'",
     scorers: {
-      home: ["B. Saka 34'", "K. Havertz 62'"],
-      away: ["E. Haaland 19'"],
+      home: ["B. Fernandes 14' (P), 78'", "M. Rashford 28', 53'", "R. Højlund 41'", "A. Garnacho 65'", "K. Mainoo 88'"],
+      away: [],
     },
     highlightPlayer: {
-      name: 'B. Saka',
-      rating: 8.6,
-      team: 'Arsenal',
+      name: 'B. Fernandes',
+      rating: 9.9,
+      team: 'Man United',
     },
   },
   {
@@ -429,21 +429,24 @@ export default function HomePage() {
 
             {/* 2. Featured Match Hero Card */}
             {liveFeaturedMatch && (
-              <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+              <div className="relative bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+                {/* Ambient Team Glow */}
+                <div className="absolute -top-16 -left-16 w-48 h-48 bg-red-500/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-16 -right-16 w-48 h-48 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
                 
                 {/* Match Header */}
-                <div className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#16161A] border-b border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
+                <div className="relative px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#16161A] border-b border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <LeagueLogo league={liveFeaturedMatch.league} size={15} />
                     <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                       {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
                     </span>
                   </div>
-                  <span className="text-slate-500 dark:text-zinc-400 text-[11px] font-medium hidden sm:inline">Emirates Stadium</span>
+                  <span className="text-slate-500 dark:text-zinc-400 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
                 </div>
 
                 {/* Scoreboard Block */}
-                <div className="p-3.5 sm:p-5">
+                <div className="relative p-3.5 sm:p-5">
                   
                   {/* Row 1: Symmetrical Clubs & Score */}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
@@ -464,9 +467,15 @@ export default function HomePage() {
                         <span className="text-slate-300 dark:text-slate-600 font-normal text-xl sm:text-3xl">-</span>
                         <span>{liveFeaturedMatch.awayScore}</span>
                       </div>
-                      <span className="text-[11px] sm:text-[13px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
-                        {liveFeaturedMatch.minute} Live
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                        </span>
+                        <span className="text-[11px] sm:text-[13px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          {liveFeaturedMatch.minute} Live
+                        </span>
+                      </div>
                     </div>
 
                     {/* Away Team Column */}
@@ -504,18 +513,27 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Minimal xG strip + CTA */}
-                  <div className="mt-3 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-[#27272A] flex items-center justify-between">
-                    <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 tabular-nums">
-                      xG {liveFeaturedMatch.xgHome} — {liveFeaturedMatch.xgAway}
-                    </span>
-                    <Link
-                      href="/match-center"
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:underline transition-colors"
-                    >
-                      <span>Match Center</span>
-                      <ArrowRight size={11} />
-                    </Link>
+                  {/* xG Momentum Bar + CTA */}
+                  <div className="mt-3 sm:mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-[11px] font-mono">
+                        <span className="font-bold text-red-600 dark:text-red-400">xG {liveFeaturedMatch.xgHome}</span>
+                        <span className="text-slate-300 dark:text-zinc-600">—</span>
+                        <span className="font-bold text-sky-600 dark:text-sky-400">xG {liveFeaturedMatch.xgAway}</span>
+                      </div>
+                      <Link
+                        href="/match-center"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:text-tactiq-green dark:hover:text-tactiq-green transition-colors"
+                      >
+                        <span>Match Center</span>
+                        <ArrowRight size={11} />
+                      </Link>
+                    </div>
+                    {/* Dual Color xG Bar */}
+                    <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800 gap-0.5">
+                      <div className="h-full bg-[#EF0107] rounded-full transition-all duration-300" style={{ width: '58%' }} />
+                      <div className="h-full bg-[#6CABDD] rounded-full transition-all duration-300" style={{ width: '42%' }} />
+                    </div>
                   </div>
                 </div>
 

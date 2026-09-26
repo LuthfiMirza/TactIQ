@@ -11,9 +11,9 @@ interface TacticalMinimapProps {
   className?: string;
 }
 
-// ─── Default Tactical Formation Entities (ARS 3-2-4-1 vs MCI 4-4-2) ──────
+// ─── Default Tactical Formation Entities (MUN 3-2-4-1 vs MCI 4-4-2) ──────
 const DEFAULT_FORMATION_ENTITIES: TrackingEntity[] = [
-  // Arsenal (Home - Red)
+  // Man United (Home - Red)
   { id: 1, team: 'home', x: 0.08, y: 0.50, jerseyNumber: 1, speedKmh: 4.2 },
   { id: 4, team: 'home', x: 0.22, y: 0.24, jerseyNumber: 4, speedKmh: 12.1 },
   { id: 2, team: 'home', x: 0.20, y: 0.50, jerseyNumber: 2, speedKmh: 14.5 },
@@ -199,7 +199,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         ctx.setLineDash([]);
       };
 
-      // Arsenal (Home) Hull: Crimson Outline Only
+      // Man United (Home) Hull: Crimson Outline Only
       drawHull(homePlayers, 'rgba(239, 1, 7, 0.6)');
       // Man City (Away) Hull: Sky Blue Outline Only
       drawHull(awayPlayers, 'rgba(108, 171, 221, 0.6)');
@@ -312,8 +312,8 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       {/* Phase Indicator */}
       <div className="flex items-center justify-between text-[10px] font-mono bg-slate-50 dark:bg-[#18181C] p-2 rounded-lg border border-slate-200/80 dark:border-[#27272A]">
         <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
-          <span className="w-2 h-2 rounded-full bg-[#EF0107]" />
-          <span className="font-bold">ARS: 3-2-4-1 Build-up</span>
+          <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
+          <span className="font-bold">MUN: 3-2-4-1 Build-up</span>
         </div>
         <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
           <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />
@@ -394,8 +394,8 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       {/* Legend */}
       <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#27272A]">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#EF0107]" />
-          <span>Arsenal (11)</span>
+          <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
+          <span>Man United (11)</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />

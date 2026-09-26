@@ -114,6 +114,7 @@ export function Navbar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={true}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                           active
                             ? 'bg-slate-100 dark:bg-[#202026] text-slate-900 dark:text-white font-bold shadow-xs'
@@ -154,27 +155,37 @@ export function Navbar() {
                   <Search size={16} />
                 </button>
 
-                {/* Dark / Light Mode Switcher */}
-                {mounted && (
-                  <button
-                    onClick={toggleTheme}
-                    aria-label="Toggle dark mode"
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#27272A] bg-slate-50 dark:bg-[#18181C] hover:bg-slate-100 dark:hover:bg-[#222228] text-slate-700 dark:text-zinc-300 text-xs font-mono font-medium transition-all shadow-xs"
-                    title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  >
-                    {isDarkMode ? (
-                      <>
-                        <Sun size={14} className="text-amber-400" />
-                        <span className="hidden sm:inline text-[11px]">Light</span>
-                      </>
-                    ) : (
-                      <>
-                        <Moon size={14} className="text-slate-600" />
-                        <span className="hidden sm:inline text-[11px]">Dark</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                {/* Dark / Light Mode Switcher — Zero Layout Shift & Smooth Morphing */}
+                <button
+                  onClick={toggleTheme}
+                  aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200 dark:border-[#27272A] bg-slate-50 dark:bg-[#18181C] hover:bg-slate-100 dark:hover:bg-[#222228] active:scale-90 flex items-center justify-center text-slate-700 dark:text-zinc-300 transition-all shadow-xs overflow-hidden group shrink-0"
+                  title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {/* Sun Icon */}
+                  <Sun
+                    size={17}
+                    className={`absolute transition-all duration-300 ease-out ${
+                      mounted
+                        ? isDarkMode
+                          ? 'rotate-0 scale-100 opacity-100 text-amber-400 group-hover:rotate-45 group-hover:text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                          : 'rotate-90 scale-0 opacity-0 pointer-events-none'
+                        : 'hidden dark:block dark:rotate-0 dark:scale-100 text-amber-400'
+                    }`}
+                  />
+
+                  {/* Moon Icon */}
+                  <Moon
+                    size={17}
+                    className={`absolute transition-all duration-300 ease-out ${
+                      mounted
+                        ? isDarkMode
+                          ? '-rotate-90 scale-0 opacity-0 pointer-events-none'
+                          : 'rotate-0 scale-100 opacity-100 text-slate-700 group-hover:-rotate-12 group-hover:text-slate-900 drop-shadow-[0_0_8px_rgba(15,23,42,0.15)]'
+                        : 'block dark:hidden rotate-0 scale-100 text-slate-700'
+                    }`}
+                  />
+                </button>
               </div>
             </>
           )}
@@ -195,6 +206,7 @@ export function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`relative flex flex-col items-center justify-center py-1 min-h-[48px] rounded-lg transition-transform active:scale-95 ${
                   active
                     ? 'text-slate-950 dark:text-white'

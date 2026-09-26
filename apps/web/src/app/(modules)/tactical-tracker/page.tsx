@@ -7,25 +7,22 @@ import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-cres
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
 import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
 
-const ROSTER_MAP: Record<number, { name: string; pos: string; dist: string }> = {
-  1: { name: 'David Raya', pos: 'GK', dist: '4.2 km' },
-  2: { name: 'William Saliba', pos: 'CB', dist: '7.8 km' },
-  6: { name: 'Gabriel Magalhães', pos: 'CB', dist: '7.5 km' },
-  4: { name: 'Ben White', pos: 'RB', dist: '8.4 km' },
-  41: { name: 'Declan Rice', pos: 'DM', dist: '10.1 km' },
-  8: { name: 'Martin Ødegaard', pos: 'AM', dist: '9.8 km' },
-  7: { name: 'Bukayo Saka', pos: 'RW', dist: '9.2 km' },
-  11: { name: 'Gabriel Martinelli', pos: 'LW', dist: '8.9 km' },
-  29: { name: 'Kai Havertz', pos: 'CF', dist: '9.4 km' },
-  31: { name: 'Ederson Moraes', pos: 'GK', dist: '3.9 km' },
-  3: { name: 'Rúben Dias', pos: 'CB', dist: '7.9 km' },
-  25: { name: 'Manuel Akanji', pos: 'CB', dist: '7.7 km' },
-  24: { name: 'Joško Gvardiol', pos: 'LB', dist: '8.6 km' },
-  16: { name: 'Rodri Cascante', pos: 'DM', dist: '10.4 km' },
-  17: { name: 'Kevin De Bruyne', pos: 'AM', dist: '8.8 km' },
-  20: { name: 'Bernardo Silva', pos: 'RW', dist: '10.2 km' },
-  47: { name: 'Phil Foden', pos: 'LW', dist: '9.1 km' },
-  9: { name: 'Erling Haaland', pos: 'ST', dist: '7.4 km' },
+// keyed by `{team}_{jerseyNumber}` to avoid cross-team collisions
+const ROSTER_MAP: Record<string, { name: string; pos: string; dist: string }> = {
+  // Man United (home) — matches simulation nums: 1,2,3,4,16,9
+  'home_1': { name: 'André Onana', pos: 'GK', dist: '4.1 km' },
+  'home_2': { name: 'Victor Lindelöf', pos: 'CB', dist: '7.5 km' },
+  'home_3': { name: 'Harry Maguire', pos: 'CB', dist: '7.8 km' },
+  'home_4': { name: 'Matthijs de Ligt', pos: 'CB', dist: '7.6 km' },
+  'home_16': { name: 'Casemiro', pos: 'DM', dist: '10.3 km' },
+  'home_9': { name: 'Rasmus Højlund', pos: 'CF', dist: '8.8 km' },
+  // Man City (away) — matches simulation nums: 22,2,6,4,8,7
+  'away_22': { name: 'Ederson Moraes', pos: 'GK', dist: '3.9 km' },
+  'away_2': { name: 'Kyle Walker', pos: 'RB', dist: '8.9 km' },
+  'away_6': { name: 'Nathan Aké', pos: 'CB', dist: '7.7 km' },
+  'away_4': { name: 'Manuel Akanji', pos: 'CB', dist: '7.9 km' },
+  'away_8': { name: 'Mateo Kovačić', pos: 'CM', dist: '10.1 km' },
+  'away_7': { name: 'Kevin De Bruyne', pos: 'AM', dist: '8.8 km' },
 };
 
 export default function TacticalTrackerPage() {
@@ -78,45 +75,50 @@ export default function TacticalTrackerPage() {
   });
 
   return (
-    <div className="w-full flex flex-col gap-6 pb-16">
+    <div className="w-full flex flex-col gap-5 sm:gap-6 pb-24 sm:pb-16">
       
       {/* ── Top Match Pass Header (Matchday Banner) ── */}
-      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-6 lg:p-7 shadow-xs overflow-hidden transition-colors">
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 lg:p-6 shadow-xs overflow-hidden transition-colors">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
           {/* Match & Room Badge */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2.5">
-              <ClubCrest code="ARS" size={44} className="drop-shadow-xs" />
-              <div className="flex flex-col items-center px-1.5 sm:px-2">
-                <span className="font-mono font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight tabular-nums">2 — 1</span>
-                <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 font-bold whitespace-nowrap">68&apos; LIVE</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+            {/* Flat Scorecard (No nested rounded card background) */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                <ClubCrest code="MUN" size={36} className="drop-shadow-xs" />
               </div>
-              <ClubCrest code="MCI" size={44} className="drop-shadow-xs" />
+              <div className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] px-1 text-center">
+                <span className="font-mono font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight tabular-nums">7 — 0</span>
+                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">88&apos; LIVE</span>
+              </div>
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                <ClubCrest code="MCI" size={40} className="drop-shadow-xs" />
+              </div>
             </div>
 
-            <div className="sm:border-l sm:border-slate-200 sm:dark:border-[#27272A] sm:pl-4">
+            <div className="sm:border-l sm:border-slate-200 sm:dark:border-[#27272A] sm:pl-5">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
                 <span className="text-[10px] font-mono uppercase tracking-wider text-slate-700 dark:text-zinc-300 font-bold">
                   2D Optical Radar
                 </span>
               </div>
-              <h1 className="font-extrabold text-lg sm:text-xl lg:text-2xl text-slate-900 dark:text-white tracking-tight mt-0.5">
+              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-white tracking-tight mt-0.5">
                 Tactical Tracker · Live Radar
               </h1>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                <LeagueLogo league="Premier League" size={14} />
-                <span>Emirates Stadium · Premier League GW08</span>
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                <LeagueLogo league="Premier League" size={13} />
+                <span>Old Trafford · Premier League GW08</span>
               </div>
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 pt-1 md:pt-0">
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
               <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
@@ -189,8 +191,8 @@ export default function TacticalTrackerPage() {
                     : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <ClubCrest code="ARS" size={13} />
-                <span>ARS (11)</span>
+                <ClubCrest code="MUN" size={13} />
+                <span>MUN (11)</span>
               </button>
               <button
                 onClick={() => setFilterTeam('away')}
@@ -223,8 +225,9 @@ export default function TacticalTrackerPage() {
                   const isBall = entity.team === 'ball';
                   const isHome = entity.team === 'home';
                   const jNumber = entity.jerseyNumber || entity.id;
-                  const rosterInfo = ROSTER_MAP[jNumber] || {
-                    name: isHome ? `Arsenal Player #${jNumber}` : `Man City Player #${jNumber}`,
+                  const rosterKey = `${entity.team}_${jNumber}`;
+                  const rosterInfo = ROSTER_MAP[rosterKey] || {
+                    name: isHome ? `Man United #${jNumber}` : `Man City #${jNumber}`,
                     pos: isHome ? 'MID' : 'FWD',
                     dist: '8.4 km',
                   };
@@ -250,7 +253,7 @@ export default function TacticalTrackerPage() {
                               isBall
                                 ? 'bg-gradient-to-br from-amber-400 to-amber-600'
                                 : isHome
-                                ? 'bg-gradient-to-br from-[#EF0107] to-[#BA0C2F]'
+                                ? 'bg-gradient-to-br from-[#DA291C] to-[#9B1B1B]'
                                 : 'bg-gradient-to-br from-[#6CABDD] to-[#458BB8]'
                             }`}
                           >
@@ -261,7 +264,7 @@ export default function TacticalTrackerPage() {
                               {isBall ? 'Nike Flight Match Ball' : rosterInfo.name}
                             </span>
                             <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">
-                              {isBall ? 'Pitch Center' : `${isHome ? 'Arsenal' : 'Man City'} · ${rosterInfo.pos}`}
+                              {isBall ? 'Pitch Center' : `${isHome ? 'Man United' : 'Man City'} · ${rosterInfo.pos}`}
                             </span>
                           </div>
                         </div>
@@ -287,7 +290,7 @@ export default function TacticalTrackerPage() {
                                 : speed > 26
                                 ? 'bg-amber-500'
                                 : isHome
-                                ? 'bg-[#EF0107]'
+                                ? 'bg-[#DA291C]'
                                 : 'bg-[#6CABDD]'
                             }`}
                             style={{ width: `${speedPercent}%` }}

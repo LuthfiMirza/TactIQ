@@ -12,6 +12,7 @@ import {
   ArrowRight,
   X,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -517,19 +518,29 @@ export default function ScoutingPage() {
 
           {/* Position Clusters */}
           <div className="h-9 flex items-center border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] rounded-lg p-0.5 shadow-xs">
-            {(['GK', 'DF', 'MF', 'FW'] as const).map((pos) => (
-              <button
-                key={pos}
-                onClick={() => handleClusterSelect(pos)}
-                className={`h-full px-3.5 rounded-md text-xs font-bold transition-all flex items-center justify-center ${
-                  selectedCluster === pos
-                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
-                }`}
-              >
-                {pos}
-              </button>
-            ))}
+            {(['GK', 'DF', 'MF', 'FW'] as const).map((pos) => {
+              const isActive = selectedCluster === pos;
+              return (
+                <button
+                  key={pos}
+                  onClick={() => handleClusterSelect(pos)}
+                  className={`relative h-full px-3.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center ${
+                    isActive
+                      ? 'text-white dark:text-zinc-900'
+                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="scoutingClusterActive"
+                      className="absolute inset-0 bg-slate-900 dark:bg-zinc-100 rounded-md shadow-xs -z-0"
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+                    />
+                  )}
+                  <span className="relative z-10">{pos}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -632,12 +643,12 @@ export default function ScoutingPage() {
                         </div>
                       </div>
 
-                      {/* Right: Match Percentage */}
-                      <div className="text-right shrink-0 font-mono">
-                        <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+                      {/* Right: Match Percentage (Clean Editorial Style) */}
+                      <div className="text-right shrink-0 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#18181C] border border-slate-200/60 dark:border-[#27272A] font-mono">
+                        <div className="text-xs font-black tabular-nums text-slate-900 dark:text-zinc-100 leading-none">
                           {rec.matchPercentage.toFixed(1)}%
                         </div>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold block">
+                        <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400 dark:text-zinc-500 block mt-0.5">
                           Match
                         </span>
                       </div>
