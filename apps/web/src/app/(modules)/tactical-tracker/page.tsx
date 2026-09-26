@@ -118,7 +118,7 @@ export default function TacticalTrackerPage() {
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
               <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>

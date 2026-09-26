@@ -600,7 +600,7 @@ export default function ScoutingPage() {
             </div>
 
             {/* Candidate List */}
-            <div className="divide-y divide-slate-100 dark:divide-[#27272A] mt-1">
+            <div className="space-y-2 mt-2.5">
               {sortedRecommendations.map((rec) => {
                 const isSelected = comparisonTarget.player.id === rec.player.id;
                 const valueFormatted = rec.player.marketValue ? `€${(rec.player.marketValue / 1e6).toFixed(0)}M` : '–';
@@ -609,10 +609,10 @@ export default function ScoutingPage() {
                   <div
                     key={rec.player.id}
                     onClick={() => handleSelectCandidate(rec)}
-                    className={`p-3 rounded-xl cursor-pointer transition-all my-1.5 border active:scale-[0.99] ${
+                    className={`p-3 rounded-xl cursor-pointer transition-all border active:scale-[0.99] ${
                       isSelected
-                        ? 'border-slate-900/60 dark:border-zinc-400 bg-slate-100/70 dark:bg-zinc-800/40 shadow-xs'
-                        : 'border-transparent hover:border-slate-200 dark:hover:border-[#27272A] hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                        ? 'border-slate-900 dark:border-zinc-300 bg-slate-100/80 dark:bg-zinc-800/50 shadow-xs'
+                        : 'border-slate-200/80 dark:border-[#27272A] bg-slate-50/50 dark:bg-[#151518] hover:border-slate-300 dark:hover:border-zinc-600 hover:bg-slate-100/60 dark:hover:bg-[#1A1A1E]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -966,22 +966,23 @@ export default function ScoutingPage() {
           </div>
 
           {/* Card 4: Match Registry & Performance Log */}
-          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 shadow-xs transition-colors">
+          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-3">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Performance Log</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Performance Log · {anchorPlayer.name}</span>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white mt-0.5">
-                  Recent Match Records ({anchorPlayer.name})
+                  Recent Match Records
                 </h3>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-zinc-400">
-                <LeagueLogo league="Premier League" size={14} />
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 dark:bg-zinc-800/60 text-[10px] font-mono text-slate-600 dark:text-zinc-300 shrink-0">
+                <LeagueLogo league="Premier League" size={13} />
                 <span>Premier League</span>
               </div>
             </div>
 
-            {/* Table Header */}
-            <div className="grid grid-cols-[1fr_80px_50px_40px_40px_50px] pb-2 border-b border-slate-100 dark:border-[#27272A] text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold">
+            {/* Desktop Table Header */}
+            <div className="hidden sm:grid grid-cols-[75px_1fr_80px_55px_40px_40px_60px] items-center pb-2.5 px-2 border-b border-slate-100 dark:border-[#27272A] text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold">
+              <span>Date</span>
               <span>Opponent</span>
               <span className="text-center">Score</span>
               <span className="text-center">Mins</span>
@@ -990,28 +991,86 @@ export default function ScoutingPage() {
               <span className="text-right">Rating</span>
             </div>
 
-            {/* Table Rows */}
-            <div className="divide-y divide-slate-100 dark:divide-[#27272A] font-mono text-xs">
+            {/* Desktop Table Rows */}
+            <div className="hidden sm:block divide-y divide-slate-100 dark:divide-[#27272A] font-mono text-xs">
               {MATCH_STATS.map((m, idx) => (
-                <div key={idx} className="grid grid-cols-[1fr_80px_50px_40px_40px_50px] items-center py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] px-2 rounded-lg transition-colors">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={m.result === 'W' ? 'tq-form-w' : 'tq-form-d'}>
+                <div key={idx} className="grid grid-cols-[75px_1fr_80px_55px_40px_40px_60px] items-center py-2.5 px-2 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors">
+                  <span className="text-[11px] text-slate-400 dark:text-zinc-500">{m.date}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={m.result === 'W' ? 'tq-form-w' : m.result === 'D' ? 'tq-form-d' : 'tq-form-l'}>
                       {m.result}
                     </span>
                     <ClubCrest code={m.opponent} size={16} />
                     <span className="font-semibold text-slate-900 dark:text-white truncate">{m.opponent}</span>
                   </div>
-                  <div className="text-center font-bold text-slate-900 dark:text-zinc-100">
+                  <div className="text-center font-bold text-slate-900 dark:text-zinc-100 tabular-nums">
                     {m.score}
                   </div>
-                  <span className="text-center text-slate-500 dark:text-zinc-400">{m.mins}&apos;</span>
-                  <span className="text-center text-slate-900 dark:text-white font-bold">{m.goals}</span>
-                  <span className="text-center text-slate-900 dark:text-white font-bold">{m.assists}</span>
-                  <div className="text-right font-bold text-slate-900 dark:text-white">
-                    {m.rating}
+                  <span className="text-center text-slate-500 dark:text-zinc-400 tabular-nums">{m.mins}&apos;</span>
+                  <span className={`text-center font-bold tabular-nums ${m.goals > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-zinc-600'}`}>{m.goals}</span>
+                  <span className={`text-center font-bold tabular-nums ${m.assists > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-zinc-600'}`}>{m.assists}</span>
+                  <div className="text-right">
+                    <span className={Number(m.rating) >= 8.0 ? 'tq-rating-high' : Number(m.rating) >= 7.0 ? 'tq-rating-good' : 'tq-rating-avg'}>
+                      {m.rating}
+                    </span>
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Mobile Clean Match Feed */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-[#27272A] font-mono">
+              {MATCH_STATS.map((m, idx) => {
+                const contributions: string[] = [];
+                if (m.goals > 0) contributions.push(`${m.goals} ${m.goals > 1 ? 'Goals' : 'Goal'}`);
+                if (m.assists > 0) contributions.push(`${m.assists} ${m.assists > 1 ? 'Assists' : 'Assist'}`);
+
+                return (
+                  <div key={idx} className="py-3 px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors">
+                    {/* Top Row: Opponent + Score + Rating */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className={m.result === 'W' ? 'tq-form-w' : m.result === 'D' ? 'tq-form-d' : 'tq-form-l'}>
+                          {m.result}
+                        </span>
+                        <ClubCrest code={m.opponent} size={18} />
+                        <span className="font-semibold text-xs text-slate-900 dark:text-white truncate">
+                          {m.opponent}
+                        </span>
+                      </div>
+
+                      <div className="font-bold text-xs text-slate-900 dark:text-zinc-100 px-2.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800/80 shrink-0 tabular-nums">
+                        {m.score}
+                      </div>
+
+                      <div className="shrink-0">
+                        <span className={Number(m.rating) >= 8.0 ? 'tq-rating-high' : Number(m.rating) >= 7.0 ? 'tq-rating-good' : 'tq-rating-avg'}>
+                          {m.rating}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Sub-row: Match details (Date, Minutes, Contribution) */}
+                    <div className="flex items-center justify-between mt-2 pt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-400 dark:text-zinc-500">{m.date}</span>
+                        <span className="text-slate-300 dark:text-zinc-600">·</span>
+                        <span>{m.mins}&apos;</span>
+                      </div>
+
+                      {contributions.length > 0 ? (
+                        <span className="text-sky-600 dark:text-sky-400 font-semibold text-[11px]">
+                          {contributions.join(' · ')}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-zinc-600 text-[10px]">
+                          Full Match
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -1021,22 +1080,36 @@ export default function ScoutingPage() {
 
       {/* ── Weights Modal ──────────────────────────────────────────────────── */}
       {isWeightsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs" onClick={() => setIsWeightsModalOpen(false)}>
-          <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-6 shadow-2xl transition-colors" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+          onClick={() => setIsWeightsModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-2xl transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Scouting Weights</span>
-              <button onClick={() => setIsWeightsModalOpen(false)} className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-md transition-colors" aria-label="Close modal">
-                <X size={15} />
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">Weights Configuration</span>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Scouting Weights</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsWeightsModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white active:scale-95 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1E1E24] transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={16} />
               </button>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 font-mono text-xs">
               {[
                 { label: 'Passing & Creation', val: 35 },
                 { label: 'Pressing Intensity', val: 25 },
                 { label: 'Progressive Carries', val: 20 },
                 { label: 'Spatial Duels', val: 20 },
               ].map(({ label, val }) => (
-                <div key={label} className="font-mono text-xs">
+                <div key={label}>
                   <div className="flex justify-between mb-1.5">
                     <span className="text-slate-600 dark:text-zinc-300">{label}</span>
                     <span className="text-slate-900 dark:text-white font-bold">{val}%</span>
@@ -1046,16 +1119,17 @@ export default function ScoutingPage() {
                   </div>
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsWeightsModalOpen(false);
+                  showToast('Weights updated');
+                }}
+                className="w-full mt-6 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-semibold text-xs rounded-xl transition-colors shadow-xs active:scale-[0.99]"
+              >
+                Apply Weights
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setIsWeightsModalOpen(false);
-                showToast('Weights updated');
-              }}
-              className="w-full mt-6 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
-            >
-              Apply Weights
-            </button>
           </div>
         </div>
       )}

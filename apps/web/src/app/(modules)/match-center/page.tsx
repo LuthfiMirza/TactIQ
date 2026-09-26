@@ -323,14 +323,14 @@ export default function MatchCenterPage() {
     ALL: {
       homeScore: 7,
       awayScore: 0,
-      statusText: "88' Live",
+      statusText: "88'",
       badgeText: "88' LIVE",
       scorersHome: [
-        "B. Fernandes 14' (P), 78'",
-        "M. Rashford 28', 53'",
-        "R. Højlund 41'",
-        "A. Garnacho 65'",
-        "K. Mainoo 88'",
+        "Fernandes 14' (P), 78'",
+        "Rashford 28', 53'",
+        "Højlund 41'",
+        "Garnacho 65'",
+        "Mainoo 88'",
       ],
       scorersAway: ['–'],
       munProb: '94%',
@@ -345,7 +345,7 @@ export default function MatchCenterPage() {
       awayScore: 0,
       statusText: 'Half Time',
       badgeText: 'HT',
-      scorersHome: ["B. Fernandes 14' (P)", "M. Rashford 28'", "R. Højlund 41'"],
+      scorersHome: ["Fernandes 14' (P)", "Rashford 28'", "Højlund 41'"],
       scorersAway: ['–'],
       munProb: '88%',
       drawProb: '9%',
@@ -357,9 +357,9 @@ export default function MatchCenterPage() {
     '2ND': {
       homeScore: 4,
       awayScore: 0,
-      statusText: "2nd Half (46'-88')",
+      statusText: "2nd Half",
       badgeText: '2nd Half',
-      scorersHome: ["M. Rashford 53'", "A. Garnacho 65'", "B. Fernandes 78'", "K. Mainoo 88'"],
+      scorersHome: ["Rashford 53'", "Garnacho 65'", "Fernandes 78'", "Mainoo 88'"],
       scorersAway: ['–'],
       munProb: '97%',
       drawProb: '2%',
@@ -463,104 +463,116 @@ export default function MatchCenterPage() {
         <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6">
 
           {/* ── Featured Match Card ── */}
-          <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-xs overflow-hidden transition-colors">
+          <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-xs overflow-hidden transition-colors flex flex-col gap-1 sm:gap-2">
             <div className="absolute -top-20 -left-20 w-52 sm:w-60 h-52 sm:h-60 bg-red-600/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -top-20 -right-20 w-52 sm:w-60 h-52 sm:h-60 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
-            
-            {/* Meta Header */}
-            <div className="relative flex items-center justify-between gap-2 pb-2.5 sm:pb-3 border-b border-slate-100 dark:border-[#27272A]">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider truncate">
-                Old Trafford · PL GW08
-              </span>
-              <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-[11px] sm:text-xs font-mono text-zinc-400 shrink-0">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                </span>
-                <span className="text-slate-900 dark:text-zinc-200">{periodInfo.badgeText}</span>
-              </div>
-            </div>
 
             {/* Score & Clubs */}
-<div className="relative py-3 sm:py-5">
-  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6">
-    
-    {/* Home: Manchester United */}
-    {/* Di mobile: vertical stack (Logo di atas, Nama di bawah), di desktop: sejajar menyamping */}
-    <div className="flex flex-col sm:flex-row items-center sm:justify-end gap-1.5 sm:gap-3 text-center sm:text-right min-w-0">
-      <div className="order-2 sm:order-1 min-w-0 w-full sm:w-auto">
-        <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
-          <span className="hidden sm:inline">Man United</span>
-          <span className="sm:hidden">Man Utd</span>
-        </h2>
-        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium">5th in PL</span>
-      </div>
-      <ClubCrest code="MUN" size={40} className="order-1 sm:order-2 w-10 h-10 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
-    </div>
-
-    {/* Monumental Center Score & Status */}
-    <div className="flex flex-col items-center justify-center px-2 sm:px-6 shrink-0">
-      <div className="flex items-center justify-center gap-2 sm:gap-3">
-        <span className="font-black text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
-          {periodInfo.homeScore}
-        </span>
-        <span className="font-normal text-xl sm:text-2xl text-slate-300 dark:text-slate-600">-</span>
-        <span className="font-black text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
-          {periodInfo.awayScore}
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 mt-1">
-        <span className="relative flex h-1.5 w-1.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-        </span>
-        <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-          {periodInfo.statusText}
-        </span>
-      </div>
-    </div>
-
-    {/* Away: Manchester City */}
-    <div className="flex flex-col sm:flex-row items-center sm:justify-start gap-1.5 sm:gap-3 text-center sm:text-left min-w-0">
-      <ClubCrest code="MCI" size={40} className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
-      <div className="min-w-0 w-full sm:w-auto">
-        <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
-          Man City
-        </h2>
-        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium">2nd in PL</span>
-      </div>
-    </div>
-
-  </div>
-
-              {/* Scorers */}
-              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-1.5 sm:gap-6 mt-2.5 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100/80 dark:border-[#27272A] text-xs">
-                <div className="text-right space-y-0.5 sm:space-y-1 text-slate-700 dark:text-zinc-200 text-[10px] sm:text-xs">
-                  {periodInfo.scorersHome.map((s, idx) => (
-                    <span key={idx} className="block truncate font-medium">{s}</span>
-                  ))}
+            <div className="relative">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6">
+                
+                {/* Home: Manchester United */}
+                <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
+                      <span className="hidden sm:inline">Man United</span>
+                      <span className="sm:hidden">Man Utd</span>
+                    </h2>
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
+                      5th in PL
+                    </span>
+                  </div>
+                  <ClubCrest code="MUN" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                 </div>
-                <div className="flex items-center justify-center px-1 sm:px-2 pt-0.5 text-slate-400 dark:text-zinc-500 select-none">
-                  <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+
+                {/* Monumental Center Score & Status */}
+                <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-32 shrink-0">
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-3">
+                    <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                      {periodInfo.homeScore}
+                    </span>
+                    <span className="font-normal text-lg sm:text-2xl text-slate-300 dark:text-slate-600">-</span>
+                    <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                      {periodInfo.awayScore}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                    </span>
+                    <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                      {periodInfo.statusText}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-left space-y-0.5 sm:space-y-1 text-slate-400 dark:text-zinc-500 text-[10px] sm:text-xs">
-                  {periodInfo.scorersAway.map((s, idx) => (
-                    <span key={idx} className="block truncate italic">{s}</span>
-                  ))}
+
+                {/* Away: Manchester City */}
+                <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
+                  <ClubCrest code="MCI" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
+                      Man City
+                    </h2>
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
+                      2nd in PL
+                    </span>
+                  </div>
                 </div>
+
+                {/* Scorers Row in the SAME Grid — 100% Mathematically Centered */}
+                {(periodInfo.scorersHome.filter(s => s && s !== '–').length > 0 ||
+                  periodInfo.scorersAway.filter(s => s && s !== '–').length > 0) && (
+                  <>
+                    <div className="col-span-3 border-t border-slate-100/80 dark:border-[#27272A]/70 my-2.5 sm:my-3" />
+
+                    {/* Home Scorers (Right-aligned, max width up to center column) */}
+                    <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
+                      {periodInfo.scorersHome
+                        .filter(s => s && s !== '–')
+                        .map((s, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {s}
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Center Ball Icon (Top-aligned with the first scorer line on the center column track) */}
+                    <div className="self-start flex justify-center items-center h-4 sm:h-4.5 w-20 sm:w-32 shrink-0 pt-0.5">
+                      <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+                    </div>
+
+                    {/* Away Scorers (Left-aligned, or empty to preserve symmetrical column track) */}
+                    <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
+                      {periodInfo.scorersAway
+                        .filter(s => s && s !== '–')
+                        .map((s, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {s}
+                          </div>
+                        ))}
+                    </div>
+                  </>
+                )}
+
               </div>
 
-              {/* xG Momentum Bar Responsive Fix */}
-              <div className="mt-3 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex flex-col gap-1.5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono">
-                  <div className="flex items-center justify-between sm:justify-start sm:gap-3 w-full sm:w-auto">
-                    <span className="font-bold text-red-600 dark:text-red-400">xG 4.62 (MUN)</span>
-                    <span className="font-bold text-sky-600 dark:text-sky-400 sm:hidden">(MCI) xG 0.38</span>
-                  </div>
-                  <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-sans font-semibold text-center">
-                    Expected Goals (xG) Momentum
+              {/* xG Momentum Bar — Symmetrical Layout */}
+              <div className="mt-3.5 px-3 py-2.5 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="font-bold text-[#DA291C] flex items-center gap-1">
+                    <span>MUN</span>
+                    <span className="text-slate-400 dark:text-zinc-500 font-normal">·</span>
+                    <span>4.62 xG</span>
                   </span>
-                  <span className="hidden sm:inline font-bold text-sky-600 dark:text-sky-400">(MCI) xG 0.38</span>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-sans font-semibold">
+                    xG Momentum
+                  </span>
+                  <span className="font-bold text-[#6CABDD] flex items-center gap-1">
+                    <span>0.38 xG</span>
+                    <span className="text-slate-400 dark:text-zinc-500 font-normal">·</span>
+                    <span>MCI</span>
+                  </span>
                 </div>
                 <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800 gap-0.5">
                   <div className="h-full bg-[#DA291C] rounded-full transition-all duration-500" style={{ width: '92%' }} />
@@ -1029,7 +1041,7 @@ export default function MatchCenterPage() {
 
               <button
                 onClick={() => setShowAiModal(true)}
-                className="w-full mt-1.5 sm:mt-2 py-2 bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 font-mono font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
+                className="w-full mt-1.5 sm:mt-2 py-2 bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold text-xs rounded-lg transition-colors shadow-xs"
               >
                 View Full Probabilities
               </button>
@@ -1105,34 +1117,47 @@ export default function MatchCenterPage() {
 
       </div>
 
-      {/* ── AI Modal ───────────────────────────────────────────────────────── */}
+      {/* ── Score Probabilities Modal ────────────────────────────────────── */}
       {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" onClick={() => setShowAiModal(false)}>
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-2xl transition-colors" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          onClick={() => setShowAiModal(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-2xl transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Score Probabilities</span>
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 block">AI Simulation Engine</span>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Score Probabilities</h3>
+              </div>
               <button
+                type="button"
                 onClick={() => setShowAiModal(false)}
-                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white active:scale-95 rounded-xl hover:bg-slate-100 dark:hover:bg-[#1E1E24] transition-colors"
+                className="w-8 h-8 flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white active:scale-95 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1E1E24] transition-colors"
                 aria-label="Close modal"
               >
-                <X size={17} />
+                <X size={16} />
               </button>
             </div>
 
             <div className="space-y-4 font-mono text-xs">
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-                <div className="p-2.5 sm:p-3 bg-slate-100/70 dark:bg-[#1E1E24] rounded-lg border border-slate-300 dark:border-zinc-700">
-                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block">2 - 1</span>
-                  <span className="text-[10px] text-slate-900 dark:text-white font-bold">34.2%</span>
+              <p className="text-slate-500 dark:text-zinc-400 text-[11px] leading-relaxed">
+                Monte Carlo match simulation outcomes based on current team xG momentum and historical Premier League head-to-head records.
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center pt-1">
+                <div className="p-3 bg-slate-100/80 dark:bg-[#1E1E24] rounded-xl border border-slate-300 dark:border-zinc-700 shadow-2xs">
+                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">2 - 1</span>
+                  <span className="text-[11px] text-sky-600 dark:text-sky-400 font-bold">34.2%</span>
                 </div>
-                <div className="p-2.5 sm:p-3 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
-                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block">2 - 2</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">21.8%</span>
+                <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-xl border border-slate-200 dark:border-[#27272A]">
+                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">2 - 2</span>
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">21.8%</span>
                 </div>
-                <div className="p-2.5 sm:p-3 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
-                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block">3 - 1</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">16.4%</span>
+                <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-xl border border-slate-200 dark:border-[#27272A]">
+                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">3 - 1</span>
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">16.4%</span>
                 </div>
               </div>
             </div>

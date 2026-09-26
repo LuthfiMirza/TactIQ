@@ -501,7 +501,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSimulation}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-xs transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-semibold text-xs transition-all shadow-xs ${
               isSimulatingLocal
                 ? 'bg-amber-600 hover:bg-amber-500 text-white'
                 : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-white'

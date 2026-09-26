@@ -73,7 +73,7 @@ const MATCHES: Match[] = [
     status: 'LIVE',
     minute: "88'",
     scorers: {
-      home: ["B. Fernandes 14' (P), 78'", "M. Rashford 28', 53'", "R. Højlund 41'", "A. Garnacho 65'", "K. Mainoo 88'"],
+      home: ["Fernandes 14' (P), 78'", "Rashford 28', 53'", "Højlund 41'", "Garnacho 65'", "Mainoo 88'"],
       away: [],
     },
     highlightPlayer: {
@@ -429,42 +429,47 @@ export default function HomePage() {
 
             {/* 2. Featured Match Hero Card */}
             {liveFeaturedMatch && (
-              <div className="relative bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+              <div className="relative bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3.5">
                 {/* Ambient Team Glow */}
                 <div className="absolute -top-16 -left-16 w-48 h-48 bg-red-500/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
                 
-                {/* Match Header */}
-                <div className="relative px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#16161A] border-b border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <LeagueLogo league={liveFeaturedMatch.league} size={15} />
-                    <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
+                {/* Match Header — Seamless Integrated */}
+                <div className="relative flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <LeagueLogo league={liveFeaturedMatch.league} size={14} />
+                    <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                       {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
                     </span>
                   </div>
-                  <span className="text-slate-500 dark:text-zinc-400 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
+                  <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
                 </div>
 
                 {/* Scoreboard Block */}
-                <div className="relative p-3.5 sm:p-5">
+                <div className="relative">
                   
-                  {/* Row 1: Symmetrical Clubs & Score */}
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+                  {/* Symmetrical Clubs, Score & Scorers — Single Unified Grid */}
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-4">
                     
                     {/* Home Team Column */}
-                    <div className="flex items-center justify-end gap-2 sm:gap-4 text-right min-w-0">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
-                        <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
-                        <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
-                      </span>
-                      <ClubCrest code={liveFeaturedMatch.homeCode} size={48} className="w-9 h-9 sm:w-12 sm:h-12 drop-shadow-xs" />
+                    <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight block">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
+                          5th in PL
+                        </span>
+                      </div>
+                      <ClubCrest code={liveFeaturedMatch.homeCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                     </div>
 
-                    {/* Center Column: Score & Live Status */}
-                    <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-36 shrink-0">
+                    {/* Center Column: Score & Minute (Without 'Live' text) */}
+                    <div className="flex flex-col items-center justify-center px-1.5 sm:px-4 w-20 sm:w-32 shrink-0">
                       <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2 font-mono">
                         <span>{liveFeaturedMatch.homeScore}</span>
-                        <span className="text-slate-300 dark:text-slate-600 font-normal text-xl sm:text-3xl">-</span>
+                        <span className="text-slate-300 dark:text-slate-600 font-normal text-lg sm:text-2xl">-</span>
                         <span>{liveFeaturedMatch.awayScore}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
@@ -472,46 +477,60 @@ export default function HomePage() {
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                         </span>
-                        <span className="text-[11px] sm:text-[13px] font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                          {liveFeaturedMatch.minute} Live
+                        <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          {liveFeaturedMatch.minute}
                         </span>
                       </div>
                     </div>
 
                     {/* Away Team Column */}
-                    <div className="flex items-center justify-start gap-2 sm:gap-4 text-left min-w-0">
-                      <ClubCrest code={liveFeaturedMatch.awayCode} size={48} className="w-9 h-9 sm:w-12 sm:h-12 drop-shadow-xs" />
-                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
-                        <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
-                        <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
-                      </span>
+                    <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
+                      <ClubCrest code={liveFeaturedMatch.awayCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight block">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
+                          2nd in PL
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Scorers Row in the SAME Grid — 100% Mathematically Centered */}
+                    {((liveFeaturedMatch.scorers?.home && liveFeaturedMatch.scorers.home.length > 0) ||
+                      (liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0)) && (
+                      <>
+                        <div className="col-span-3 border-t border-slate-100/80 dark:border-[#27272A]/70 my-2.5 sm:my-3" />
+
+                        {/* Home Scorers (Right-aligned, max width up to center column) */}
+                        <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
+                          {liveFeaturedMatch.scorers?.home?.map((scorer, idx) => (
+                            <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                              {scorer}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Center Column: Soccer Ball Icon top-aligned with first scorer line */}
+                        <div className="self-start flex justify-center items-center h-4 sm:h-4.5 w-20 sm:w-32 shrink-0 pt-0.5">
+                          <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+                        </div>
+
+                        {/* Away Scorers (Left-aligned, or empty to preserve symmetrical column track) */}
+                        <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
+                          {liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0 ? (
+                            liveFeaturedMatch.scorers.away.map((scorer, idx) => (
+                              <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                                {scorer}
+                              </div>
+                            ))
+                          ) : null}
+                        </div>
+                      </>
+                    )}
 
                   </div>
-
-                  {/* Row 2: Dedicated Symmetrical Scorers List */}
-                  {(liveFeaturedMatch.scorers?.home?.length || liveFeaturedMatch.scorers?.away?.length) && (
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4 mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A]/70 text-xs">
-                      {/* Home Scorers */}
-                      <div className="text-right space-y-0.5 text-slate-600 dark:text-zinc-400 text-[11px] sm:text-xs">
-                        {liveFeaturedMatch.scorers?.home?.map((s, idx) => (
-                          <div key={idx} className="truncate">{s}</div>
-                        ))}
-                      </div>
-
-                      {/* Center Ball Icon */}
-                      <div className="flex items-center justify-center px-1.5 sm:px-6 w-20 sm:w-36 pt-0.5 text-slate-400 dark:text-zinc-500 select-none">
-                        <SoccerBallIcon size={13} className="text-slate-400 dark:text-zinc-500" />
-                      </div>
-
-                      {/* Away Scorers */}
-                      <div className="text-left space-y-0.5 text-slate-600 dark:text-zinc-400 text-[11px] sm:text-xs">
-                        {liveFeaturedMatch.scorers?.away?.map((s, idx) => (
-                          <div key={idx} className="truncate">{s}</div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* xG Momentum Bar + CTA */}
                   <div className="mt-3 sm:mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
