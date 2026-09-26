@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { VideoOverlayCanvas } from '@/components/video-overlay-canvas';
 import { TacticalMinimap } from '@/components/tactical-minimap';
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
-import { Radio, Activity, Film, Cpu, AlertCircle, Gauge, Footprints, Video, Layers, Crosshair } from 'lucide-react';
+import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
 
 const ROSTER_MAP: Record<number, { name: string; pos: string; dist: string }> = {
   1: { name: 'David Raya', pos: 'GK', dist: '4.2 km' },
@@ -34,6 +34,10 @@ export default function TacticalTrackerPage() {
   const [pipelineMessage, setPipelineMessage] = useState<string | null>(null);
   const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
   const [filterTeam, setFilterTeam] = useState<'all' | 'home' | 'away' | 'ball'>('all');
+
+  const handleFrameUpdate = useCallback((frame: TrackingFramePayload) => {
+    setLatestFrame(frame);
+  }, []);
 
   // Trigger ML background pipeline
   const handleStartPipeline = async () => {
@@ -73,42 +77,38 @@ export default function TacticalTrackerPage() {
   });
 
   return (
-    <div className="w-full flex flex-col gap-8 pb-16">
+    <div className="w-full flex flex-col gap-6 pb-16">
       
-      {/* ── Top Match Pass Header (Concept B Ticket Silhouette & Dual Club Glow) ── */}
-      <div className="relative rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg border border-[#222B3D] bg-[#141A24] p-6 lg:p-7 shadow-2xl overflow-hidden">
-        {/* Subtle Club Atmospheric Glows (Isolated at edges, zero overlap to prevent purple tint) */}
-        <div className="absolute top-0 left-0 w-48 h-full bg-gradient-to-r from-[#EF0107]/15 to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-[#6CABDD]/15 to-transparent pointer-events-none" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* ── Top Match Pass Header (Matchday Banner) ── */}
+      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-6 lg:p-7 shadow-xs overflow-hidden transition-colors">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           {/* Match & Room Badge */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] border border-white/20 flex items-center justify-center font-display font-black text-xs text-white shadow-[0_0_18px_rgba(239,1,7,0.4)]">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] flex items-center justify-center font-extrabold text-xs text-white shadow-xs shrink-0">
                 ARS
               </div>
-              <div className="flex flex-col items-center px-2">
-                <span className="font-display font-black text-2xl text-white tracking-tight tabular-nums">2 — 1</span>
-                <span className="text-[10px] font-mono text-[#8E9EB5]">68&apos; LIVE</span>
+              <div className="flex flex-col items-center px-1.5 sm:px-2">
+                <span className="font-mono font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight tabular-nums">2 — 1</span>
+                <span className="text-[10px] font-mono text-[#10B981] font-bold whitespace-nowrap">68&apos; LIVE</span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6CABDD] to-[#458BB8] border border-white/20 flex items-center justify-center font-display font-black text-xs text-white shadow-[0_0_18px_rgba(108,171,221,0.4)]">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#6CABDD] to-[#458BB8] flex items-center justify-center font-extrabold text-xs text-white shadow-xs shrink-0">
                 MCI
               </div>
             </div>
 
-            <div className="border-l border-[#222B3D] pl-4">
+            <div className="sm:border-l sm:border-slate-200 sm:dark:border-[#27272A] sm:pl-4">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#00DF59]" />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#8E9EB5]">
-                  TACTICAL CV RADAR · HOMOGRAPHY 99.4%
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#10B981] font-bold">
+                  2D Optical Radar
                 </span>
               </div>
-              <h1 className="font-display font-black text-xl lg:text-2xl text-white uppercase tracking-tight mt-0.5">
-                Computer Vision Optical Stream
+              <h1 className="font-extrabold text-lg sm:text-xl lg:text-2xl text-slate-900 dark:text-white tracking-tight mt-0.5">
+                Tactical Tracker · Live Radar
               </h1>
-              <p className="text-xs text-[#8E9EB5] font-mono mt-0.5">
-                Emirates Stadium · High-Cam Broadcast (50mm f/2.8) · 29.97 FPS
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                Emirates Stadium · Premier League GW08
               </p>
             </div>
           </div>
@@ -118,62 +118,35 @@ export default function TacticalTrackerPage() {
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#00DF59] hover:bg-[#00C84F] text-black text-xs font-black uppercase tracking-wider rounded-xl shadow-md shadow-[#00DF59]/20 transition-all disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
-              <span>{isStartingPipeline ? 'Starting...' : 'Connect CV Pipeline'}</span>
+              <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
             </button>
           </div>
         </div>
       </div>
 
       {pipelineMessage && (
-        <div className="p-4 bg-[#141A24] border border-[#222B3D] rounded-2xl text-xs font-mono text-[#00DF59] flex items-center gap-2 shadow-lg">
-          <Activity size={14} />
+        <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] rounded-xl text-xs font-mono text-slate-800 dark:text-zinc-200 flex items-center gap-2 shadow-xs">
+          <Activity size={14} className="text-[#10B981] shrink-0" />
           <span>{pipelineMessage}</span>
         </div>
       )}
 
       {/* ── Main Workspace ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left 8 cols: Video Viewport & Camera Specs */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        {/* Left 8 cols: Video Viewport */}
+        <div className="lg:col-span-8 flex flex-col gap-5">
           <VideoOverlayCanvas
             sessionId={activeSessionId}
-            onFrameUpdate={(frame) => setLatestFrame(frame)}
+            onFrameUpdate={handleFrameUpdate}
           />
-
-          {/* Camera Rig & Optical Calibration Banner */}
-          <div className="p-5 rounded-2xl border border-[#222B3D] bg-[#141A24] grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono shadow-xl">
-            <div className="p-3 rounded-xl bg-[#10151E] border border-[#222B3D]/80">
-              <span className="text-[10px] text-[#596982] uppercase block">Optical Engine</span>
-              <span className="text-white font-bold block mt-1">YOLOv8x-Pose</span>
-              <span className="text-[10px] text-[#00DF59] mt-0.5 block">Confidence 94.8%</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#10151E] border border-[#222B3D]/80">
-              <span className="text-[10px] text-[#596982] uppercase block">Pitch Homography</span>
-              <span className="text-white font-bold block mt-1">DLT Normalized</span>
-              <span className="text-[10px] text-[#38BDF8] mt-0.5 block">Error: &lt; 0.12m</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#10151E] border border-[#222B3D]/80">
-              <span className="text-[10px] text-[#596982] uppercase block">Stream Latency</span>
-              <span className="text-white font-bold block mt-1">38 ms</span>
-              <span className="text-[10px] text-[#00DF59] mt-0.5 block">Zero Frame Drop</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-[#10151E] border border-[#222B3D]/80">
-              <span className="text-[10px] text-[#596982] uppercase block">Sensor Room</span>
-              <span className="text-white font-bold block mt-1">session_{activeSessionId.slice(-7)}</span>
-              <span className="text-[10px] text-[#8E9EB5] mt-0.5 block">Broadcast High-Cam</span>
-            </div>
-          </div>
         </div>
 
         {/* Right 4 cols: Planar Minimap & Interactive Entity Registry */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-5">
           
           {/* 2D Minimap Frame */}
           <TacticalMinimap
@@ -183,29 +156,29 @@ export default function TacticalTrackerPage() {
           />
 
           {/* Entity Registry Table (Player Telemetry Cards) */}
-          <div className="rounded-2xl border border-[#222B3D] bg-[#141A24] p-5 shadow-xl flex flex-col gap-4">
+          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 shadow-xs flex flex-col gap-3.5 transition-colors">
             
             {/* Header & Active Count */}
-            <div className="flex items-center justify-between border-b border-[#222B3D] pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-2.5">
               <div className="flex items-center gap-2">
-                <Cpu size={15} className="text-[#8E9EB5]" />
-                <span className="text-xs font-bold uppercase tracking-wider text-white">
+                <Cpu size={15} className="text-slate-500 dark:text-zinc-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   Tracked Entity Stream
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-[#8E9EB5] bg-[#10151E] border border-[#222B3D] px-2.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2.5 py-0.5 rounded">
                 {rawEntities.length || 23} Entities Active
               </span>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#10151E] border border-[#222B3D] text-[11px] font-mono">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-[#18181C] border border-slate-200/80 dark:border-[#27272A] text-[11px] font-mono">
               <button
                 onClick={() => setFilterTeam('all')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold ${
                   filterTeam === 'all'
-                    ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm'
-                    : 'text-[#8E9EB5] hover:text-white'
+                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 All ({rawEntities.length || 23})
@@ -214,8 +187,8 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('home')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'home'
-                    ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm'
-                    : 'text-[#8E9EB5] hover:text-white'
+                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#EF0107]" />
@@ -225,8 +198,8 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('away')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'away'
-                    ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm'
-                    : 'text-[#8E9EB5] hover:text-white'
+                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-[#6CABDD]" />
@@ -236,11 +209,11 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('ball')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'ball'
-                    ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm'
-                    : 'text-[#8E9EB5] hover:text-white'
+                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                 <span>Ball</span>
               </button>
             </div>
@@ -265,17 +238,17 @@ export default function TacticalTrackerPage() {
                     <div
                       key={entity.id}
                       onClick={() => setSelectedEntityId(isSelected ? null : entity.id)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[#00DF59] bg-[#00DF59]/10 shadow-lg shadow-[#00DF59]/5'
-                          : 'border-[#222B3D] bg-[#1D2534]/70 hover:bg-[#1D2534] hover:border-[#35425C]'
+                          ? 'border-slate-300 dark:border-zinc-500 bg-slate-100 dark:bg-[#1E1E24] shadow-xs'
+                          : 'border-slate-200 dark:border-[#27272A] bg-slate-50/50 dark:bg-[#18181C]/60 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                       }`}
                     >
                       {/* Top Row: Identity & Speed */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-sm shrink-0 ${
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-xs shrink-0 ${
                               isBall
                                 ? 'bg-gradient-to-br from-amber-400 to-amber-600'
                                 : isHome
@@ -286,35 +259,35 @@ export default function TacticalTrackerPage() {
                             {isBall ? '⚽' : jNumber}
                           </div>
                           <div>
-                            <span className="font-bold text-white text-xs block truncate">
+                            <span className="font-bold text-slate-900 dark:text-white text-xs block truncate">
                               {isBall ? 'Nike Flight Match Ball' : rosterInfo.name}
                             </span>
-                            <span className="text-[10px] text-[#8E9EB5] block">
+                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">
                               {isBall ? 'Pitch Center' : `${isHome ? 'Arsenal' : 'Man City'} · ${rosterInfo.pos}`}
                             </span>
                           </div>
                         </div>
 
                         <div className="text-right">
-                          <span className="text-xs font-bold text-white block tabular-nums">
-                            {speed.toFixed(1)} <span className="text-[10px] text-[#596982]">km/h</span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white block tabular-nums">
+                            {speed.toFixed(1)} <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-normal">km/h</span>
                           </span>
-                          <span className="text-[10px] text-[#8E9EB5] block">
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">
                             {isBall ? 'In Flight' : rosterInfo.dist}
                           </span>
                         </div>
                       </div>
 
                       {/* Speed Meter Bar */}
-                      <div className="mt-2.5 flex items-center gap-2">
-                        <Gauge size={11} className="text-[#596982] shrink-0" />
-                        <div className="w-full h-1.5 bg-[#10151E] rounded-full overflow-hidden">
+                      <div className="mt-2 flex items-center gap-2">
+                        <Gauge size={11} className="text-slate-400 shrink-0" />
+                        <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                           <div
                             className={`h-full transition-all duration-300 ${
                               isBall
-                                ? 'bg-amber-400'
+                                ? 'bg-amber-500'
                                 : speed > 26
-                                ? 'bg-[#F59E0B]'
+                                ? 'bg-amber-500'
                                 : isHome
                                 ? 'bg-[#EF0107]'
                                 : 'bg-[#6CABDD]'
@@ -322,7 +295,7 @@ export default function TacticalTrackerPage() {
                             style={{ width: `${speedPercent}%` }}
                           />
                         </div>
-                        <span className="text-[9px] text-[#596982] shrink-0 tabular-nums">
+                        <span className="text-[9px] text-slate-500 dark:text-zinc-400 shrink-0 tabular-nums">
                           {speedPercent}%
                         </span>
                       </div>
@@ -330,10 +303,10 @@ export default function TacticalTrackerPage() {
                   );
                 })
               ) : (
-                <div className="py-12 text-center text-[#8E9EB5] font-mono text-xs space-y-2">
-                  <AlertCircle size={20} className="mx-auto text-[#00DF59]" />
-                  <p className="font-bold text-white">No entities match filter</p>
-                  <p className="text-[10px] text-[#596982]">
+                <div className="py-12 text-center text-slate-500 dark:text-zinc-400 font-mono text-xs space-y-2">
+                  <AlertCircle size={20} className="mx-auto text-[#10B981]" />
+                  <p className="font-bold text-slate-900 dark:text-white">No entities match filter</p>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">
                     Select another filter tab or trigger the simulation stream.
                   </p>
                 </div>
@@ -341,12 +314,12 @@ export default function TacticalTrackerPage() {
             </div>
 
             {/* Technical Calibration Specs Footer */}
-            <div className="pt-3 border-t border-[#222B3D] text-[10px] font-mono text-[#8E9EB5] flex items-center justify-between">
+            <div className="pt-2.5 border-t border-slate-100 dark:border-[#27272A] text-[10px] font-mono text-slate-500 dark:text-zinc-400 flex items-center justify-between">
               <span className="flex items-center gap-1">
-                <Crosshair size={11} className="text-[#00DF59]" />
+                <Crosshair size={11} className="text-[#10B981]" />
                 <span>Click player to lock target</span>
               </span>
-              <span className="text-white">Coordinate: [X, Y, Z]</span>
+              <span className="text-slate-900 dark:text-white font-semibold">Coordinate: [X, Y, Z]</span>
             </div>
 
           </div>

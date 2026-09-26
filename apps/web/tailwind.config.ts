@@ -10,48 +10,51 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // FotMob Design System + Multi-Metric Analytics Tokens
-        fm: {
-          // Canvas & Surfaces (FotMob Matchday Pro)
-          base: '#0B0E14',       // Deep stadium dark canvas
-          card: '#141A24',       // Crisp card surface
-          cardHover: '#1C2432',  // Hover surface
-          surface2: '#1D2534',   // Inner elements, tabs & input bg
-          surface3: '#252F42',   // Elevated chips & highlights
-          border: '#222B3D',     // Crisp card border
-          borderHover: '#35425C',
+        // TactIQ Design System (Soft-Gray Canvas + Crisp Cards)
+        tactiq: {
+          // Canvas & Surfaces
+          base: '#F0F2F5',       // Soft neutral gray canvas
+          canvas: '#F0F2F5',
+          card: '#FFFFFF',       // Crisp white cards
+          cardHover: '#F8FAFC',  // Subtle light hover
+          surface2: '#F1F5F9',   // Light gray inputs, chips, sub-cards
+          surface3: '#E2E8F0',   // Elevated borders & dividers
+          border: '#E2E8F0',     // Clean slate border
+          borderHover: '#CBD5E1',
 
-          // Signature Electric Football Green
-          green: '#00DF59',
-          greenHover: '#00C84F',
-          greenBg: '#092B16',
-          greenBorder: '#145A30',
+          // Signature Pitch Green
+          green: '#00A83F',      // TactIQ brand green
+          greenHover: '#008734',
+          greenLight: '#E6F7EC', // Light green tint for badges
+          greenBg: '#ECFDF5',
+          greenBorder: '#A7F3D0',
+          liveGreen: '#00DF59',  // Vibrant live dot / dark badge
 
           // Typography
-          white: '#FFFFFF',
-          text: '#E2E8F0',
-          muted: '#8E9EB5',
-          dim: '#596982',
+          heading: '#0F172A',    // Slate 900
+          text: '#1E293B',       // Slate 800
+          muted: '#64748B',      // Slate 500
+          dim: '#94A3B8',        // Slate 400
 
-          // Multi-Metric Tactical Functional Tokens (StatsBomb / Opta)
-          attack: '#F59E0B',        // xG, Big Chances, Shots, Attacking Threat
-          attackBg: '#2E1F07',
-          attackBorder: '#5E3D0A',
-          possess: '#00DF59',       // Possession, Passing Volume, Key Passes
-          possessBg: '#092B16',
-          possessBorder: '#145A30',
-          defense: '#38BDF8',       // Pressing (PPDA), Interceptions, Blocks, Duals
-          defenseBg: '#0A253A',
-          defenseBorder: '#16486D',
-          danger: '#EF4444',        // Turnovers, Disciplinary, High Risk
-          dangerBg: '#2E0F10',
-          dangerBorder: '#5C1E20',
+          // Multi-Metric Tactical Functional Tokens (Opta / StatsBomb)
+          attack: '#D97706',        // xG, Big Chances
+          attackBg: '#FEF3C7',
+          attackBorder: '#FDE68A',
+          possess: '#00A83F',       // Possession, Passing
+          possessBg: '#ECFDF5',
+          possessBorder: '#A7F3D0',
+          defense: '#0284C7',       // Pressing, Tackles
+          defenseBg: '#F0F9FF',
+          defenseBorder: '#BAE6FD',
+          danger: '#DC2626',        // Turnovers, Red cards
+          dangerBg: '#FEF2F2',
+          dangerBorder: '#FECACA',
 
-          // Status & Rating Colors (FotMob Standard)
-          ratingHigh: '#00DF59',  // 8.0+
-          ratingGood: '#10B981',  // 7.0 - 7.9
-          ratingAvg: '#F59E0B',   // 6.0 - 6.9
-          ratingLow: '#EF4444',   // < 6.0
+          // Status & Rating Colors
+          ratingHigh: '#00A83F',  // 8.0+ (Emerald Green)
+          ratingGood: '#10B981',  // 7.0 - 7.9 (Emerald)
+          ratingAvg: '#F59E0B',   // 6.0 - 6.9 (Amber)
+          ratingLow: '#EF4444',   // < 6.0 (Rose)
 
           // Club accent colors
           arsenal: '#EF0107',
@@ -61,29 +64,29 @@ const config: Config = {
           barca: '#A50044',
           real: '#FEBE10',
         },
-        // Backward-compatibility aliases so shared components don't break
+        // Backward-compatibility aliases so existing modules transition smoothly
         tq: {
-          base: '#0B0E14',
-          surface: '#141A24',
-          surface2: '#1D2534',
-          surface3: '#252F42',
-          line: '#222B3D',
-          lineHover: '#35425C',
+          base: '#F0F2F5',
+          surface: '#FFFFFF',
+          surface2: '#F1F5F9',
+          surface3: '#E2E8F0',
+          line: '#E2E8F0',
+          lineHover: '#CBD5E1',
           white: '#FFFFFF',
-          muted: '#8E9EB5',
-          dim: '#596982',
-          coral: '#00DF59',
-          coralHover: '#00C84F',
-          coralBg: '#092B16',
-          coralBorder: '#145A30',
-          win: '#00DF59',
-          winBg: '#092B16',
+          muted: '#64748B',
+          dim: '#94A3B8',
+          coral: '#00A83F',
+          coralHover: '#008734',
+          coralBg: '#ECFDF5',
+          coralBorder: '#A7F3D0',
+          win: '#00A83F',
+          winBg: '#ECFDF5',
         },
       },
       fontFamily: {
-        display: ['Syne', 'Inter', 'system-ui', 'sans-serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        display: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
     },
   },

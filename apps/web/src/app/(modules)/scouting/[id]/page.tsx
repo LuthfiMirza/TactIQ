@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { RadarChart } from '@/components/radar-chart';
 import type { PlayerDTO, PlayerSimilarityResponse } from '@tactiq/shared-types';
-import { ArrowLeft, Sparkles, Shield, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Shield, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
 
 const FALLBACK_PLAYER: PlayerDTO = {
   id: 'player-kdb',
@@ -195,7 +195,6 @@ export default function PlayerProfilePage() {
           <div className="flex items-center justify-between border-b border-tactiq-border pb-3">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles size={16} className="text-tactiq-cyan" />
                 <span>Statistically Similar Counterparts (ML Cosine Model)</span>
               </h2>
               <p className="text-xs text-tactiq-muted mt-0.5">

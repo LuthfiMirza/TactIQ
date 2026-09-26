@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -30,6 +30,16 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   comparisonPlayerName = 'Comparison Player',
   className = '',
 }) => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   const labels = ['Pace', 'Shooting', 'Passing', 'Dribbling', 'Defending', 'Physical', 'Vision'];
 
   const targetData = [
@@ -46,13 +56,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     {
       label: playerName,
       data: targetData,
-      backgroundColor: 'rgba(0, 223, 89, 0.18)',
-      borderColor: '#00DF59',
+      backgroundColor: 'rgba(0, 168, 63, 0.18)',
+      borderColor: '#00A83F',
       borderWidth: 2,
-      pointBackgroundColor: '#00DF59',
-      pointBorderColor: '#0B0E14',
+      pointBackgroundColor: '#00A83F',
+      pointBorderColor: '#FFFFFF',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#00DF59',
+      pointHoverBorderColor: '#00A83F',
       pointRadius: 4,
       pointHoverRadius: 6,
     },
@@ -72,13 +82,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     datasets.push({
       label: comparisonPlayerName,
       data: compData,
-      backgroundColor: 'rgba(56, 189, 248, 0.18)',
-      borderColor: '#38BDF8',
+      backgroundColor: 'rgba(2, 132, 199, 0.18)',
+      borderColor: '#0284C7',
       borderWidth: 2,
-      pointBackgroundColor: '#38BDF8',
-      pointBorderColor: '#0B0E14',
+      pointBackgroundColor: '#0284C7',
+      pointBorderColor: '#FFFFFF',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#38BDF8',
+      pointHoverBorderColor: '#0284C7',
       pointRadius: 4,
       pointHoverRadius: 6,
     });
@@ -95,14 +105,14 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     scales: {
       r: {
         angleLines: {
-          color: '#222B3D',
+          color: isDark ? '#27272A' : '#E2E8F0',
         },
         grid: {
-          color: '#1C2432',
+          color: isDark ? '#27272A' : '#E2E8F0',
           circular: true,
         },
         pointLabels: {
-          color: '#94A3B8',
+          color: isDark ? '#E4E4E7' : '#334155',
           font: {
             size: 11,
             weight: 600 as const,
@@ -111,7 +121,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
         ticks: {
           backdropColor: 'transparent',
-          color: '#64748B',
+          color: isDark ? '#71717A' : '#94A3B8',
           stepSize: 20,
           font: {
             size: 9,
@@ -125,10 +135,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: '#E2E8F0',
+          color: isDark ? '#F4F4F5' : '#1E293B',
           font: {
             size: 12,
-            weight: 500 as const,
+            weight: 600 as const,
             family: 'Inter, system-ui, sans-serif',
           },
           padding: 16,
@@ -137,10 +147,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
       },
       tooltip: {
-        backgroundColor: '#121820',
+        backgroundColor: '#121215',
         titleColor: '#FFFFFF',
         bodyColor: '#10B981',
-        borderColor: '#253142',
+        borderColor: '#27272A',
         borderWidth: 1,
         padding: 10,
         displayColors: true,
@@ -149,8 +159,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   };
 
   return (
-    <div className={`relative flex items-center justify-center p-3 bg-tactiq-card border border-tactiq-border rounded-xl ${className}`}>
-      <div className="w-full max-w-[380px] h-[340px]">
+    <div className={`relative flex items-center justify-center p-2 bg-slate-50/60 dark:bg-[#18181C] rounded-xl border border-slate-100 dark:border-[#27272A] transition-colors ${className}`}>
+      <div className="w-full max-w-[380px] h-[320px]">
         <Radar data={chartData} options={options} />
       </div>
     </div>

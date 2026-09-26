@@ -11,6 +11,38 @@ interface TacticalMinimapProps {
   className?: string;
 }
 
+// ─── Default Tactical Formation Entities (ARS 3-2-4-1 vs MCI 4-4-2) ──────
+const DEFAULT_FORMATION_ENTITIES: TrackingEntity[] = [
+  // Arsenal (Home - Red)
+  { id: 1, team: 'home', x: 0.08, y: 0.50, jerseyNumber: 1, speedKmh: 4.2 },
+  { id: 4, team: 'home', x: 0.22, y: 0.24, jerseyNumber: 4, speedKmh: 12.1 },
+  { id: 2, team: 'home', x: 0.20, y: 0.50, jerseyNumber: 2, speedKmh: 14.5 },
+  { id: 6, team: 'home', x: 0.22, y: 0.76, jerseyNumber: 6, speedKmh: 11.8 },
+  { id: 41, team: 'home', x: 0.38, y: 0.38, jerseyNumber: 41, speedKmh: 16.2 },
+  { id: 5, team: 'home', x: 0.38, y: 0.62, jerseyNumber: 5, speedKmh: 15.0 },
+  { id: 7, team: 'home', x: 0.62, y: 0.16, jerseyNumber: 7, speedKmh: 24.8 },
+  { id: 8, team: 'home', x: 0.58, y: 0.40, jerseyNumber: 8, speedKmh: 18.4 },
+  { id: 29, team: 'home', x: 0.58, y: 0.60, jerseyNumber: 29, speedKmh: 17.2 },
+  { id: 11, team: 'home', x: 0.62, y: 0.84, jerseyNumber: 11, speedKmh: 23.5 },
+  { id: 19, team: 'home', x: 0.74, y: 0.50, jerseyNumber: 9, speedKmh: 19.8 },
+
+  // Man City (Away - Blue)
+  { id: 31, team: 'away', x: 0.92, y: 0.50, jerseyNumber: 31, speedKmh: 3.9 },
+  { id: 25, team: 'away', x: 0.78, y: 0.20, jerseyNumber: 25, speedKmh: 14.2 },
+  { id: 3, team: 'away', x: 0.76, y: 0.40, jerseyNumber: 3, speedKmh: 13.8 },
+  { id: 14, team: 'away', x: 0.76, y: 0.60, jerseyNumber: 14, speedKmh: 12.9 },
+  { id: 24, team: 'away', x: 0.78, y: 0.80, jerseyNumber: 24, speedKmh: 15.1 },
+  { id: 20, team: 'away', x: 0.55, y: 0.22, jerseyNumber: 20, speedKmh: 18.0 },
+  { id: 16, team: 'away', x: 0.52, y: 0.42, jerseyNumber: 16, speedKmh: 17.5 },
+  { id: 17, team: 'away', x: 0.52, y: 0.58, jerseyNumber: 17, speedKmh: 16.8 },
+  { id: 47, team: 'away', x: 0.55, y: 0.78, jerseyNumber: 47, speedKmh: 19.2 },
+  { id: 9, team: 'away', x: 0.42, y: 0.46, jerseyNumber: 9, speedKmh: 16.0 },
+  { id: 199, team: 'away', x: 0.42, y: 0.54, jerseyNumber: 19, speedKmh: 15.5 },
+
+  // Match Ball
+  { id: 999, team: 'ball', x: 0.58, y: 0.40, speedKmh: 28.5 },
+];
+
 export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
   entities = [],
   selectedEntityId = null,
@@ -21,6 +53,9 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
   const [showPassingLanes, setShowPassingLanes] = useState(true);
   const [showConvexHull, setShowConvexHull] = useState(false);
   const [showTacticalZones, setShowTacticalZones] = useState(false);
+
+  // Fall back to default formation entities if none streamed yet
+  const activeEntities = entities && entities.length > 0 ? entities : DEFAULT_FORMATION_ENTITIES;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,27 +68,27 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
 
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Draw Pitch Surface (Dark stadium grass with subtle mowing stripes)
-    ctx.fillStyle = '#0B1510';
+    // 1. Draw Pitch Surface (Authentic stadium pitch with rich grass contrast)
+    ctx.fillStyle = '#0F2C1F';
     ctx.fillRect(0, 0, width, height);
 
     const pad = 12;
     const pW = width - pad * 2;
     const pH = height - pad * 2;
 
-    // Grass alternating stripes
+    // Grass alternating mowing stripes
     const stripeCount = 8;
     const sW = pW / stripeCount;
     for (let i = 0; i < stripeCount; i++) {
       if (i % 2 === 0) {
-        ctx.fillStyle = 'rgba(0, 223, 89, 0.025)';
+        ctx.fillStyle = 'rgba(0, 223, 89, 0.04)';
         ctx.fillRect(pad + i * sW, pad, sW, pH);
       }
     }
 
     // Optional: 18 FIFA Tactical Zones (Half-spaces, Zone 14)
     if (showTacticalZones) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
 
@@ -67,20 +102,20 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       const zone14Y = pad + pH * 0.3;
       const zone14W = sixthW;
       const zone14H = pH * 0.4;
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.08)'; // Zone 14 amber tint
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)'; // Zone 14 amber tint
       ctx.fillRect(zone14X, zone14Y, zone14W, zone14H);
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
       ctx.strokeRect(zone14X, zone14Y, zone14W, zone14H);
 
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.6)';
-      ctx.font = '8px monospace';
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = 'bold 8px monospace';
       ctx.fillText('Z14', zone14X + 4, zone14Y + 12);
 
       ctx.setLineDash([]);
     }
 
-    // 2. Pitch Line Markings
-    ctx.strokeStyle = '#1D3B2C';
+    // 2. Pitch Line Markings (Crisp white lines with high legibility)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1.5;
 
     // Pitch Outline
@@ -99,9 +134,9 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
     ctx.stroke();
 
     // Center Spot
-    ctx.fillStyle = '#1D3B2C';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.beginPath();
-    ctx.arc(pad + pW / 2, pad + pH / 2, 2, 0, Math.PI * 2);
+    ctx.arc(pad + pW / 2, pad + pH / 2, 2.5, 0, Math.PI * 2);
     ctx.fill();
 
     // Penalty Boxes & Six Yard Boxes
@@ -135,9 +170,9 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
     ctx.stroke();
 
     // 3. Separate Entities
-    const homePlayers = entities.filter((e) => e.team === 'home');
-    const awayPlayers = entities.filter((e) => e.team === 'away');
-    const ball = entities.find((e) => e.team === 'ball');
+    const homePlayers = activeEntities.filter((e) => e.team === 'home');
+    const awayPlayers = activeEntities.filter((e) => e.team === 'away');
+    const ball = activeEntities.find((e) => e.team === 'ball');
 
     // 4. Optional: Convex Hulls (Team Compactness Shape)
     if (showConvexHull) {
@@ -206,7 +241,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
     }
 
     // 6. Render Players & Ball
-    entities.forEach((ent) => {
+    activeEntities.forEach((ent) => {
       const px = pad + ent.x * pW;
       const py = pad + ent.y * pH;
       const isSelected = selectedEntityId === ent.id;
@@ -260,34 +295,34 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
   }, [entities, showPassingLanes, showConvexHull, showTacticalZones, selectedEntityId]);
 
   return (
-    <div className={`p-4 bg-[#141A24] border border-[#222B3D] rounded-2xl space-y-3 shadow-xl ${className}`}>
+    <div className={`p-4 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl space-y-3 shadow-xs transition-colors ${className}`}>
       {/* Header with FIFA Specs & Tactical Phase */}
-      <div className="flex items-center justify-between border-b border-[#222B3D] pb-3">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3">
         <div className="flex items-center gap-2">
-          <Compass size={15} className="text-[#00DF59]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-white">
+          <Compass size={15} className="text-[#10B981]" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
             2D Tactical Radar
           </span>
         </div>
-        <span className="text-[10px] font-mono text-[#8E9EB5] bg-[#10151E] border border-[#222B3D] px-2 py-0.5 rounded">
+        <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2 py-0.5 rounded">
           105m × 68m Planar
         </span>
       </div>
 
       {/* Phase Indicator */}
-      <div className="flex items-center justify-between text-[10px] font-mono bg-[#10151E] p-2 rounded-lg border border-[#222B3D]">
-        <div className="flex items-center gap-1.5 text-[#EF0107]">
+      <div className="flex items-center justify-between text-[10px] font-mono bg-slate-50 dark:bg-[#18181C] p-2 rounded-lg border border-slate-200/80 dark:border-[#27272A]">
+        <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
           <span className="w-2 h-2 rounded-full bg-[#EF0107]" />
           <span className="font-bold">ARS: 3-2-4-1 Build-up</span>
         </div>
-        <div className="flex items-center gap-1.5 text-[#6CABDD]">
+        <div className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
           <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />
           <span className="font-bold">MCI: 4-4-2 Mid-Block</span>
         </div>
       </div>
 
       {/* Canvas Viewport */}
-      <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden border border-[#222B3D] shadow-inner bg-[#0B1510]">
+      <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden border border-slate-200 dark:border-[#27272A] shadow-inner bg-[#0B1510]">
         <canvas
           ref={canvasRef}
           width={360}
@@ -320,12 +355,12 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowPassingLanes(!showPassingLanes)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showPassingLanes
-              ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm font-semibold'
-              : 'bg-[#10151E] text-[#8E9EB5] border border-[#222B3D] hover:text-white'
+              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
+              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
           }`}
           title="Toggle Passing Lanes"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showPassingLanes ? 'bg-[#00DF59]' : 'bg-[#596982]'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showPassingLanes ? 'bg-[#00DF59]' : 'bg-slate-400'}`} />
           <span>Pass Lanes</span>
         </button>
 
@@ -333,12 +368,12 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowConvexHull(!showConvexHull)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showConvexHull
-              ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm font-semibold'
-              : 'bg-[#10151E] text-[#8E9EB5] border border-[#222B3D] hover:text-white'
+              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
+              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
           }`}
           title="Toggle Team Shape Convex Hull"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showConvexHull ? 'bg-white' : 'bg-[#596982]'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showConvexHull ? 'bg-white' : 'bg-slate-400'}`} />
           <span>Shapes</span>
         </button>
 
@@ -346,18 +381,18 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowTacticalZones(!showTacticalZones)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showTacticalZones
-              ? 'bg-[#1D2534] text-white border border-[#35425C] shadow-sm font-semibold'
-              : 'bg-[#10151E] text-[#8E9EB5] border border-[#222B3D] hover:text-white'
+              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
+              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
           }`}
           title="Toggle 18 Tactical Zones & Zone 14"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showTacticalZones ? 'bg-[#F59E0B]' : 'bg-[#596982]'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showTacticalZones ? 'bg-[#F59E0B]' : 'bg-slate-400'}`} />
           <span>Zone 14</span>
         </button>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-[#8E9EB5] border-t border-[#222B3D]">
+      <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#27272A]">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#EF0107]" />
           <span>Arsenal (11)</span>
@@ -367,7 +402,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           <span>Man City (11)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#00DF59]" />
+          <span className="w-2 h-2 rounded-full bg-[#10B981]" />
           <span>Live Ball</span>
         </div>
       </div>

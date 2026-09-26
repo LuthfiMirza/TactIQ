@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import {
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
 } from 'lucide-react';
 
 interface MatchFixture {
@@ -32,108 +30,310 @@ interface H2HEncounter {
   date: string;
   homeTeam: string;
   awayTeam: string;
+  homeShort: string;
+  awayShort: string;
+  homeColor: string;
+  awayColor: string;
   homeScore: number;
   awayScore: number;
   venue: string;
   competition: string;
   outcomeBadge: string;
   outcomeType: 'win-home' | 'win-away' | 'draw';
+  formResult: 'W' | 'D' | 'L';
 }
 
 const H2H_ENCOUNTERS: H2HEncounter[] = [
   {
-    date: '31.03.24', homeTeam: 'Manchester City', awayTeam: 'Arsenal FC',
+    date: '31 Mar 2024', homeTeam: 'Man City', awayTeam: 'Arsenal',
+    homeShort: 'MCI', awayShort: 'ARS', homeColor: '#6CABDD', awayColor: '#EF0107',
     homeScore: 0, awayScore: 0, venue: 'Etihad Stadium',
     competition: 'Premier League', outcomeBadge: 'Draw', outcomeType: 'draw',
+    formResult: 'D',
   },
   {
-    date: '08.10.23', homeTeam: 'Arsenal FC', awayTeam: 'Manchester City',
+    date: '08 Okt 2023', homeTeam: 'Arsenal', awayTeam: 'Man City',
+    homeShort: 'ARS', awayShort: 'MCI', homeColor: '#EF0107', awayColor: '#6CABDD',
     homeScore: 1, awayScore: 0, venue: 'Emirates Stadium',
     competition: 'Premier League', outcomeBadge: 'Arsenal Win', outcomeType: 'win-home',
+    formResult: 'W',
   },
   {
-    date: '06.08.23', homeTeam: 'Arsenal FC', awayTeam: 'Manchester City',
+    date: '06 Agu 2023', homeTeam: 'Arsenal', awayTeam: 'Man City',
+    homeShort: 'ARS', awayShort: 'MCI', homeColor: '#EF0107', awayColor: '#6CABDD',
     homeScore: 1, awayScore: 1, venue: 'Wembley Stadium',
     competition: 'Community Shield', outcomeBadge: 'Arsenal Pens', outcomeType: 'win-home',
+    formResult: 'W',
   },
   {
-    date: '26.04.23', homeTeam: 'Manchester City', awayTeam: 'Arsenal FC',
+    date: '26 Apr 2023', homeTeam: 'Man City', awayTeam: 'Arsenal',
+    homeShort: 'MCI', awayShort: 'ARS', homeColor: '#6CABDD', awayColor: '#EF0107',
     homeScore: 4, awayScore: 1, venue: 'Etihad Stadium',
     competition: 'Premier League', outcomeBadge: 'City Win', outcomeType: 'win-away',
+    formResult: 'L',
   },
   {
-    date: '15.02.23', homeTeam: 'Arsenal FC', awayTeam: 'Manchester City',
+    date: '15 Feb 2023', homeTeam: 'Arsenal', awayTeam: 'Man City',
+    homeShort: 'ARS', awayShort: 'MCI', homeColor: '#EF0107', awayColor: '#6CABDD',
     homeScore: 1, awayScore: 3, venue: 'Emirates Stadium',
     competition: 'Premier League', outcomeBadge: 'City Win', outcomeType: 'win-away',
+    formResult: 'L',
   },
 ];
 
 const MATCHDAY_FIXTURES: MatchFixture[] = [
   {
-    id: 'fix-1', homeTeam: 'Liverpool FC', homeShort: 'LIV', homeColor: '#C8102E',
-    awayTeam: 'Chelsea FC', awayShort: 'CHE', awayColor: '#034694',
+    id: 'fix-1', homeTeam: 'Liverpool', homeShort: 'LIV', homeColor: '#C8102E',
+    awayTeam: 'Chelsea', awayShort: 'CHE', awayColor: '#034694',
     homeScore: 3, awayScore: 1, timeOrStatus: 'FT', statusType: 'FINISHED',
     venue: 'Anfield', xgHome: 2.88, xgAway: 0.94, matchdayNote: 'High Conversion',
   },
   {
     id: 'fix-2', homeTeam: 'Aston Villa', homeShort: 'AVL', homeColor: '#95BFE5',
-    awayTeam: 'Tottenham Hotspur', awayShort: 'TOT', awayColor: '#132257',
+    awayTeam: 'Spurs', awayShort: 'TOT', awayColor: '#132257',
     timeOrStatus: '20:00 Today', statusType: 'UPCOMING',
     venue: 'Villa Park', projectedResult: 'Villa 2 — 1 Spurs', winProbHome: 48,
   },
   {
-    id: 'fix-3', homeTeam: 'Newcastle United', homeShort: 'NEW', homeColor: '#241F20',
-    awayTeam: 'Brighton & Hove Albion', awayShort: 'BHA', awayColor: '#0057B8',
+    id: 'fix-3', homeTeam: 'Newcastle', homeShort: 'NEW', homeColor: '#241F20',
+    awayTeam: 'Brighton', awayShort: 'BHA', awayColor: '#0057B8',
     homeScore: 0, awayScore: 0, timeOrStatus: 'FT', statusType: 'FINISHED',
     venue: "St. James' Park", xgHome: 0.88, xgAway: 0.74, matchdayNote: 'Low Block Draw',
   },
   {
-    id: 'fix-4', homeTeam: 'AFC Bournemouth', homeShort: 'BOU', homeColor: '#DA291C',
-    awayTeam: 'Arsenal FC', awayShort: 'ARS', awayColor: '#EF0107',
+    id: 'fix-4', homeTeam: 'Bournemouth', homeShort: 'BOU', homeColor: '#DA291C',
+    awayTeam: 'Arsenal', awayShort: 'ARS', awayColor: '#EF0107',
     timeOrStatus: '16:30 Tomorrow', statusType: 'UPCOMING',
     venue: 'Vitality Stadium', projectedResult: 'Sim Readiness: 94%', matchdayNote: 'Preview Active',
   },
 ];
 
 const LEAGUE_STANDINGS = [
-  { rank: 1, club: 'Arsenal FC', played: 8, gd: '+32', pts: 58, form: ['W', 'W', 'W'], isLeader: true },
-  { rank: 2, club: 'Manchester City', played: 8, gd: '+29', pts: 56, form: ['W', 'D', 'L'], isLeader: false },
-  { rank: 3, club: 'Liverpool FC', played: 8, gd: '+24', pts: 54, form: ['W', 'W', 'D'], isLeader: false },
+  { rank: 1, club: 'Arsenal', played: 8, gd: '+32', pts: 58, form: ['W', 'W', 'W'], isLeader: true },
+  { rank: 2, club: 'Man City', played: 8, gd: '+29', pts: 56, form: ['W', 'D', 'L'], isLeader: false },
+  { rank: 3, club: 'Liverpool', played: 8, gd: '+24', pts: 54, form: ['W', 'W', 'D'], isLeader: false },
   { rank: 4, club: 'Aston Villa', played: 7, gd: '+12', pts: 49, form: ['W', 'W', 'L'], isLeader: false },
 ];
 
-export default function MatchCenterPage() {
-  const [filterTab, setFilterTab] = useState<'ALL' | 'FINISHED' | 'UPCOMING'>('ALL');
-  const [showAiModal, setShowAiModal] = useState(false);
+const STATS_DATA = {
+  ALL: {
+    top: [
+      { label: 'Ball possession', homeVal: '53%', awayVal: '47%', homeNum: 53, awayNum: 47 },
+      { label: 'Expected goals (xG)', homeVal: '1.84', awayVal: '1.12', homeNum: 1.84, awayNum: 1.12 },
+      { label: 'Total shots', homeVal: 14, awayVal: 9, homeNum: 14, awayNum: 9 },
+      { label: 'Shots on target', homeVal: 6, awayVal: 3, homeNum: 6, awayNum: 3 },
+      { label: 'Big chances', homeVal: 3, awayVal: 1, homeNum: 3, awayNum: 1 },
+      { label: 'Touches in opp. box', homeVal: 28, awayVal: 19, homeNum: 28, awayNum: 19 },
+      { label: 'Accurate passes', homeVal: '482 (88%)', awayVal: '390 (84%)', homeNum: 482, awayNum: 390 },
+      { label: 'Corners', homeVal: 6, awayVal: 4, homeNum: 6, awayNum: 4 },
+    ],
+    shots: [
+      { label: 'Shots off target', homeVal: 5, awayVal: 4, homeNum: 5, awayNum: 4 },
+      { label: 'Blocked shots', homeVal: 3, awayVal: 2, homeNum: 3, awayNum: 2 },
+      { label: 'Shots inside box', homeVal: 10, awayVal: 5, homeNum: 10, awayNum: 5 },
+      { label: 'Shots outside box', homeVal: 4, awayVal: 4, homeNum: 4, awayNum: 4 },
+    ],
+    passes: [
+      { label: 'Own half passes', homeVal: 234, awayVal: 210, homeNum: 234, awayNum: 210 },
+      { label: 'Opposition half', homeVal: 248, awayVal: 180, homeNum: 248, awayNum: 180 },
+      { label: 'Accurate long balls', homeVal: '22 (65%)', awayVal: '26 (58%)', homeNum: 22, awayNum: 26 },
+      { label: 'Accurate crosses', homeVal: '5 (38%)', awayVal: '3 (25%)', homeNum: 5, awayNum: 3 },
+      { label: 'Offsides', homeVal: 1, awayVal: 2, homeNum: 1, awayNum: 2 },
+    ],
+    defence: [
+      { label: 'Tackles won', homeVal: '15 (75%)', awayVal: '12 (60%)', homeNum: 15, awayNum: 12 },
+      { label: 'Interceptions', homeVal: 8, awayVal: 6, homeNum: 8, awayNum: 6 },
+      { label: 'Clearances', homeVal: 18, awayVal: 22, homeNum: 18, awayNum: 22 },
+      { label: 'Keeper saves', homeVal: 2, awayVal: 4, homeNum: 2, awayNum: 4 },
+      { label: 'Fouls committed', homeVal: 9, awayVal: 11, homeNum: 9, awayNum: 11 },
+    ],
+  },
+  '1ST': {
+    top: [
+      { label: 'Ball possession', homeVal: '51%', awayVal: '49%', homeNum: 51, awayNum: 49 },
+      { label: 'Expected goals (xG)', homeVal: '0.92', awayVal: '0.78', homeNum: 0.92, awayNum: 0.78 },
+      { label: 'Total shots', homeVal: 7, awayVal: 5, homeNum: 7, awayNum: 5 },
+      { label: 'Shots on target', homeVal: 3, awayVal: 2, homeNum: 3, awayNum: 2 },
+      { label: 'Big chances', homeVal: 1, awayVal: 1, homeNum: 1, awayNum: 1 },
+      { label: 'Touches in opp. box', homeVal: 13, awayVal: 10, homeNum: 13, awayNum: 10 },
+      { label: 'Accurate passes', homeVal: '240 (89%)', awayVal: '215 (86%)', homeNum: 240, awayNum: 215 },
+      { label: 'Corners', homeVal: 3, awayVal: 2, homeNum: 3, awayNum: 2 },
+    ],
+    shots: [
+      { label: 'Shots off target', homeVal: 3, awayVal: 2, homeNum: 3, awayNum: 2 },
+      { label: 'Blocked shots', homeVal: 1, awayVal: 1, homeNum: 1, awayNum: 1 },
+      { label: 'Shots inside box', homeVal: 5, awayVal: 3, homeNum: 5, awayNum: 3 },
+      { label: 'Shots outside box', homeVal: 2, awayVal: 2, homeNum: 2, awayNum: 2 },
+    ],
+    passes: [
+      { label: 'Own half passes', homeVal: 120, awayVal: 115, homeNum: 120, awayNum: 115 },
+      { label: 'Opposition half', homeVal: 120, awayVal: 100, homeNum: 120, awayNum: 100 },
+      { label: 'Accurate long balls', homeVal: '10 (62%)', awayVal: '12 (55%)', homeNum: 10, awayNum: 12 },
+      { label: 'Accurate crosses', homeVal: '2 (33%)', awayVal: '1 (20%)', homeNum: 2, awayNum: 1 },
+      { label: 'Offsides', homeVal: 0, awayVal: 1, homeNum: 0, awayNum: 1 },
+    ],
+    defence: [
+      { label: 'Tackles won', homeVal: '8 (80%)', awayVal: '6 (60%)', homeNum: 8, awayNum: 6 },
+      { label: 'Interceptions', homeVal: 4, awayVal: 3, homeNum: 4, awayNum: 3 },
+      { label: 'Clearances', homeVal: 9, awayVal: 11, homeNum: 9, awayNum: 11 },
+      { label: 'Keeper saves', homeVal: 1, awayVal: 2, homeNum: 1, awayNum: 2 },
+      { label: 'Fouls committed', homeVal: 4, awayVal: 5, homeNum: 4, awayNum: 5 },
+    ],
+  },
+  '2ND': {
+    top: [
+      { label: 'Ball possession', homeVal: '56%', awayVal: '44%', homeNum: 56, awayNum: 44 },
+      { label: 'Expected goals (xG)', homeVal: '0.92', awayVal: '0.34', homeNum: 0.92, awayNum: 0.34 },
+      { label: 'Total shots', homeVal: 7, awayVal: 4, homeNum: 7, awayNum: 4 },
+      { label: 'Shots on target', homeVal: 3, awayVal: 1, homeNum: 3, awayNum: 1 },
+      { label: 'Big chances', homeVal: 2, awayVal: 0, homeNum: 2, awayNum: 0 },
+      { label: 'Touches in opp. box', homeVal: 15, awayVal: 9, homeNum: 15, awayNum: 9 },
+      { label: 'Accurate passes', homeVal: '242 (87%)', awayVal: '175 (82%)', homeNum: 242, awayNum: 175 },
+      { label: 'Corners', homeVal: 3, awayVal: 2, homeNum: 3, awayNum: 2 },
+    ],
+    shots: [
+      { label: 'Shots off target', homeVal: 2, awayVal: 2, homeNum: 2, awayNum: 2 },
+      { label: 'Blocked shots', homeVal: 2, awayVal: 1, homeNum: 2, awayNum: 1 },
+      { label: 'Shots inside box', homeVal: 5, awayVal: 2, homeNum: 5, awayNum: 2 },
+      { label: 'Shots outside box', homeVal: 2, awayVal: 2, homeNum: 2, awayNum: 2 },
+    ],
+    passes: [
+      { label: 'Own half passes', homeVal: 114, awayVal: 95, homeNum: 114, awayNum: 95 },
+      { label: 'Opposition half', homeVal: 128, awayVal: 80, homeNum: 128, awayNum: 80 },
+      { label: 'Accurate long balls', homeVal: '12 (67%)', awayVal: '14 (61%)', homeNum: 12, awayNum: 14 },
+      { label: 'Accurate crosses', homeVal: '3 (43%)', awayVal: '2 (29%)', homeNum: 3, awayNum: 2 },
+      { label: 'Offsides', homeVal: 1, awayVal: 1, homeNum: 1, awayNum: 1 },
+    ],
+    defence: [
+      { label: 'Tackles won', homeVal: '7 (70%)', awayVal: '6 (60%)', homeNum: 7, awayNum: 6 },
+      { label: 'Interceptions', homeVal: 4, awayVal: 3, homeNum: 4, awayNum: 3 },
+      { label: 'Clearances', homeVal: 9, awayVal: 11, homeNum: 9, awayNum: 11 },
+      { label: 'Keeper saves', homeVal: 1, awayVal: 2, homeNum: 1, awayNum: 2 },
+      { label: 'Fouls committed', homeVal: 5, awayVal: 6, homeNum: 5, awayNum: 6 },
+    ],
+  },
+};
+
+const LINEUPS = {
+  home: {
+    formation: '4-3-3',
+    starters: [
+      { num: 22, name: 'David Raya', pos: 'GK' },
+      { num: 4, name: 'Ben White', pos: 'RB' },
+      { num: 2, name: 'William Saliba', pos: 'CB' },
+      { num: 6, name: 'Gabriel', pos: 'CB' },
+      { num: 12, name: 'Jurriën Timber', pos: 'LB' },
+      { num: 5, name: 'Thomas Partey', pos: 'DM' },
+      { num: 41, name: 'Declan Rice', pos: 'CM' },
+      { num: 8, name: 'Martin Ødegaard', pos: 'AM', isCaptain: true },
+      { num: 7, name: 'Bukayo Saka', pos: 'RW' },
+      { num: 29, name: 'Kai Havertz', pos: 'ST' },
+      { num: 11, name: 'Gabriel Martinelli', pos: 'LW' },
+    ],
+  },
+  away: {
+    formation: '4-1-4-1',
+    starters: [
+      { num: 31, name: 'Ederson', pos: 'GK' },
+      { num: 2, name: 'Kyle Walker', pos: 'RB', isCaptain: true },
+      { num: 3, name: 'Rúben Dias', pos: 'CB' },
+      { num: 25, name: 'Manuel Akanji', pos: 'CB' },
+      { num: 24, name: 'Joško Gvardiol', pos: 'LB' },
+      { num: 16, name: 'Rodri', pos: 'DM' },
+      { num: 20, name: 'Bernardo Silva', pos: 'RM' },
+      { num: 17, name: 'Kevin De Bruyne', pos: 'AM' },
+      { num: 47, name: 'Phil Foden', pos: 'AM' },
+      { num: 10, name: 'Jack Grealish', pos: 'LM' },
+      { num: 9, name: 'Erling Haaland', pos: 'ST' },
+    ],
+  },
+};
+
+function MatchStatRow({
+  label,
+  homeVal,
+  awayVal,
+  homeNum,
+  awayNum,
+  homeColor = '#EF0107',
+  awayColor = '#6CABDD',
+}: {
+  label: string;
+  homeVal: string | number;
+  awayVal: string | number;
+  homeNum: number;
+  awayNum: number;
+  homeColor?: string;
+  awayColor?: string;
+}) {
+  const total = homeNum + awayNum;
+  const homePct = total > 0 ? Math.round((homeNum / total) * 100) : 50;
+  const awayPct = 100 - homePct;
+  const isHomeWinner = homeNum > awayNum;
+  const isAwayWinner = awayNum > homeNum;
 
   return (
-    <div className="w-full flex flex-col gap-8 pb-12">
+    <div className="py-2 sm:py-2.5">
+      <div className="flex items-center justify-between text-xs mb-1 font-mono">
+        <span className={`w-14 sm:w-20 text-left truncate ${isHomeWinner ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+          {homeVal}
+        </span>
+        <span className="text-[11px] sm:text-xs font-sans font-medium text-slate-600 dark:text-slate-300 text-center flex-1 truncate px-1 sm:px-2">
+          {label}
+        </span>
+        <span className={`w-14 sm:w-20 text-right truncate ${isAwayWinner ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+          {awayVal}
+        </span>
+      </div>
+      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 gap-1">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${homePct}%`, backgroundColor: homeColor }}
+        />
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${awayPct}%`, backgroundColor: awayColor }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function MatchCenterPage() {
+  const [filterTab, setFilterTab] = useState<'ALL' | 'FINISHED' | 'UPCOMING'>('ALL');
+  const [matchTab, setMatchTab] = useState<'stats' | 'h2h' | 'lineups' | 'table'>('stats');
+  const [statsPeriod, setStatsPeriod] = useState<'ALL' | '1ST' | '2ND'>('ALL');
+  const [showAiModal, setShowAiModal] = useState(false);
+
+  const activeStats = STATS_DATA[statsPeriod];
+
+  return (
+    <div className="w-full flex flex-col gap-6 pb-12">
       
       {/* ── Matchday Header Strip ─────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#222B3D] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-[#27272A] pb-3">
         <div className="flex items-center gap-3">
-          <button className="w-8 h-8 rounded-lg border border-[#222B3D] bg-[#141A24] flex items-center justify-center text-[#8E9EB5] hover:text-white transition-colors">
+          <button className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors shrink-0">
             <ChevronLeft size={14} />
           </button>
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#596982] block">Schedule Database</span>
-            <span className="font-display font-black text-xs uppercase tracking-wider text-white">Gameweek 08 / Premier League</span>
+            <span className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">GW08 · Premier League</span>
           </div>
-          <button className="w-8 h-8 rounded-lg border border-[#222B3D] bg-[#141A24] flex items-center justify-center text-[#8E9EB5] hover:text-white transition-colors">
+          <button className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors shrink-0">
             <ChevronRight size={14} />
           </button>
         </div>
 
         {/* Tab Filters */}
-        <div className="flex items-center border border-[#222B3D] bg-[#141A24] rounded-lg p-0.5">
+        <div className="flex items-center border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] rounded-lg p-0.5 shadow-xs w-fit">
           {(['ALL', 'FINISHED', 'UPCOMING'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setFilterTab(tab)}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors ${
                 filterTab === tab
-                  ? 'bg-[#00DF59] text-black'
-                  : 'text-[#8E9EB5] hover:text-white'
+                  ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
               }`}
             >
               {tab}
@@ -142,266 +342,358 @@ export default function MatchCenterPage() {
         </div>
       </div>
 
-      {/* ── Featured Match Card (Concept B Matchday Pass + Club Lighting) ── */}
-      <div className="relative rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg border border-[#222B3D] bg-[#141A24] p-6 lg:p-8 shadow-2xl overflow-hidden">
+      {/* ── Featured Match Card with Tabs ── */}
+      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-7 shadow-xs overflow-hidden transition-colors">
         
-        {/* Atmospheric Club Ambient Lights */}
-        <div className="absolute top-0 left-0 w-2/5 h-full bg-gradient-to-r from-[#EF0107]/20 via-[#EF0107]/4 to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 w-2/5 h-full bg-gradient-to-l from-[#6CABDD]/20 via-[#6CABDD]/4 to-transparent pointer-events-none" />
-
         {/* Meta Header */}
-        <div className="relative flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#222B3D]">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00DF59] animate-pulse" />
-            <span className="text-xs font-semibold text-white font-mono uppercase tracking-wider">
-              MATCH PASS · Emirates Stadium, London · Premier League GW08
+        <div className="relative flex flex-wrap items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-slate-100 dark:border-[#27272A]">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+            <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider truncate max-w-[200px] sm:max-w-none">
+              Emirates Stadium · PL GW08
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="text-[#8E9EB5]">Ref: M. Oliver</span>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-[#092B16] border border-[#145A30] text-[#00DF59] font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00DF59] animate-pulse" />
-              <span>68&apos; Live</span>
-            </div>
+          <div className="flex items-center gap-1.5 font-bold text-xs font-mono text-[#00A83F] dark:text-[#10B981]">
+            <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+            <span>68&apos; LIVE</span>
           </div>
         </div>
 
         {/* Score & Clubs */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-12 items-center gap-8 py-10">
-          
-          {/* Home: Arsenal */}
-          <div className="lg:col-span-4 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] border-2 border-white/20 flex items-center justify-center font-display font-black text-base text-white shadow-[0_0_24px_rgba(239,1,7,0.45)] shrink-0">
-              ARS
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-white leading-none">
-                  Arsenal FC
+        <div className="py-4 sm:py-8">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-8">
+            
+            {/* Home: Arsenal */}
+            <div className="flex items-center justify-end gap-2 sm:gap-4 text-right min-w-0">
+              <div className="min-w-0">
+                <h2 className="font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white leading-tight truncate">
+                  <span className="hidden sm:inline">Arsenal</span>
+                  <span className="sm:hidden">ARS</span>
                 </h2>
-                <span className="text-[10px] font-mono text-[#EF0107] font-bold">[Home]</span>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">1st in PL</span>
               </div>
-              <span className="text-xs font-mono text-[#FF5A5F] mt-1.5 block">B. Saka 34&apos;, G. Martinelli 58&apos;</span>
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-sm shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]">
+                ARS
+              </div>
             </div>
-          </div>
 
-          {/* Monumental Center Score */}
-          <div className="lg:col-span-4 flex flex-col items-center justify-center border-y lg:border-y-0 lg:border-x border-[#222B3D] py-6 lg:py-0">
-            <div className="flex items-center justify-center gap-6">
-              <span className="font-display font-black text-6xl text-white tracking-tighter tabular-nums">2</span>
-              <span className="font-display font-light text-3xl text-[#596982]">:</span>
-              <span className="font-display font-black text-6xl text-white tracking-tighter tabular-nums">1</span>
+            {/* Monumental Center Score & Status */}
+            <div className="flex flex-col items-center justify-center px-1.5 sm:px-8 shrink-0">
+              <div className="flex items-center justify-center gap-2 sm:gap-4">
+                <span className="font-extrabold text-3xl sm:text-5xl text-slate-900 dark:text-white tracking-tight tabular-nums">2</span>
+                <span className="font-normal text-xl sm:text-3xl text-slate-300 dark:text-slate-600">-</span>
+                <span className="font-extrabold text-3xl sm:text-5xl text-slate-900 dark:text-white tracking-tight tabular-nums">1</span>
+              </div>
+              <span className="text-[11px] sm:text-sm font-medium text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
+                68&apos; Live
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-2 text-[#00DF59] text-xs font-bold">
-              <TrendingUp size={14} />
-              <span>Arsenal Momentum +0.42 xT</span>
-            </div>
-          </div>
 
-          {/* Away: Manchester City */}
-          <div className="lg:col-span-4 flex items-center justify-start lg:justify-end gap-4">
-            <div className="text-left lg:text-right order-2 lg:order-1">
-              <div className="flex items-center lg:justify-end gap-2">
-                <span className="text-[10px] font-mono text-[#6CABDD] font-bold">[Away]</span>
-                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-white leading-none">
-                  Man City
+            {/* Away: Manchester City */}
+            <div className="flex items-center justify-start gap-2 sm:gap-4 text-left min-w-0">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#6CABDD] to-[#458BB8] flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-sm shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]">
+                MCI
+              </div>
+              <div className="min-w-0">
+                <h2 className="font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white leading-tight truncate">
+                  <span className="hidden sm:inline">Man City</span>
+                  <span className="sm:hidden">MCI</span>
                 </h2>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">2nd in PL</span>
               </div>
-              <span className="text-xs font-mono text-[#6CABDD] mt-1.5 block">E. Haaland 42&apos; (P)</span>
             </div>
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6CABDD] to-[#458BB8] border-2 border-white/20 flex items-center justify-center font-display font-black text-base text-white order-1 lg:order-2 shadow-[0_0_24px_rgba(108,171,221,0.45)] shrink-0">
-              MCI
-            </div>
+
           </div>
 
+          {/* Symmetrical Scorers Row */}
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-8 mt-3 sm:mt-5 pt-2 sm:pt-3 border-t border-slate-100/80 dark:border-[#27272A] text-xs">
+            <div className="text-right space-y-0.5 sm:space-y-1 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs">
+              <span className="block truncate">B. Saka 34&apos;</span>
+              <span className="block truncate">G. Martinelli 58&apos;</span>
+            </div>
+            <div className="flex items-center justify-center px-2 sm:px-4 pt-0.5 text-slate-400 dark:text-zinc-500 text-xs select-none">
+              <span>⚽</span>
+            </div>
+            <div className="text-left space-y-0.5 sm:space-y-1 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs">
+              <span className="block truncate">E. Haaland 42&apos; (P)</span>
+            </div>
+          </div>
         </div>
 
-        {/* Ticket Perforated Divider with Cutout Notches */}
-        <div className="relative flex items-center my-2">
-          <div className="absolute -left-10 w-7 h-7 rounded-full bg-[#0B0E14] border border-[#222B3D] z-10 shadow-inner" />
-          <div className="w-full border-t border-dashed border-[#222B3D] mx-2" />
-          <div className="absolute -right-10 w-7 h-7 rounded-full bg-[#0B0E14] border border-[#222B3D] z-10 shadow-inner" />
-        </div>
-
-        {/* FotMob Live Win Probability Bar */}
-        <div className="pt-6">
-          <div className="flex items-center justify-between text-xs font-mono pb-2.5">
-            <span className="text-[10px] uppercase tracking-wider text-[#596982]">FotMob Live Probability</span>
-            <div className="flex items-center gap-6">
-              <span className="text-[#00DF59] font-bold">Arsenal 58%</span>
-              <span className="text-[#8E9EB5]">Draw 24%</span>
-              <span className="text-[#6CABDD] font-bold">Man City 18%</span>
+        {/* Live Win Probability Bar */}
+        <div className="pt-4 border-t border-slate-100 dark:border-[#27272A]">
+          <div className="flex items-center justify-between text-xs font-mono pb-2">
+            <div className="flex items-center gap-5">
+              <span className="text-[#00A83F] dark:text-[#10B981] font-bold">ARS 58%</span>
+              <span className="text-slate-500 dark:text-zinc-400">Draw 24%</span>
+              <span className="text-sky-700 dark:text-sky-400 font-bold">MCI 18%</span>
             </div>
           </div>
           
-          <div className="w-full h-2 bg-[#1D2534] rounded-full flex overflow-hidden">
-            <div className="h-full bg-[#00DF59]" style={{ width: '58%' }} />
-            <div className="h-full bg-[#596982]" style={{ width: '24%' }} />
-            <div className="h-full bg-[#6CABDD]" style={{ width: '18%' }} />
+          <div className="w-full h-2 bg-slate-100 dark:bg-zinc-800 rounded-full flex overflow-hidden">
+            <div className="h-full bg-[#00A83F] dark:bg-[#10B981]" style={{ width: '58%' }} />
+            <div className="h-full bg-slate-300 dark:bg-zinc-600" style={{ width: '24%' }} />
+            <div className="h-full bg-sky-500" style={{ width: '18%' }} />
           </div>
         </div>
 
-        {/* 3 Telemetric Multi-Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 font-mono text-xs">
-          <div className="p-4 rounded-xl bg-[#1D2534] border border-[#222B3D]">
-            <div className="flex justify-between text-[#8E9EB5] text-[10px] uppercase mb-1">
-              <span>Expected Goals (xG)</span>
-              <span className="text-[#F59E0B] font-bold">Delta +0.72</span>
-            </div>
-            <div className="flex items-baseline justify-between text-xl font-bold text-white mt-1">
-              <span className="text-[#F59E0B]">1.84</span>
-              <span className="text-[10px] text-[#596982]">Non-Penalty xG</span>
-              <span>1.12</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#1D2534] border border-[#222B3D]">
-            <div className="flex justify-between text-[#8E9EB5] text-[10px] uppercase mb-1">
-              <span>Possession Share</span>
-              <span className="text-white">Arsenal 53%</span>
-            </div>
-            <div className="flex items-baseline justify-between text-xl font-bold text-white mt-1">
-              <span className="text-[#00DF59]">53%</span>
-              <span className="text-[10px] text-[#596982]">Passes: 412 vs 388</span>
-              <span>47%</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#1D2534] border border-[#222B3D]">
-            <div className="flex justify-between text-[#8E9EB5] text-[10px] uppercase mb-1">
-              <span>Big Chances</span>
-              <span className="text-[#38BDF8] font-bold">Conv. 66%</span>
-            </div>
-            <div className="flex items-baseline justify-between text-xl font-bold text-white mt-1">
-              <span className="text-[#00DF59]">3</span>
-              <span className="text-[10px] text-[#596982]">Box Touches: 26 vs 14</span>
-              <span>1</span>
-            </div>
-          </div>
+        {/* ── Match Tabs Bar ── */}
+        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-[#27272A] pt-6 pb-2.5 overflow-x-auto">
+          {(['stats', 'h2h', 'lineups', 'table'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setMatchTab(tab)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+                matchTab === tab
+                  ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+              }`}
+            >
+              {tab === 'stats' ? 'Match Stats' : tab === 'h2h' ? 'H2H' : tab === 'lineups' ? 'Lineups' : 'Table'}
+            </button>
+          ))}
         </div>
 
-      </div>
-
-      {/* ── Lower Workspace: H2H & Standings ───────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left 8 cols: H2H Records & Matchday Fixtures */}
-        <div className="lg:col-span-8 flex flex-col gap-8">
-          
-          {/* H2H Historical Table */}
-          <div className="rounded-2xl border border-[#222B3D] bg-[#141A24] p-6 shadow-xl">
-            <div className="flex items-baseline justify-between border-b border-[#222B3D] pb-4 mb-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#596982] block">Head-to-Head</span>
-                <h3 className="font-display font-black text-sm uppercase tracking-wider text-white mt-0.5">
-                  Recent Encounters
-                </h3>
-              </div>
-              <span className="text-xs font-mono text-[#8E9EB5]">2 Arsenal · 1 Draw · 2 City</span>
-            </div>
-
-            <div className="divide-y divide-[#222B3D]/60 font-mono text-xs">
-              {H2H_ENCOUNTERS.map((h, i) => (
-                <div key={i} className="flex items-center justify-between py-3 hover:bg-[#1D2534] px-2 rounded-lg transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[#8E9EB5] text-[11px]">{h.date}</span>
-                    <span className="font-bold text-white">
-                      {h.homeTeam} {h.homeScore} — {h.awayScore} {h.awayTeam}
-                    </span>
-                    <span className="text-[#596982] text-[10px] hidden sm:inline">({h.competition})</span>
-                  </div>
-                  <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded ${
-                    h.outcomeType === 'win-home' ? 'bg-[#092B16] text-[#00DF59] border border-[#145A30]' : 'bg-[#1D2534] text-[#8E9EB5]'
-                  }`}>
-                    {h.outcomeBadge}
-                  </span>
-                </div>
+        {/* ── Tab Content: STATS ── */}
+        {matchTab === 'stats' && (
+          <div className="pt-4 space-y-6">
+            {/* Period Selector (ALL · 1ST · 2ND) */}
+            <div className="flex items-center justify-center gap-1.5 pb-2">
+              {(['ALL', '1ST', '2ND'] as const).map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setStatsPeriod(period)}
+                  className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
+                    statsPeriod === period
+                      ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  {period === 'ALL' ? 'All Match' : period === '1ST' ? '1st Half' : '2nd Half'}
+                </button>
               ))}
             </div>
-          </div>
 
-          {/* Gameweek Fixtures */}
-          <div className="rounded-2xl border border-[#222B3D] bg-[#141A24] p-6 shadow-xl">
-            <div className="flex items-baseline justify-between border-b border-[#222B3D] pb-4 mb-4">
-              <h3 className="font-display font-black text-sm uppercase tracking-wider text-white">
-                Gameweek 08 Schedule
-              </h3>
-              <span className="text-[10px] font-mono text-[#8E9EB5]">4 Matches</span>
+            {/* Top Stats Section */}
+            <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 sm:p-5 border border-slate-100 dark:border-[#27272A]">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 pb-2 mb-2 border-b border-slate-200/60 dark:border-[#27272A]">
+                Top Stats
+              </div>
+              <div className="divide-y divide-slate-100 dark:divide-[#222227]">
+                {activeStats.top.map((s, idx) => (
+                  <MatchStatRow key={idx} {...s} />
+                ))}
+              </div>
             </div>
 
+            {/* Two-column grid for Shots and Passes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {MATCHDAY_FIXTURES.map((fix) => (
-                <div key={fix.id} className="p-4 rounded-xl border border-[#222B3D] bg-[#1D2534] flex flex-col justify-between font-mono text-xs">
-                  <div className="flex justify-between items-center pb-2 border-b border-[#222B3D] text-[#8E9EB5] text-[10px]">
-                    <span className="font-bold text-[#00DF59] uppercase">{fix.timeOrStatus}</span>
-                    <span>{fix.venue}</span>
+              {/* Shots Section */}
+              <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 pb-2 mb-2 border-b border-slate-200/60 dark:border-[#27272A]">
+                  Shots
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-[#222227]">
+                  {activeStats.shots.map((s, idx) => (
+                    <MatchStatRow key={idx} {...s} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Passes Section */}
+              <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 pb-2 mb-2 border-b border-slate-200/60 dark:border-[#27272A]">
+                  Passes
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-[#222227]">
+                  {activeStats.passes.map((s, idx) => (
+                    <MatchStatRow key={idx} {...s} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Defence Section */}
+            <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 pb-2 mb-2 border-b border-slate-200/60 dark:border-[#27272A]">
+                Defence & Duels
+              </div>
+              <div className="divide-y divide-slate-100 dark:divide-[#222227]">
+                {activeStats.defence.map((s, idx) => (
+                  <MatchStatRow key={idx} {...s} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab Content: H2H ── */}
+        {matchTab === 'h2h' && (
+          <div className="pt-4 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-[#27272A]">
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Past Encounters</span>
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <span className="text-red-600 dark:text-red-400">2 ARS</span>
+                <span className="text-slate-500 dark:text-zinc-400">1 D</span>
+                <span className="text-sky-600 dark:text-sky-400">2 MCI</span>
+              </div>
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
+              {H2H_ENCOUNTERS.map((h, i) => (
+                <div
+                  key={i}
+                  className="py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors grid grid-cols-12 items-center gap-2 sm:gap-4"
+                >
+                  <div className="col-span-3 flex flex-col justify-center">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                      {h.date}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      {h.competition}
+                    </span>
                   </div>
-                  
-                  <div className="py-4 flex justify-between items-center text-sm font-bold text-white">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white" style={{ backgroundColor: fix.homeColor }}>
-                        {fix.homeShort}
+
+                  <div className="col-span-7 flex items-center justify-between gap-2 sm:gap-3">
+                    <div className="flex items-center justify-end gap-2 flex-1 text-right min-w-0">
+                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                        {h.homeTeam}
                       </span>
-                      <span>{fix.homeTeam}</span>
+                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
+                        {h.homeShort}
+                      </span>
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
+                        style={{ backgroundColor: h.homeColor }}
+                      >
+                        {h.homeShort}
+                      </div>
                     </div>
 
-                    <span>{fix.homeScore !== undefined ? `${fix.homeScore} - ${fix.awayScore}` : 'VS'}</span>
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums shrink-0 text-center min-w-[38px]">
+                      <span>{h.homeScore}</span>
+                      <span className="text-slate-300 dark:text-slate-600 mx-1.5 font-normal">-</span>
+                      <span>{h.awayScore}</span>
+                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <span>{fix.awayTeam}</span>
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white" style={{ backgroundColor: fix.awayColor }}>
-                        {fix.awayShort}
+                    <div className="flex items-center justify-start gap-2 flex-1 text-left min-w-0">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
+                        style={{ backgroundColor: h.awayColor }}
+                      >
+                        {h.awayShort}
+                      </div>
+                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
+                        {h.awayShort}
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                        {h.awayTeam}
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-[#222B3D] flex justify-between text-[10px] text-[#8E9EB5]">
-                    <span>{fix.matchdayNote ?? fix.projectedResult}</span>
-                    {fix.xgHome && <span className="text-white font-bold">xG {fix.xgHome} : {fix.xgAway}</span>}
+                  <div className="col-span-2 flex justify-end">
+                    <span
+                      className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-2xs ${
+                        h.formResult === 'W'
+                          ? 'bg-[#16A34A] text-white'
+                          : h.formResult === 'D'
+                          ? 'bg-slate-400 dark:bg-[#3E4452] text-white'
+                          : 'bg-rose-600 text-white'
+                      }`}
+                      title={h.outcomeBadge}
+                    >
+                      {h.formResult}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-        </div>
-
-        {/* Right 4 cols: Standings & Monte Carlo */}
-        <div className="lg:col-span-4 flex flex-col gap-8">
-          
-          {/* Standings Table with FotMob Form Dots */}
-          <div className="rounded-2xl border border-[#222B3D] bg-[#141A24] p-6 shadow-xl">
-            <div className="flex items-baseline justify-between border-b border-[#222B3D] pb-3 mb-3">
-              <h3 className="font-display font-black text-sm uppercase tracking-wider text-white">
-                Live Standings (Top 4)
-              </h3>
-              <span className="text-[10px] font-mono text-[#8E9EB5] uppercase">PL Table</span>
+        {/* ── Tab Content: LINEUPS ── */}
+        {matchTab === 'lineups' && (
+          <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Arsenal XI */}
+            <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
+              <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60 dark:border-[#27272A]">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#EF0107]" />
+                  <span className="font-bold text-xs text-slate-900 dark:text-white">Arsenal</span>
+                </div>
+                <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                  {LINEUPS.home.formation}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                {LINEUPS.home.starters.map((player) => (
+                  <div key={player.num} className="flex items-center justify-between py-1 px-1 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24]">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 text-right font-mono text-slate-400 text-[11px]">{player.num}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{player.name}</span>
+                      {player.isCaptain && <span className="text-[9px] font-bold px-1 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">C</span>}
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400">{player.pos}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="font-mono text-xs divide-y divide-[#222B3D]/60">
-              <div className="flex justify-between py-1.5 text-[10px] uppercase text-[#596982]">
+            {/* Man City XI */}
+            <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
+              <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60 dark:border-[#27272A]">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-[#6CABDD]" />
+                  <span className="font-bold text-xs text-slate-900 dark:text-white">Man City</span>
+                </div>
+                <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                  {LINEUPS.away.formation}
+                </span>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                {LINEUPS.away.starters.map((player) => (
+                  <div key={player.num} className="flex items-center justify-between py-1 px-1 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24]">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 text-right font-mono text-slate-400 text-[11px]">{player.num}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{player.name}</span>
+                      {player.isCaptain && <span className="text-[9px] font-bold px-1 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">C</span>}
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400">{player.pos}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Tab Content: TABLE ── */}
+        {matchTab === 'table' && (
+          <div className="pt-4">
+            <div className="font-mono text-xs divide-y divide-slate-100 dark:divide-[#27272A]">
+              <div className="flex justify-between py-1.5 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
                 <span>Club</span>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <span className="w-5 text-center">P</span>
                   <span className="w-6 text-center">GD</span>
-                  <span className="w-6 text-right font-bold text-white">PTS</span>
+                  <span className="w-6 text-right font-bold text-slate-900 dark:text-white">PTS</span>
                   <span className="w-14 text-right">Form</span>
                 </div>
               </div>
 
               {LEAGUE_STANDINGS.map((row) => (
-                <div key={row.rank} className="flex justify-between py-2.5 items-center hover:bg-[#1D2534] px-1 rounded transition-colors">
+                <div key={row.rank} className="flex justify-between py-2 items-center hover:bg-slate-50 dark:hover:bg-[#1A1A1E] px-1 rounded transition-colors">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#8E9EB5] w-3 font-bold">{row.rank}</span>
-                    <span className="font-bold text-white">{row.club}</span>
+                    <span className="text-slate-500 dark:text-slate-400 w-3 font-bold">{row.rank}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{row.club}</span>
                   </div>
-                  <div className="flex gap-3 items-center tabular-nums">
-                    <span className="w-5 text-center text-[#8E9EB5]">{row.played}</span>
-                    <span className="w-6 text-center text-[#8E9EB5]">{row.gd}</span>
-                    <span className="w-6 text-right font-black text-white">{row.pts}</span>
+                  <div className="flex gap-4 items-center tabular-nums">
+                    <span className="w-5 text-center text-slate-600 dark:text-slate-400">{row.played}</span>
+                    <span className="w-6 text-center text-slate-600 dark:text-slate-400">{row.gd}</span>
+                    <span className="w-6 text-right font-bold text-slate-900 dark:text-white">{row.pts}</span>
                     <div className="w-14 flex items-center justify-end gap-1">
                       {row.form.map((f, i) => (
-                        <span key={i} className={f === 'W' ? 'fm-form-w' : f === 'D' ? 'fm-form-d' : 'fm-form-l'}>
+                        <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
                           {f}
                         </span>
                       ))}
@@ -411,65 +703,148 @@ export default function MatchCenterPage() {
               ))}
             </div>
           </div>
+        )}
 
-          {/* Monte Carlo Simulation Card */}
-          <div className="rounded-2xl border border-[#222B3D] bg-[#141A24] p-6 shadow-xl">
-            <div className="border-b border-[#222B3D] pb-3 mb-3 flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Simulation Engine</span>
-              <span className="text-[10px] font-mono text-[#00DF59] font-bold bg-[#092B16] border border-[#145A30] px-2 py-0.5 rounded">
-                10,000 Runs
-              </span>
+      </div>
+
+      {/* ── Lower Workspace: Fixtures & Simulation ───────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left 8 cols: GW08 Fixtures */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 shadow-xs transition-colors">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-1">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">GW08 Fixtures</h3>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">4 Matches</span>
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
+              {MATCHDAY_FIXTURES.map((fix) => (
+                <div
+                  key={fix.id}
+                  className="py-3 sm:py-3.5 px-2 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-xl transition-colors grid grid-cols-12 items-center gap-2 sm:gap-4"
+                >
+                  <div className="col-span-3 flex flex-col justify-center">
+                    <span className={`text-xs font-bold ${
+                      fix.timeOrStatus === 'FT' ? 'text-[#10B981]' : 'text-slate-900 dark:text-white'
+                    }`}>
+                      {fix.timeOrStatus}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      {fix.venue}
+                    </span>
+                  </div>
+
+                  <div className="col-span-6 flex items-center justify-between gap-2 sm:gap-3">
+                    <div className="flex items-center justify-end gap-2 flex-1 text-right min-w-0">
+                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                        {fix.homeTeam}
+                      </span>
+                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
+                        {fix.homeShort}
+                      </span>
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
+                        style={{ backgroundColor: fix.homeColor }}
+                      >
+                        {fix.homeShort}
+                      </div>
+                    </div>
+
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums shrink-0 text-center min-w-[38px]">
+                      {fix.homeScore !== undefined ? (
+                        <>
+                          <span>{fix.homeScore}</span>
+                          <span className="text-slate-300 dark:text-slate-600 mx-1.5 font-normal">-</span>
+                          <span>{fix.awayScore}</span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500 font-medium text-xs">VS</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-start gap-2 flex-1 text-left min-w-0">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
+                        style={{ backgroundColor: fix.awayColor }}
+                      >
+                        {fix.awayShort}
+                      </div>
+                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
+                        {fix.awayShort}
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                        {fix.awayTeam}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="col-span-3 flex flex-col items-end justify-center text-right">
+                    {fix.xgHome !== undefined ? (
+                      <span className="text-xs text-slate-900 dark:text-white font-bold tabular-nums">
+                        <span className="text-slate-500 font-normal text-[11px]">xG</span> {fix.xgHome} - {fix.xgAway}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                        {fix.projectedResult ?? 'Premier League'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right 4 cols: Simulation Matrix */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 shadow-xs transition-colors">
+            <div className="border-b border-slate-100 dark:border-[#27272A] pb-3 mb-3 flex justify-between items-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Simulation</span>
+              <span className="text-[10px] font-mono text-[#10B981] font-bold">10K runs</span>
             </div>
             
-            <p className="text-xs text-[#8E9EB5] font-sans leading-relaxed mb-4">
-              State-space possession projections indicate an 82% probability for Arsenal to secure points against City overloads.
-            </p>
+            <div className="text-xs font-mono text-slate-600 dark:text-slate-300 mb-4">
+              ARS win probability: <span className="font-bold text-slate-900 dark:text-white">82%</span>
+            </div>
 
             <button
               onClick={() => setShowAiModal(true)}
-              className="w-full py-2.5 bg-[#1D2534] hover:bg-[#00DF59] hover:text-black font-mono font-bold text-xs uppercase tracking-wider rounded-lg transition-colors border border-[#222B3D]"
+              className="w-full py-2.5 bg-slate-900 dark:bg-zinc-100 hover:bg-[#10B981] dark:hover:bg-[#10B981] text-white dark:text-zinc-900 dark:hover:text-white font-mono font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
             >
-              Open Probability Matrix
+              View Matrix
             </button>
           </div>
-
         </div>
 
       </div>
 
-      {/* ── Modal ──────────────────────────────────────────────────────────── */}
+      {/* ── AI Modal ───────────────────────────────────────────────────────── */}
       {showAiModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowAiModal(false)}>
-          <div className="w-full max-w-lg rounded-2xl border border-[#222B3D] bg-[#141A24] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#222B3D] pb-3 mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-white">Monte Carlo Distribution</span>
-              <button onClick={() => setShowAiModal(false)} className="text-[#8E9EB5] hover:text-white font-mono text-xs">
-                [Close]
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" onClick={() => setShowAiModal(false)}>
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-6 shadow-2xl transition-colors" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Score Probabilities</span>
+              <button onClick={() => setShowAiModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-mono text-xs">
+                ✕
               </button>
             </div>
 
             <div className="space-y-4 font-mono text-xs">
-              <div className="p-4 bg-[#1D2534] rounded-xl border border-[#222B3D]">
-                <span className="text-[10px] uppercase text-[#8E9EB5] block mb-3">Most Probable Full-Time Scores</span>
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="p-3 bg-[#141A24] rounded-lg border border-[#00DF59]/40">
-                    <span className="text-base font-black text-white block">2 - 1</span>
-                    <span className="text-[10px] text-[#00DF59] font-bold">34.2% Prob</span>
-                  </div>
-                  <div className="p-3 bg-[#141A24] rounded-lg border border-[#222B3D]">
-                    <span className="text-base font-black text-white block">2 - 2</span>
-                    <span className="text-[10px] text-[#8E9EB5]">21.8% Prob</span>
-                  </div>
-                  <div className="p-3 bg-[#141A24] rounded-lg border border-[#222B3D]">
-                    <span className="text-base font-black text-white block">3 - 1</span>
-                    <span className="text-[10px] text-[#8E9EB5]">16.4% Prob</span>
-                  </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-3 bg-slate-100/70 dark:bg-[#1E1E24] rounded-lg border border-slate-300 dark:border-zinc-700">
+                  <span className="text-base font-black text-slate-900 dark:text-white block">2 - 1</span>
+                  <span className="text-[10px] text-[#10B981] font-bold">34.2%</span>
+                </div>
+                <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
+                  <span className="text-base font-black text-slate-900 dark:text-white block">2 - 2</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">21.8%</span>
+                </div>
+                <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
+                  <span className="text-base font-black text-slate-900 dark:text-white block">3 - 1</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">16.4%</span>
                 </div>
               </div>
-
-              <p className="text-xs text-[#8E9EB5] leading-relaxed">
-                Calibrated on 420,000 historical sequences with state-space pressing metrics and xG conversion models.
-              </p>
             </div>
           </div>
         </div>

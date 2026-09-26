@@ -1,641 +1,744 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import {
+  Trophy,
+  Activity,
+  Flame,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+} from 'lucide-react';
 
-// ─── Realtime Match Telemetry (FotMob Match Card + Multi-Metric Data) ───────
+// ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
-const LIVE_STATS = [
+interface Match {
+  id: string;
+  league: string;
+  leagueCountry: string;
+  round: string;
+  home: string;
+  homeCode: string;
+  homeColor: string;
+  away: string;
+  awayCode: string;
+  awayColor: string;
+  homeScore?: number;
+  awayScore?: number;
+  xgHome?: number;
+  xgAway?: number;
+  status: 'LIVE' | 'FT' | 'HT' | 'UPCOMING';
+  minute?: string;
+  startTime?: string;
+  scorers?: {
+    home: string[];
+    away: string[];
+  };
+  highlightPlayer?: {
+    name: string;
+    rating: number;
+    team: string;
+  };
+}
+
+const LEAGUES = [
+  { id: 'all', name: 'All Matches', flag: '🌍', count: 24 },
+  { id: 'epl', name: 'Premier League', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', count: 8, popular: true },
+  { id: 'ucl', name: 'Champions League', flag: '🇪🇺', count: 6, popular: true },
+  { id: 'laliga', name: 'La Liga', flag: '🇪🇸', count: 5, popular: true },
+  { id: 'seriea', name: 'Serie A', flag: '🇮🇹', count: 4, popular: true },
+  { id: 'bundesliga', name: 'Bundesliga', flag: '🇩🇪', count: 4, popular: true },
+  { id: 'ligue1', name: 'Ligue 1', flag: '🇫🇷', count: 3, popular: false },
+  { id: 'eredivisie', name: 'Eredivisie', flag: '🇳🇱', count: 2, popular: false },
+];
+
+const MATCHES: Match[] = [
+  // Premier League
   {
-    label: 'Expected Goals (xG)',
-    value: '2.31',
-    sub: 'Emirates Domination',
+    id: 'm1',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Arsenal',
+    homeCode: 'ARS',
+    homeColor: '#EF0107',
+    away: 'Man City',
+    awayCode: 'MCI',
+    awayColor: '#6CABDD',
+    homeScore: 2,
+    awayScore: 1,
+    xgHome: 2.31,
+    xgAway: 1.14,
+    status: 'LIVE',
+    minute: "68'",
+    scorers: {
+      home: ["B. Saka 34'", "K. Havertz 62'"],
+      away: ["E. Haaland 19'"],
+    },
+    highlightPlayer: {
+      name: 'B. Saka',
+      rating: 8.6,
+      team: 'Arsenal',
+    },
   },
   {
-    label: 'Possession Share',
-    value: '54.2%',
-    sub: '448 Completed Passes',
+    id: 'm2',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Liverpool',
+    homeCode: 'LIV',
+    homeColor: '#C8102E',
+    away: 'Chelsea',
+    awayCode: 'CHE',
+    awayColor: '#034694',
+    homeScore: 3,
+    awayScore: 1,
+    xgHome: 2.88,
+    xgAway: 0.94,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["M. Salah 29' (P)", "C. Jones 51'", "D. Szoboszlai 88'"],
+      away: ["N. Jackson 48'"],
+    },
+    highlightPlayer: {
+      name: 'M. Salah',
+      rating: 8.3,
+      team: 'Liverpool',
+    },
   },
   {
-    label: 'Pressing Intensity (PPDA)',
-    value: '8.2',
-    sub: 'High Block Sequence',
+    id: 'm3',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Aston Villa',
+    homeCode: 'AVL',
+    homeColor: '#670E36',
+    away: 'Tottenham',
+    awayCode: 'TOT',
+    awayColor: '#132257',
+    status: 'UPCOMING',
+    startTime: '21:00',
+    xgHome: 1.62,
+    xgAway: 1.55,
+  },
+
+  // Champions League
+  {
+    id: 'm4',
+    league: 'Champions League',
+    leagueCountry: 'Europe',
+    round: 'League Phase',
+    home: 'Bayern München',
+    homeCode: 'BAY',
+    homeColor: '#DC052D',
+    away: 'Paris Saint-Germain',
+    awayCode: 'PSG',
+    awayColor: '#004170',
+    homeScore: 3,
+    awayScore: 2,
+    xgHome: 2.15,
+    xgAway: 1.84,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["H. Kane 14', 77'", "J. Musiala 44'"],
+      away: ["O. Dembélé 32'", "B. Barcola 81'"],
+    },
+    highlightPlayer: {
+      name: 'H. Kane',
+      rating: 8.8,
+      team: 'Bayern',
+    },
   },
   {
-    label: 'Big Chances Created',
-    value: '3 — 1',
-    sub: 'Arsenal Conversion 66%',
+    id: 'm5',
+    league: 'Champions League',
+    leagueCountry: 'Europe',
+    round: 'League Phase',
+    home: 'Real Madrid',
+    homeCode: 'RMA',
+    homeColor: '#FEBE10',
+    away: 'Borussia Dortmund',
+    awayCode: 'BVB',
+    awayColor: '#FDE100',
+    status: 'UPCOMING',
+    startTime: '23:45',
+    xgHome: 2.45,
+    xgAway: 1.1,
   },
+
+  // La Liga
   {
-    label: 'Box Touches',
-    value: '28 vs 14',
-    sub: 'Territory Edge',
+    id: 'm6',
+    league: 'La Liga',
+    leagueCountry: 'Spain',
+    round: 'El Clásico',
+    home: 'FC Barcelona',
+    homeCode: 'BAR',
+    homeColor: '#A50044',
+    away: 'Real Madrid',
+    awayCode: 'RMA',
+    awayColor: '#FEBE10',
+    homeScore: 0,
+    awayScore: 0,
+    xgHome: 0.42,
+    xgAway: 0.61,
+    status: 'HT',
+    minute: 'HT',
+    highlightPlayer: {
+      name: 'L. Yamal',
+      rating: 7.2,
+      team: 'Barcelona',
+    },
   },
 ];
 
-function StatGrid() {
-  return (
-    <div className="relative rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg border border-[#222B3D] bg-[#141A24] shadow-2xl shadow-black/80 overflow-hidden">
-      
-      {/* 1. FotMob Matchday Pass Header */}
-      <div className="px-5 py-3 border-b border-[#222B3D] bg-[#10151E] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#00DF59] animate-pulse" />
-          <span className="text-[11px] font-bold text-white uppercase tracking-wider font-mono">
-            MATCH PASS · GW 8
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-[#8E9EB5]">Emirates Stadium</span>
-          <span className="px-2 py-0.5 rounded bg-[#092B16] border border-[#145A30] text-[#00DF59] text-[11px] font-mono font-bold">
-            68&apos; LIVE
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Main FotMob Scoreboard with Atmospheric Club Lighting */}
-      <div className="relative p-6 overflow-hidden">
-        {/* Subtle Club Atmospheric Glows */}
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#EF0107]/20 via-[#EF0107]/5 to-transparent pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[#6CABDD]/20 via-[#6CABDD]/5 to-transparent pointer-events-none" />
-
-        <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          
-          {/* Home: Arsenal */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] border border-white/20 flex items-center justify-center font-display font-black text-xs text-white shrink-0 shadow-[0_0_20px_rgba(239,1,7,0.45)]">
-              ARS
-            </div>
-            <div className="min-w-0">
-              <span className="text-sm font-bold text-white block truncate">Arsenal</span>
-              <span className="text-[10px] text-[#FF5A5F] font-semibold block truncate mt-0.5 font-mono">
-                Saka 34&apos;, Mart. 58&apos;
-              </span>
-            </div>
-          </div>
-
-          {/* Center Score + Rating Pill (Zero Wrapping) */}
-          <div className="flex flex-col items-center justify-center px-3 shrink-0">
-            <div className="font-display font-black text-3xl text-white tracking-tight tabular-nums flex items-center gap-2 whitespace-nowrap">
-              <span>2</span>
-              <span className="text-[#596982] text-xl font-light">-</span>
-              <span>1</span>
-            </div>
-            <span className="fm-rating-high text-[10px] mt-1.5 whitespace-nowrap shadow-sm">
-              8.4 FotMob
-            </span>
-          </div>
-
-          {/* Away: Manchester City */}
-          <div className="flex items-center justify-end gap-3 min-w-0 text-right">
-            <div className="min-w-0">
-              <span className="text-sm font-bold text-white block truncate">Man City</span>
-              <span className="text-[10px] text-[#6CABDD] font-semibold block truncate mt-0.5 font-mono">
-                Haaland 42&apos; (P)
-              </span>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6CABDD] to-[#458BB8] border border-white/20 flex items-center justify-center font-display font-black text-xs text-white shrink-0 shadow-[0_0_20px_rgba(108,171,221,0.45)]">
-              MCI
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* 3. Ticket Perforated Divider with Cutout Notches */}
-      <div className="relative flex items-center my-0">
-        {/* Left Concave Cutout */}
-        <div className="absolute -left-3.5 w-7 h-7 rounded-full bg-[#0B0E14] border border-[#222B3D] z-10 shadow-inner" />
-        {/* Dashed Perforation Line */}
-        <div className="w-full border-t border-dashed border-[#222B3D] mx-4" />
-        {/* Right Concave Cutout */}
-        <div className="absolute -right-3.5 w-7 h-7 rounded-full bg-[#0B0E14] border border-[#222B3D] z-10 shadow-inner" />
-      </div>
-
-      {/* 4. Ticket Stub Telemetry Section */}
-      <div className="p-5 bg-[#10151E]/60 flex flex-col gap-2.5 font-mono text-xs">
-        <div className="flex items-center justify-between text-[10px] text-[#596982] tracking-wider uppercase pb-1 border-b border-[#222B3D]/30">
-          <span>Telemetry Stream</span>
-          <span className="font-mono">#TQ-8849-LIVE</span>
-        </div>
-        {LIVE_STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="flex items-center justify-between py-1.5 border-b border-[#222B3D]/40 last:border-b-0 hover:bg-[#1D2534]/50 px-2 rounded transition-colors"
-          >
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-[#8E9EB5]">{stat.label}</span>
-              <span className="text-[10px] text-[#596982] mt-0.5">{stat.sub}</span>
-            </div>
-            <span className="text-sm font-bold text-white tabular-nums">
-              {stat.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Scout Spotlight (FotMob Player Dossier + StatsBomb Metrics) ─────────────
-
-function ScoutSpotlightCard() {
-  return (
-    <section className="py-10 bg-[#10151E] border-y border-[#222B3D]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="relative rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg border border-[#222B3D] bg-[#141A24] p-6 lg:p-7 shadow-xl hover:border-[#35425C] transition-colors overflow-hidden">
-          {/* Subtle Arsenal Club Glow on Dossier */}
-          <div className="absolute top-0 left-0 w-80 h-full bg-gradient-to-r from-[#EF0107]/10 via-[#EF0107]/2 to-transparent pointer-events-none" />
-
-          <Link href="/scouting" className="relative group block">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-
-              {/* Tag & Player Identity */}
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="relative shrink-0">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] border-2 border-white/20 flex items-center justify-center font-display font-black text-base text-white shadow-[0_0_18px_rgba(239,1,7,0.35)] group-hover:scale-105 transition-transform">
-                    MØ
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded bg-[#141A24] border border-[#222B3D] text-[10px] font-bold leading-none">
-                    🇳🇴
-                  </span>
-                </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="font-display font-black text-xl text-white leading-none">
-                      Martin Ødegaard
-                    </span>
-                    <span className="fm-rating-high text-xs">
-                      8.4 FotMob Rating
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-[#1D2534] text-[#8E9EB5] text-xs font-mono font-bold">
-                      AM / CM
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#8E9EB5] mt-1.5 truncate">
-                    Arsenal FC · Age 25 · 2,520 mins · Premier League 2024–25
-                  </p>
-                </div>
-              </div>
-
-              {/* Multi-Metric Tactical Columns */}
-              <div className="grid grid-cols-3 gap-6 shrink-0 border-t lg:border-t-0 lg:border-l border-[#222B3D] pt-4 lg:pt-0 lg:pl-8 font-mono">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#596982] block">AI Match</span>
-                  <span className="text-xl font-black text-[#00DF59] block mt-0.5">94.2%</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#F59E0B] block">Key Passes</span>
-                  <span className="text-xl font-black text-[#F59E0B] block mt-0.5">2.84</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#38BDF8] block">Exp. Assist</span>
-                  <span className="text-xl font-black text-[#38BDF8] block mt-0.5">0.34</span>
-                </div>
-              </div>
-
-              {/* Inspect Button */}
-              <div className="shrink-0 flex items-center justify-end">
-                <span className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#1D2534] border border-[#222B3D] text-white text-xs font-bold uppercase tracking-wider group-hover:bg-[#00DF59] group-hover:text-black transition-colors">
-                  <span>Player Profile</span>
-                  <ArrowUpRight size={14} />
-                </span>
-              </div>
-
-            </div>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Matchday Scoreboard (FotMob Match Fixtures) ─────────────────────────────
-
-const FOTMOB_FIXTURES = [
-  {
-    league: 'Premier League', round: 'Matchday 8',
-    home: 'Arsenal FC', homeCode: 'ARS', homeColor: '#EF0107',
-    away: 'Manchester City', awayCode: 'MCI', awayColor: '#6CABDD',
-    homeScore: 2, awayScore: 1,
-    minute: "68'", status: 'live' as const,
-    xgHome: '2.31', xgAway: '1.14',
-    ratingHome: '7.8', ratingAway: '6.9',
-  },
-  {
-    league: 'La Liga', round: 'El Clásico',
-    home: 'FC Barcelona', homeCode: 'BAR', homeColor: '#A50044',
-    away: 'Real Madrid', awayCode: 'RMA', awayColor: '#FEBE10',
-    homeScore: 0, awayScore: 0,
-    minute: 'HT', status: 'ht' as const,
-    xgHome: '0.42', xgAway: '0.61',
-    ratingHome: '7.0', ratingAway: '7.1',
-  },
-  {
-    league: 'Premier League', round: 'Gameweek 8',
-    home: 'Liverpool FC', homeCode: 'LIV', homeColor: '#C8102E',
-    away: 'Chelsea FC', awayCode: 'CHE', awayColor: '#034694',
-    homeScore: 3, awayScore: 1,
-    minute: 'FT', status: 'ft' as const,
-    xgHome: '2.88', awayXg: '0.94',
-    ratingHome: '8.1', ratingAway: '6.4',
-  },
+const STANDINGS = [
+  { rank: 1, club: 'Arsenal', code: 'ARS', color: '#EF0107', p: 8, gd: '+18', pts: 58 },
+  { rank: 2, club: 'Man City', code: 'MCI', color: '#6CABDD', p: 8, gd: '+16', pts: 56 },
+  { rank: 3, club: 'Liverpool', code: 'LIV', color: '#C8102E', p: 8, gd: '+14', pts: 54 },
+  { rank: 4, club: 'Aston Villa', code: 'AVL', color: '#670E36', p: 8, gd: '+8', pts: 49 },
+  { rank: 5, club: 'Chelsea', code: 'CHE', color: '#034694', p: 8, gd: '+7', pts: 46 },
 ];
 
-function LiveMatchStrip() {
+const TOP_SCORERS = [
+  { name: 'Erling Haaland', club: 'Man City', goals: 14, rating: 8.4 },
+  { name: 'Mohamed Salah', club: 'Liverpool', goals: 11, rating: 8.2 },
+  { name: 'Bukayo Saka', club: 'Arsenal', goals: 9, rating: 8.6 },
+  { name: 'Cole Palmer', club: 'Chelsea', goals: 8, rating: 8.0 },
+];
+
+export default function HomePage() {
+  const [selectedLeague, setSelectedLeague] = useState<string>('all');
+  const [liveOnly, setLiveOnly] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
+
+  // Filter matches
+  const filteredMatches = MATCHES.filter((m) => {
+    if (selectedLeague !== 'all') {
+      if (selectedLeague === 'epl' && m.league !== 'Premier League') return false;
+      if (selectedLeague === 'ucl' && m.league !== 'Champions League') return false;
+      if (selectedLeague === 'laliga' && m.league !== 'La Liga') return false;
+    }
+    if (liveOnly && m.status !== 'LIVE' && m.status !== 'HT') return false;
+    return true;
+  });
+
+  // Group matches by league
+  const groupedLeagues = Array.from(new Set(filteredMatches.map((m) => m.league)));
+
+  const liveFeaturedMatch = MATCHES.find((m) => m.id === 'm1');
+
   return (
-    <section className="py-14 bg-[#0B0E14] border-b border-[#222B3D]">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-[#F0F2F5] dark:bg-[#09090B] pb-16 pt-4 transition-colors duration-150">
+      <div className="max-w-[1360px] mx-auto px-3 sm:px-6">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00DF59]" />
-            <h3 className="font-display font-black text-base uppercase tracking-wider text-white">
-              FotMob Matchday Scoreboard
-            </h3>
-          </div>
-          <Link href="/match-center" className="text-xs font-bold text-[#00DF59] hover:underline flex items-center gap-1 uppercase tracking-wider">
-            <span>View All Matches</span>
-            <ArrowRight size={13} />
-          </Link>
-        </div>
-
-        {/* Match Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {FOTMOB_FIXTURES.map((m) => (
-            <Link key={m.homeCode + m.awayCode} href="/match-center" className="group block">
-              <div className="relative rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-[#222B3D] bg-[#141A24] hover:border-[#35425C] p-5 shadow-xl transition-all overflow-hidden">
-                
-                {/* Subtle Dual Club Lighting in Background */}
-                <div
-                  className="absolute inset-y-0 left-0 w-2/5 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at left, ${m.homeColor}, transparent 75%)`,
-                  }}
-                />
-                <div
-                  className="absolute inset-y-0 right-0 w-2/5 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at right, ${m.awayColor}, transparent 75%)`,
-                  }}
-                />
-
-                {/* League Header */}
-                <div className="relative flex items-center justify-between pb-3.5 border-b border-[#222B3D]">
-                  <span className="text-xs font-semibold text-[#8E9EB5]">
-                    {m.league} · {m.round}
-                  </span>
-                  
-                  {m.status === 'live' ? (
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#092B16] border border-[#145A30] text-[11px] font-mono font-bold text-[#00DF59]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00DF59] animate-pulse" />
-                      <span>{m.minute} LIVE</span>
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded bg-[#1D2534] text-[11px] font-mono font-bold text-[#8E9EB5]">
-                      {m.minute}
-                    </span>
-                  )}
-                </div>
-
-                {/* Score & Clubs */}
-                <div className="relative py-6 flex items-center justify-between">
-                  {/* Home */}
-                  <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center font-display font-black text-xs text-white shadow-lg transition-transform group-hover:scale-105"
-                      style={{
-                        backgroundColor: m.homeColor,
-                        boxShadow: `0 0 18px ${m.homeColor}55`,
-                      }}
-                    >
-                      {m.homeCode}
-                    </div>
-                    <span className="text-xs font-bold text-white truncate text-center w-full">
-                      {m.home}
-                    </span>
-                  </div>
-
-                  {/* Big Athletic Score */}
-                  <div className="flex flex-col items-center justify-center px-4 shrink-0">
-                    <div className="flex items-center gap-2.5 font-display font-black text-4xl text-white tracking-tight tabular-nums">
-                      <span>{m.homeScore}</span>
-                      <span className="text-[#596982] text-2xl font-light">-</span>
-                      <span>{m.awayScore}</span>
-                    </div>
-                    <span className="text-[10px] uppercase font-bold text-[#596982] mt-1 font-mono">VS</span>
-                  </div>
-
-                  {/* Away */}
-                  <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center font-display font-black text-xs text-white shadow-lg transition-transform group-hover:scale-105"
-                      style={{
-                        backgroundColor: m.awayColor,
-                        boxShadow: `0 0 18px ${m.awayColor}55`,
-                      }}
-                    >
-                      {m.awayCode}
-                    </div>
-                    <span className="text-xs font-bold text-white truncate text-center w-full">
-                      {m.away}
-                    </span>
-                  </div>
-                </div>
-
-                {/* FotMob xG Footer (Multi-Metric Amber Accent) */}
-                <div className="pt-3 border-t border-[#222B3D] flex items-center justify-between text-xs font-mono text-[#8E9EB5]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-[#F59E0B] font-bold">xG</span>
-                    <span className="font-bold text-white">{m.xgHome}</span>
-                  </div>
-                  <span className="text-[10px] text-[#596982]">Expected Goals</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-white">{m.awayXg}</span>
-                    <span className="text-[10px] text-[#F59E0B] font-bold">xG</span>
-                  </div>
-                </div>
-
+        {/* ── Main 3-Column Layout ────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 1: Left Navigation & Pinned Leagues (3 cols / 250px)
+             ════════════════════════════════════════════════════════════════ */}
+          <aside className="hidden lg:flex flex-col gap-4 lg:col-span-3">
+            
+            {/* Quick Filter Card */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3 transition-colors">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 px-3 py-1.5 mb-1">
+                Feeds & Filters
               </div>
-            </Link>
-          ))}
-        </div>
-
-      </div>
-    </section>
-  );
-}
-
-// ─── Product Preview Mockup (With FotMob Rating Chips) ───────────────────────
-
-function ProductPreview() {
-  const PLAYERS = [
-    { name: 'Martin Ødegaard', flag: '🇳🇴', pos: 'MID', club: 'Arsenal FC', match: '94.2', xg: '0.34', kp: '2.84', rating: '8.4', ratingClass: 'fm-rating-high' },
-    { name: 'Dominik Szoboszlai', flag: '🇭🇺', pos: 'MID', club: 'Liverpool FC', match: '91.8', xg: '0.29', kp: '2.68', rating: '8.1', ratingClass: 'fm-rating-high' },
-    { name: 'Gianluca Busio', flag: '🇺🇸', pos: 'MID', club: 'Venezia FC', match: '89.4', xg: '0.21', kp: '2.12', rating: '7.9', ratingClass: 'fm-rating-good' },
-    { name: 'Arda Güler', flag: '🇹🇷', pos: 'MID', club: 'Real Madrid', match: '87.1', xg: '0.28', kp: '2.75', rating: '8.2', ratingClass: 'fm-rating-high' },
-  ];
-
-  return (
-    <div className="w-full rounded-2xl border border-[#222B3D] overflow-hidden bg-[#141A24] shadow-2xl">
-      <div className="flex items-center justify-between px-5 h-11 border-b border-[#222B3D] bg-[#19212E]">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-          <span className="w-2.5 h-2.5 rounded-full bg-[#00DF59]" />
-          <span className="ml-3 text-[11px] text-[#8E9EB5] font-mono">tactiq.io / player-scouting</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#00DF59] animate-pulse" />
-          <span className="text-[10px] font-mono text-[#00DF59] font-bold uppercase">FotMob Ratings Sync</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[2.5fr_1fr_1fr_1fr_1.5fr_1fr] px-5 py-3 border-b border-[#222B3D] text-[#596982] text-[10px] uppercase tracking-wider font-bold">
-        <span>Player Profile</span>
-        <span>Similarity</span>
-        <span>xG / 90</span>
-        <span>Key Passes</span>
-        <span>Club</span>
-        <span>Rating</span>
-      </div>
-
-      {PLAYERS.map((p, i) => (
-        <div
-          key={p.name}
-          className={`grid grid-cols-[2.5fr_1fr_1fr_1fr_1.5fr_1fr] items-center px-5 py-3.5 border-b border-[#222B3D]/60 last:border-b-0 transition-colors ${
-            i === 0 ? 'bg-[#1D2534]' : 'hover:bg-[#1D2534]/60'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-base">{p.flag}</span>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-white leading-tight">{p.name}</span>
-              <span className="text-[10px] text-[#596982]">{p.pos}</span>
-            </div>
-          </div>
-          <span className="text-xs font-bold font-mono text-[#00DF59]">{p.match}%</span>
-          <span className="text-xs font-mono text-[#F59E0B] font-semibold">{p.xg}</span>
-          <span className="text-xs font-mono text-[#38BDF8] font-semibold">{p.kp}</span>
-          <span className="text-xs text-[#8E9EB5]">{p.club}</span>
-          <div>
-            <span className={p.ratingClass}>{p.rating}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Main Landing Page ───────────────────────────────────────────────────────
-
-export default function LandingPage() {
-  return (
-    <div className="min-h-screen text-white bg-[#0B0E14]">
-      {/* ── HERO SECTION: Generous Breathing Room Under Floating Navbar ── */}
-      <section className="relative min-h-[92vh] flex flex-col justify-center pt-36 pb-20 border-b border-[#222B3D]">
-        <div className="max-w-7xl mx-auto w-full px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-
-            {/* Left 7 cols: Bold Athletic Typography */}
-            <div className="lg:col-span-7 flex flex-col gap-6">
-              
-              <div className="font-display leading-[0.9] tracking-tight">
-                <h1 className="text-[clamp(54px,7.5vw,104px)] font-black text-white uppercase">
-                  Football
-                </h1>
-                <h1 className="text-[clamp(54px,7.5vw,104px)] font-black italic text-[#00DF59] uppercase">
-                  Intelligence,
-                </h1>
-                <h1 className="text-[clamp(54px,7.5vw,104px)] font-black text-white uppercase">
-                  Redefined.
-                </h1>
-              </div>
-
-              <p className="text-base text-[#8E9EB5] leading-relaxed max-w-lg">
-                High-density optical tracking, AI player similarity benchmarking, and live match analytics built for football purists, scouts, and performance directors.
-              </p>
-
-              {/* CTAs */}
-              <div className="flex items-center gap-4 pt-2">
-                <Link
-                  href="/scouting"
-                  className="flex items-center gap-2.5 px-7 py-3.5 bg-[#00DF59] hover:bg-[#00C84F] text-black text-sm font-black uppercase tracking-wider rounded-lg shadow-lg shadow-[#00DF59]/25 transition-all duration-150 active:scale-95"
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                    selectedLeague === 'all' && !liveOnly
+                      ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
+                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                  }`}
                 >
-                  <span>Explore Platform</span>
-                  <ArrowRight size={14} />
-                </Link>
-                
+                  <span className="flex items-center gap-2.5">
+                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-[#00A83F] dark:text-[#10B981]' : 'text-slate-400 dark:text-zinc-500'} />
+                    All Matches
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono font-medium">24</span>
+                </button>
+
+                <button
+                  onClick={() => setLiveOnly(!liveOnly)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                    liveOnly
+                      ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
+                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                    Live Matches
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#27272A] text-[#00A83F] dark:text-[#10B981]">
+                    2 LIVE
+                  </span>
+                </button>
+
                 <Link
                   href="/match-center"
-                  className="flex items-center gap-2 px-6 py-3.5 rounded-lg border border-[#222B3D] hover:border-[#35425C] text-sm font-semibold text-white hover:bg-[#141A24] transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
                 >
-                  <span>Watch Demo</span>
-                  <ArrowUpRight size={14} className="text-[#8E9EB5]" />
+                  <span className="flex items-center gap-2.5">
+                    <Activity size={14} className="text-slate-400 dark:text-zinc-500" />
+                    Match Center
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">→</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Popular Leagues Accordion */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3 transition-colors">
+              <div className="flex items-center justify-between px-3 py-1.5 mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                  Popular Leagues
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono">Pinned</span>
+              </div>
+              <div className="space-y-0.5">
+                {LEAGUES.filter((l) => l.id !== 'all').map((league) => {
+                  const isActive = selectedLeague === league.id;
+                  return (
+                    <button
+                      key={league.id}
+                      onClick={() => setSelectedLeague(league.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isActive
+                          ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
+                          : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span className="text-sm">{league.flag}</span>
+                        <span className="truncate">{league.name}</span>
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
+                        {league.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+          </aside>
+
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 2: Center Main Matchday Stream (6 cols)
+             ════════════════════════════════════════════════════════════════ */}
+          <main className="lg:col-span-6 flex flex-col gap-4">
+            
+            {/* Mobile / Tablet Horizontal League & Filter Chips (lg:hidden) */}
+            <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+              <button
+                onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+                  selectedLeague === 'all' && !liveOnly
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                    : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                }`}
+              >
+                All (24)
+              </button>
+
+              <button
+                onClick={() => setLiveOnly(!liveOnly)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
+                  liveOnly
+                    ? 'bg-[#00A83F] dark:bg-[#10B981] text-white font-bold shadow-xs'
+                    : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                <span>Live (2)</span>
+              </button>
+
+              {LEAGUES.filter((l) => l.id !== 'all').map((league) => {
+                const isActive = selectedLeague === league.id && !liveOnly;
+                return (
+                  <button
+                    key={league.id}
+                    onClick={() => { setSelectedLeague(league.id); setLiveOnly(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                        : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                    }`}
+                  >
+                    <span>{league.flag}</span>
+                    <span>{league.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 1. Date Picker Bar */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-1.5 flex items-center justify-between transition-colors">
+              <button className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setSelectedDate('yesterday')}
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedDate === 'yesterday'
+                      ? 'bg-slate-900 dark:bg-zinc-200 text-white dark:text-zinc-900 font-bold'
+                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Yesterday
+                </button>
+
+                <button
+                  onClick={() => setSelectedDate('today')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    selectedDate === 'today'
+                      ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
+                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Today
+                </button>
+
+                <button
+                  onClick={() => setSelectedDate('tomorrow')}
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedDate === 'tomorrow'
+                      ? 'bg-slate-900 dark:bg-zinc-200 text-white dark:text-zinc-900 font-bold'
+                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Tomorrow
+                </button>
+              </div>
+
+              <button className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* 2. Featured Match Hero Card */}
+            {liveFeaturedMatch && (
+              <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+                
+                {/* Match Header */}
+                <div className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#16161A] border-b border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                    <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
+                      {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
+                    </span>
+                  </div>
+                  <span className="text-slate-500 dark:text-zinc-400 text-[11px] font-medium hidden sm:inline">Emirates Stadium</span>
+                </div>
+
+                {/* Scoreboard Block */}
+                <div className="p-3.5 sm:p-5">
+                  
+                  {/* Symmetrical Grid: Home (1fr) - Center (Auto) - Away (1fr) */}
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-4">
+                    
+                    {/* Home Team Column */}
+                    <div className="flex flex-col items-end text-right min-w-0">
+                      {/* Name + Logo */}
+                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
+                        </span>
+                        <div
+                          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-xs shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]"
+                          style={{ backgroundColor: liveFeaturedMatch.homeColor }}
+                        >
+                          {liveFeaturedMatch.homeCode}
+                        </div>
+                      </div>
+
+                      {/* Home Scorers */}
+                      <div className="mt-1.5 sm:mt-2.5 space-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                        {liveFeaturedMatch.scorers?.home.map((s, idx) => (
+                          <div key={idx} className="truncate max-w-[110px] sm:max-w-none">{s}</div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Center Column: Score & Live Status */}
+                    <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-36 shrink-0">
+                      <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2">
+                        <span>{liveFeaturedMatch.homeScore}</span>
+                        <span className="text-slate-300 dark:text-slate-600 font-normal text-xl sm:text-3xl">-</span>
+                        <span>{liveFeaturedMatch.awayScore}</span>
+                      </div>
+                      <span className="text-[11px] sm:text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 whitespace-nowrap">
+                        {liveFeaturedMatch.minute} Live
+                      </span>
+                    </div>
+
+                    {/* Away Team Column */}
+                    <div className="flex flex-col items-start text-left min-w-0">
+                      {/* Logo + Name */}
+                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                        <div
+                          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-xs shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]"
+                          style={{ backgroundColor: liveFeaturedMatch.awayColor }}
+                        >
+                          {liveFeaturedMatch.awayCode}
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
+                        </span>
+                      </div>
+
+                      {/* Away Scorers */}
+                      <div className="mt-1.5 sm:mt-2.5 space-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
+                        {liveFeaturedMatch.scorers?.away.map((s, idx) => (
+                          <div key={idx} className="truncate max-w-[110px] sm:max-w-none">{s}</div>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Minimal xG strip + CTA */}
+                  <div className="mt-3 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-[#27272A] flex items-center justify-between">
+                    <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 tabular-nums">
+                      xG {liveFeaturedMatch.xgHome} — {liveFeaturedMatch.xgAway}
+                    </span>
+                    <Link
+                      href="/match-center"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00A83F] dark:text-[#10B981] hover:text-[#008734] dark:hover:text-[#059669] transition-colors"
+                    >
+                      <span>Match Center</span>
+                      <ArrowRight size={11} />
+                    </Link>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. Grouped Matches By Competition */}
+            <div className="space-y-4">
+              {groupedLeagues.map((leagueName) => {
+                const matchesInLeague = filteredMatches.filter((m) => m.league === leagueName);
+                if (matchesInLeague.length === 0) return null;
+
+                return (
+                  <div key={leagueName} className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+                    
+                    {/* League Subheader */}
+                    <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-[#16161A] border-b border-slate-200/80 dark:border-[#27272A] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{leagueName}</span>
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">· {matchesInLeague[0].leagueCountry}</span>
+                      </div>
+                      <Link
+                        href="/match-center"
+                        className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-[#00A83F] dark:hover:text-[#10B981] flex items-center gap-1 transition-colors"
+                      >
+                        <span>Standings</span>
+                        <ChevronRight size={12} />
+                      </Link>
+                    </div>
+
+                    {/* Match List Rows */}
+                    <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
+                      {matchesInLeague.map((match) => (
+                        <Link
+                          key={match.id}
+                          href="/match-center"
+                          className="block p-3.5 hover:bg-slate-50/80 dark:hover:bg-[#1A1A1E] transition-colors group"
+                        >
+                          <div className="grid grid-cols-[54px_1fr] items-center gap-3">
+                            
+                            {/* Status Column */}
+                            <div className="text-center font-mono">
+                              {match.status === 'LIVE' ? (
+                                <span className="font-bold text-xs sm:text-[13px] text-[#00A83F] dark:text-[#10B981] tracking-tight">
+                                  {match.minute}
+                                </span>
+                              ) : match.status === 'HT' ? (
+                                <span className="font-bold text-xs text-amber-600 dark:text-amber-400 tracking-tight">
+                                  HT
+                                </span>
+                              ) : match.status === 'FT' ? (
+                                <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+                                  FT
+                                </span>
+                              ) : (
+                                <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                  {match.startTime}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Teams & Scorers */}
+                            <div className="space-y-1 min-w-0 pr-1">
+                              {/* Home Row */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div
+                                    className="w-4 h-4 rounded-sm flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                    style={{ backgroundColor: match.homeColor }}
+                                  >
+                                    {match.homeCode[0]}
+                                  </div>
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                    {match.home}
+                                  </span>
+                                </div>
+                                {match.homeScore !== undefined && (
+                                  <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                                    {match.homeScore}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Away Row */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div
+                                    className="w-4 h-4 rounded-sm flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+                                    style={{ backgroundColor: match.awayColor }}
+                                  >
+                                    {match.awayCode[0]}
+                                  </div>
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                    {match.away}
+                                  </span>
+                                </div>
+                                {match.awayScore !== undefined && (
+                                  <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                                    {match.awayScore}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+          </main>
+
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 3: Right Contextual Rail - Standings & Leaders (3 cols)
+             ════════════════════════════════════════════════════════════════ */}
+          <aside className="flex flex-col gap-4 lg:col-span-3">
+            
+            {/* 1. Mini League Standings */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Premier League Table</span>
+                </div>
+                <Link href="/match-center" className="text-[11px] font-semibold text-[#00A83F] dark:text-[#10B981] hover:underline">
+                  Full
                 </Link>
               </div>
 
-              {/* Metric Counters */}
-              <div className="grid grid-cols-3 gap-6 pt-6 border-t border-[#222B3D] max-w-md font-mono">
-                <div>
-                  <div className="text-3xl font-black text-white">1,842</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-[#596982] mt-0.5">Profiles Screened</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-white">31</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-[#596982] mt-0.5">Live Fixtures</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-black text-white">4.2K</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-[#596982] mt-0.5">Tactical Events</div>
-                </div>
+              {/* Table Headers */}
+              <div className="grid grid-cols-[20px_1fr_28px_32px_28px] text-[10px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider pb-1 px-1">
+                <span>#</span>
+                <span>Club</span>
+                <span className="text-center">P</span>
+                <span className="text-center">GD</span>
+                <span className="text-right">PTS</span>
               </div>
 
-            </div>
-
-            {/* Right 5 cols: FotMob Realtime Match Telemetry */}
-            <div className="lg:col-span-5">
-              <StatGrid />
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── C: SCOUT SPOTLIGHT ────────────────────────────────────────────── */}
-      <ScoutSpotlightCard />
-
-      {/* ── A: LIVE MATCH STRIP ───────────────────────────────────────────── */}
-      <LiveMatchStrip />
-
-      {/* ── SECTION: WHAT WE TRACK ────────────────────────────────────────── */}
-      <section className="py-24 border-b border-[#222B3D] bg-[#10151E]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-2.5 mb-14">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00DF59]" />
-            <span className="text-xs font-bold uppercase tracking-wider text-[#8E9EB5]">Core Analytics Capabilities</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                number: '01',
-                title: 'Player Scouting & Profiler',
-                desc: 'Cosine-similarity engine comparing 40+ performance attributes across Europe top 5 leagues to find high-compatibility targets.',
-                href: '/scouting',
-                tags: ['Radar Profiling', 'Anchor Benchmarks', 'Market Value ROI'],
-              },
-              {
-                number: '02',
-                title: 'Live Match Intelligence',
-                desc: 'Realtime expected goals (xG), pressing intensity (PPDA), head-to-head records, and Monte Carlo probability forecasts.',
-                href: '/match-center',
-                tags: ['xG Trajectory', 'H2H Breakdown', 'Monte Carlo Sim'],
-              },
-              {
-                number: '03',
-                title: '2D & Video Tactical Tracker',
-                desc: 'Computer-vision optical frame coordinates plotted to interactive tactical pitch radar with automated event scrubbing.',
-                href: '/tactical-tracker',
-                tags: ['Optical Tracking', '2D Radar Minimap', 'Scrubber Replay'],
-              },
-            ].map((item) => (
-              <div
-                key={item.number}
-                className="bg-[#141A24] border border-[#222B3D] hover:border-[#35425C] rounded-2xl p-6 flex flex-col justify-between group transition-all"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-xs font-bold text-[#00DF59]">{item.number}</span>
-                    <Link href={item.href} className="w-8 h-8 rounded-lg bg-[#1D2534] flex items-center justify-center text-[#8E9EB5] group-hover:text-white group-hover:bg-[#00DF59] group-hover:text-black transition-colors">
-                      <ArrowUpRight size={14} />
-                    </Link>
-                  </div>
-                  <h3 className="font-display font-black text-xl text-white mb-2 leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-[#8E9EB5] leading-relaxed mb-6">
-                    {item.desc}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 pt-4 border-t border-[#222B3D]">
-                  {item.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 rounded bg-[#1D2534] text-[10px] font-mono text-[#8E9EB5]">
-                      {tag}
+              {/* Standings Rows */}
+              <div className="divide-y divide-slate-100 dark:divide-[#27272A] text-xs">
+                {STANDINGS.map((row) => (
+                  <div
+                    key={row.rank}
+                    className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
+                  >
+                    <span className={`font-mono text-[11px] font-bold ${row.rank === 1 ? 'text-[#00A83F] dark:text-[#10B981]' : 'text-slate-500 dark:text-zinc-400'}`}>
+                      {row.rank}
                     </span>
-                  ))}
-                </div>
+                    <div className="flex items-center gap-2 min-w-0 pr-1">
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: row.color }}
+                      />
+                      <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                        {row.club}
+                      </span>
+                    </div>
+                    <span className="font-mono text-slate-600 dark:text-zinc-400 text-center">{row.p}</span>
+                    <span className="font-mono text-slate-600 dark:text-zinc-400 text-center">{row.gd}</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white text-right">{row.pts}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      {/* ── SECTION: PLATFORM PREVIEW ─────────────────────────────────────── */}
-      <section className="py-24 border-b border-[#222B3D] bg-[#0B0E14]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-[#00DF59]" />
-                <span className="text-[11px] uppercase font-bold tracking-wider text-[#8E9EB5]">Data Matrix Preview</span>
+            {/* 2. Top Performers */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Flame size={14} className="text-amber-500" />
+                  Top Scorers
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">GW 8</span>
               </div>
-              <h2 className="font-display text-3xl lg:text-4xl font-black text-white uppercase tracking-tight">
-                Benchmark Radar & Scouting Sheet
-              </h2>
+
+              <div className="space-y-2.5">
+                {TOP_SCORERS.map((player, idx) => (
+                  <div
+                    key={player.name}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="font-mono text-xs font-bold text-slate-400 dark:text-zinc-500 w-3 text-center">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
+                          {player.name}
+                        </span>
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-400 block truncate">
+                          {player.club}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
+                        {player.goals}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                        G
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Link href="/scouting" className="hidden md:flex items-center gap-2 text-xs font-bold text-[#00DF59] hover:underline uppercase tracking-wider">
-              Launch Profiler <ArrowRight size={13} />
-            </Link>
-          </div>
 
-          <ProductPreview />
-        </div>
-      </section>
+          </aside>
 
-      {/* ── FOOTER CTA ────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-[#080B10]">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="border border-[#222B3D] rounded-2xl p-8 lg:p-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 bg-[#141A24] shadow-2xl">
-            <div>
-              <h2 className="font-display text-3xl lg:text-5xl font-black text-white tracking-tight uppercase leading-tight">
-                Ready to elevate your<br />
-                <span className="text-[#00DF59] italic">tactical workflow?</span>
-              </h2>
-              <p className="text-sm text-[#8E9EB5] mt-3 max-w-md">
-                No sign-up required. Jump straight into live match analytics, player comparison radars, and optical tracking.
-              </p>
-            </div>
-            
-            <Link
-              href="/scouting"
-              className="flex items-center gap-2.5 px-8 py-4 bg-[#00DF59] hover:bg-[#00C84F] text-black text-sm font-black tracking-wide uppercase rounded-lg shadow-xl shadow-[#00DF59]/20 transition-all duration-150 active:scale-95 shrink-0"
-            >
-              <span>Get Started Now</span>
-              <ArrowRight size={15} />
-            </Link>
-          </div>
         </div>
-      </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#222B3D] py-8 bg-[#0B0E14]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono">
-          <div className="flex items-center gap-2">
-            <span className="font-display font-black text-sm text-white">Tact<span className="text-[#00DF59]">IQ</span></span>
-            <span className="text-[#596982]">© 2026 TactIQ Platform · Luthfi (API) · Fuad (ML) · Ferrel (Front-End)</span>
-          </div>
-          <div className="flex items-center gap-6 text-[#596982]">
-            <Link href="/scouting" className="hover:text-white transition-colors">Scouting</Link>
-            <Link href="/match-center" className="hover:text-white transition-colors">Match Center</Link>
-            <Link href="/tactical-tracker" className="hover:text-white transition-colors">Tactical Tracker</Link>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
