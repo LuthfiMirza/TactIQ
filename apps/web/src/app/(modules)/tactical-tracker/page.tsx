@@ -88,25 +88,25 @@ export default function TacticalTrackerPage() {
                 <ClubCrest code="MUN" size={36} className="drop-shadow-xs" />
               </div>
               <div className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] px-1 text-center">
-                <span className="font-mono font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight tabular-nums">7 — 0</span>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">88&apos; LIVE</span>
+                <span className="font-mono font-black text-xl sm:text-2xl text-white tracking-tight tabular-nums">7 — 0</span>
+                <span className="text-[10px] font-mono text-tactiq-coral font-bold whitespace-nowrap">88&apos; LIVE</span>
               </div>
               <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
                 <ClubCrest code="MCI" size={40} className="drop-shadow-xs" />
               </div>
             </div>
 
-            <div className="sm:border-l sm:border-slate-200 sm:dark:border-[#27272A] sm:pl-5">
+            <div className="sm:border-l sm:border-[#27272A] sm:pl-5">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-700 dark:text-zinc-300 font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 font-bold">
                   2D Optical Radar
                 </span>
               </div>
-              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-slate-900 dark:text-white tracking-tight mt-0.5">
+              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-white tracking-tight mt-0.5">
                 Tactical Tracker · Live Radar
               </h1>
-              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
                 <LeagueLogo league="Premier League" size={13} />
                 <span>Old Trafford · Premier League GW08</span>
               </div>
@@ -118,7 +118,7 @@ export default function TacticalTrackerPage() {
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-semibold rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-xl shadow-xs shadow-[#CEFF00]/20 transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
               <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
@@ -172,13 +172,13 @@ export default function TacticalTrackerPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 dark:bg-[#18181C] border border-slate-200/80 dark:border-[#27272A] text-[11px] font-mono">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181C] border border-[#27272A] text-[11px] font-mono">
               <button
                 onClick={() => setFilterTeam('all')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold ${
                   filterTeam === 'all'
-                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 All ({rawEntities.length || 23})
@@ -187,8 +187,8 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('home')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'home'
-                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <ClubCrest code="MUN" size={13} />
@@ -198,8 +198,8 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('away')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'away'
-                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <ClubCrest code="MCI" size={13} />
@@ -209,8 +209,8 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('ball')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'ball'
-                    ? 'bg-white dark:bg-[#121215] text-slate-900 dark:text-white border border-slate-300 dark:border-[#27272A] shadow-xs'
-                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />

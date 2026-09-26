@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
   Trophy,
   Users,
   Crosshair,
   Search,
   Activity,
-  Sun,
-  Moon,
   X,
 } from 'lucide-react';
 
@@ -18,33 +17,13 @@ export function Navbar() {
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isSearchOpen]);
-
-  const toggleTheme = () => {
-    const nextDark = !isDarkMode;
-    setIsDarkMode(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
 
   const navItems = [
     { name: 'Matches', shortName: 'Matches', href: '/', icon: Trophy },
@@ -97,16 +76,16 @@ export function Navbar() {
               {/* Brand & Left Elements */}
               <div className="flex items-center gap-6">
                 <Link href="/" className="flex items-center gap-2 group">
-                  <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-zinc-100 flex items-center justify-center text-white dark:text-zinc-900 font-bold font-mono text-base shadow-xs transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-[#CEFF00] flex items-center justify-center text-black font-black font-mono text-base shadow-xs shadow-[#CEFF00]/25 transition-transform group-hover:scale-105">
                     TQ
                   </div>
-                  <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white leading-none">
-                    Tact<span className="text-slate-400 dark:text-zinc-500">IQ</span>
+                  <span className="font-extrabold text-xl tracking-tight text-white leading-none">
+                    Tact<span className="text-zinc-500">IQ</span>
                   </span>
                 </Link>
 
-                {/* Desktop Primary Navigation Tabs */}
-                <nav className="hidden md:flex items-center gap-1 ml-2">
+                {/* Desktop Primary Navigation Tabs: Segmented Dock Container */}
+                <nav className="hidden md:flex items-center gap-0.5 ml-2 p-1 bg-[#141418] border border-[#27272A] rounded-xl shadow-xs">
                   {navItems.map((item) => {
                     const active = isCurrent(item.href);
                     const Icon = item.icon;
@@ -115,76 +94,55 @@ export function Navbar() {
                         key={item.href}
                         href={item.href}
                         prefetch={true}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold outline-none focus:outline-none focus-visible:outline-none select-none transition-colors ${
                           active
-                            ? 'bg-slate-100 dark:bg-[#202026] text-slate-900 dark:text-white font-bold shadow-xs'
-                            : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                            ? 'text-black font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
                         }`}
                       >
-                        <Icon size={14} className={active ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-zinc-400'} />
-                        <span>{item.name}</span>
+                        {active && (
+                          <motion.div
+                            layoutId="navbarActiveDock"
+                            className="absolute inset-0 bg-[#CEFF00] rounded-lg shadow-sm shadow-[#CEFF00]/20 -z-0"
+                            transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+                          />
+                        )}
+                        <Icon size={14} className={`relative z-10 transition-colors ${active ? 'text-black' : 'text-zinc-400'}`} />
+                        <span className="relative z-10">{item.name}</span>
                       </Link>
                     );
                   })}
                 </nav>
               </div>
 
-              {/* Right Elements: Search & Theme Toggle */}
+              {/* Right Elements: Search Bar */}
               <div className="flex items-center gap-2 sm:gap-3">
                 {/* Desktop Search Bar */}
                 <div className="relative hidden md:block w-48 lg:w-64">
                   <Search
                     size={14}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500"
                   />
                   <input
                     type="text"
                     placeholder="Search team, player, xG..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[#F0F2F5] dark:bg-[#18181C] border border-transparent focus:border-slate-300 dark:focus:border-zinc-700 focus:bg-white dark:focus:bg-[#1F1F24] text-xs text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 pl-8 pr-3 py-1.5 rounded-lg outline-none transition-all"
+                    className="w-full bg-[#18181C] border border-zinc-800 focus:border-[#CEFF00]/50 focus:ring-1 focus:ring-[#CEFF00]/30 focus:bg-[#1F1F24] text-xs text-zinc-100 placeholder-zinc-500 pl-8 pr-12 py-1.5 rounded-lg outline-none transition-all"
                   />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 hidden lg:flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/50 text-[10px] font-mono text-zinc-400 pointer-events-none select-none">
+                    <span>⌘</span>
+                    <span>K</span>
+                  </div>
                 </div>
 
-                {/* Mobile Search Button (Opsi B) */}
+                {/* Mobile Search Button */}
                 <button
                   onClick={() => setIsSearchOpen(true)}
                   aria-label="Open search"
-                  className="md:hidden w-9 h-9 rounded-lg border border-slate-200 dark:border-[#27272A] bg-slate-50 dark:bg-[#18181C] hover:bg-slate-100 dark:hover:bg-[#222228] flex items-center justify-center text-slate-700 dark:text-zinc-300 transition-colors shadow-xs"
+                  className="md:hidden w-9 h-9 rounded-lg border border-[#27272A] bg-[#18181C] hover:bg-[#222228] flex items-center justify-center text-zinc-300 transition-colors shadow-xs"
                 >
                   <Search size={16} />
-                </button>
-
-                {/* Dark / Light Mode Switcher — Zero Layout Shift & Smooth Morphing */}
-                <button
-                  onClick={toggleTheme}
-                  aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                  className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200 dark:border-[#27272A] bg-slate-50 dark:bg-[#18181C] hover:bg-slate-100 dark:hover:bg-[#222228] active:scale-90 flex items-center justify-center text-slate-700 dark:text-zinc-300 transition-all shadow-xs overflow-hidden group shrink-0"
-                  title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                  {/* Sun Icon */}
-                  <Sun
-                    size={17}
-                    className={`absolute transition-all duration-300 ease-out ${
-                      mounted
-                        ? isDarkMode
-                          ? 'rotate-0 scale-100 opacity-100 text-amber-400 group-hover:rotate-45 group-hover:text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
-                          : 'rotate-90 scale-0 opacity-0 pointer-events-none'
-                        : 'hidden dark:block dark:rotate-0 dark:scale-100 text-amber-400'
-                    }`}
-                  />
-
-                  {/* Moon Icon */}
-                  <Moon
-                    size={17}
-                    className={`absolute transition-all duration-300 ease-out ${
-                      mounted
-                        ? isDarkMode
-                          ? '-rotate-90 scale-0 opacity-0 pointer-events-none'
-                          : 'rotate-0 scale-100 opacity-100 text-slate-700 group-hover:-rotate-12 group-hover:text-slate-900 drop-shadow-[0_0_8px_rgba(15,23,42,0.15)]'
-                        : 'block dark:hidden rotate-0 scale-100 text-slate-700'
-                    }`}
-                  />
                 </button>
               </div>
             </>
@@ -196,7 +154,7 @@ export function Navbar() {
       {/* ── Mobile Bottom Navigation Bar (< 768px) ─────────────── */}
       <nav
         aria-label="Mobile Navigation"
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 dark:bg-[#121215]/95 backdrop-blur-md border-t border-slate-200 dark:border-[#27272A] shadow-lg transition-colors duration-150 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#121215]/95 backdrop-blur-md border-t border-[#27272A] shadow-lg transition-colors duration-150 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
       >
         <div className="grid grid-cols-4 items-center h-14 px-1 max-w-md mx-auto">
           {navItems.map((item) => {
@@ -207,14 +165,14 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 prefetch={true}
-                className={`relative flex flex-col items-center justify-center py-1 min-h-[48px] rounded-lg transition-transform active:scale-95 ${
+                className={`relative flex flex-col items-center justify-center py-1 min-h-[48px] rounded-lg outline-none focus:outline-none focus-visible:outline-none select-none transition-transform active:scale-95 ${
                   active
-                    ? 'text-slate-950 dark:text-white'
-                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
+                    ? 'text-[#CEFF00]'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0.5 w-6 h-0.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
+                  <span className="absolute top-0.5 w-6 h-0.5 rounded-full bg-[#CEFF00] shadow-[0_0_8px_rgba(206,255,0,0.8)]" />
                 )}
                 <Icon
                   size={20}
@@ -224,8 +182,8 @@ export function Navbar() {
                 <span
                   className={`text-[10px] mt-1 tracking-tight truncate max-w-full px-1 ${
                     active
-                      ? 'font-bold text-slate-950 dark:text-white'
-                      : 'font-medium text-slate-500 dark:text-zinc-400'
+                      ? 'font-bold text-[#CEFF00]'
+                      : 'font-medium text-zinc-400'
                   }`}
                 >
                   {item.shortName}

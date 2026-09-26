@@ -62,6 +62,12 @@ const config: Config = {
           chelsea: '#034694',
           barca: '#A50044',
           real: '#FEBE10',
+
+          // Accent palette — broadcast-style telemetry
+          lime: '#CEFF00',       // Primary states, active pills, CTAs (dark bg only)
+          limeSafe: '#84CC16',   // Light-mode-safe variant (lime-500)
+          cyan: '#00D2FF',       // xG telemetry away / cool metric
+          coral: '#EF4444',      // xG telemetry home / live pulse / hot metric
         },
         // Backward-compatibility aliases so existing modules transition smoothly
         tq: {

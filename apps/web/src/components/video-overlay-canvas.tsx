@@ -401,8 +401,8 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             }}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[32px] ${
               showVideoBackground
-                ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
-                : 'bg-white dark:bg-[#121215] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#27272A] hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
             }`}
           >
             {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
@@ -485,8 +485,8 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
               onClick={() => seekToMoment(moment)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all shrink-0 ${
                 activeMoment?.minute === moment.minute
-                  ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
-                  : 'bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:text-slate-900 dark:hover:text-white shadow-xs'
+                  ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                  : 'bg-[#121215] border border-[#27272A] text-zinc-300 hover:border-zinc-700 hover:text-white shadow-xs'
               }`}
             >
               <span className="font-bold">{moment.minute}&apos;</span>
@@ -497,14 +497,14 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       </div>
 
       {/* Bottom Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-[#121215] border-t border-slate-200 dark:border-[#27272A] text-xs transition-colors gap-2">
+      <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[#121215] border-t border-[#27272A] text-xs transition-colors gap-2">
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSimulation}
             className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-semibold text-xs transition-all shadow-xs ${
               isSimulatingLocal
                 ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-white'
+                : 'bg-[#CEFF00] hover:bg-[#b8e600] text-black font-black shadow-xs shadow-[#CEFF00]/20'
             }`}
           >
             {isSimulatingLocal ? <Pause size={14} /> : <Play size={14} />}

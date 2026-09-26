@@ -19,30 +19,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
-      </head>
-      <body className="min-h-screen bg-[#F0F2F5] dark:bg-[#09090B] text-slate-900 dark:text-zinc-100 font-sans antialiased transition-colors duration-150 relative">
+    <html lang="en" className="dark">
+      <body className="min-h-screen bg-[#09090B] text-zinc-100 font-sans antialiased relative">
         {/* Subtle Pitch Mesh Atmosphere (Web & Mobile) */}
         <div
           className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
           aria-hidden="true"
         >
           {/* Top Radial Stadium Pitch Glow */}
-          <div className="absolute -top-[12%] sm:-top-[22%] left-1/2 -translate-x-1/2 w-[550px] sm:w-[950px] lg:w-[1300px] h-[340px] sm:h-[500px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/[0.08] via-emerald-600/[0.025] to-transparent dark:from-emerald-400/[0.07] dark:via-emerald-500/[0.015] dark:to-transparent blur-2xl sm:blur-3xl" />
+          <div className="absolute -top-[12%] sm:-top-[22%] left-1/2 -translate-x-1/2 w-[550px] sm:w-[950px] lg:w-[1300px] h-[340px] sm:h-[500px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#CEFF00]/[0.05] via-emerald-500/[0.02] to-transparent blur-2xl sm:blur-3xl" />
         </div>
         <div className="relative z-10">
           <Navbar />

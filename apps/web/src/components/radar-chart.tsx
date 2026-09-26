@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -30,16 +30,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   comparisonPlayerName = 'Comparison Player',
   className = '',
 }) => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
-    checkDark();
-    const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
   const labels = ['Pace', 'Shooting', 'Passing', 'Dribbling', 'Defending', 'Physical', 'Vision'];
 
   const targetData = [
@@ -56,13 +46,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     {
       label: playerName,
       data: targetData,
-      backgroundColor: 'rgba(71, 85, 105, 0.22)',
-      borderColor: '#475569',
+      backgroundColor: 'rgba(206, 255, 0, 0.2)',
+      borderColor: '#CEFF00',
       borderWidth: 2,
-      pointBackgroundColor: '#475569',
-      pointBorderColor: '#FFFFFF',
+      pointBackgroundColor: '#CEFF00',
+      pointBorderColor: '#000000',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#475569',
+      pointHoverBorderColor: '#CEFF00',
       pointRadius: 4,
       pointHoverRadius: 6,
     },
@@ -82,13 +72,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     datasets.push({
       label: comparisonPlayerName,
       data: compData,
-      backgroundColor: 'rgba(2, 132, 199, 0.18)',
-      borderColor: '#0284C7',
+      backgroundColor: 'rgba(0, 210, 255, 0.2)',
+      borderColor: '#00D2FF',
       borderWidth: 2,
-      pointBackgroundColor: '#0284C7',
-      pointBorderColor: '#FFFFFF',
+      pointBackgroundColor: '#00D2FF',
+      pointBorderColor: '#000000',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#0284C7',
+      pointHoverBorderColor: '#00D2FF',
       pointRadius: 4,
       pointHoverRadius: 6,
     });
@@ -109,14 +99,14 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     scales: {
       r: {
         angleLines: {
-          color: isDark ? '#27272A' : '#E2E8F0',
+          color: '#27272A',
         },
         grid: {
-          color: isDark ? '#27272A' : '#E2E8F0',
+          color: '#27272A',
           circular: true,
         },
         pointLabels: {
-          color: isDark ? '#E4E4E7' : '#334155',
+          color: '#E4E4E7',
           font: {
             size: 11,
             weight: 600 as const,
@@ -125,7 +115,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
         ticks: {
           backdropColor: 'transparent',
-          color: isDark ? '#71717A' : '#94A3B8',
+          color: '#71717A',
           stepSize: 20,
           font: {
             size: 9,
@@ -139,7 +129,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: isDark ? '#F4F4F5' : '#1E293B',
+          color: '#F4F4F5',
           font: {
             size: 12,
             weight: 600 as const,

@@ -355,12 +355,12 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowPassingLanes(!showPassingLanes)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showPassingLanes
-              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
-              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+              : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle Passing Lanes"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showPassingLanes ? 'bg-[#00DF59]' : 'bg-slate-400'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showPassingLanes ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Pass Lanes</span>
         </button>
 
@@ -368,12 +368,12 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowConvexHull(!showConvexHull)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showConvexHull
-              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
-              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+              : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle Team Shape Convex Hull"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showConvexHull ? 'bg-white' : 'bg-slate-400'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showConvexHull ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Shapes</span>
         </button>
 
@@ -381,12 +381,12 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           onClick={() => setShowTacticalZones(!showTacticalZones)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showTacticalZones
-              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs font-semibold'
-              : 'bg-slate-50 dark:bg-[#18181C] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A] hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+              : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle 18 Tactical Zones & Zone 14"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showTacticalZones ? 'bg-[#F59E0B]' : 'bg-slate-400'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full ${showTacticalZones ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Zone 14</span>
         </button>
       </div>

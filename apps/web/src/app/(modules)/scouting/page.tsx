@@ -527,17 +527,17 @@ export default function ScoutingPage() {
                   className={`relative h-full px-3.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center ${
                     isActive
                       ? 'text-white dark:text-zinc-900'
-                      : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                      : 'text-zinc-400 hover:text-white'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="scoutingClusterActive"
-                      className="absolute inset-0 bg-slate-900 dark:bg-zinc-100 rounded-md shadow-xs -z-0"
+                      className="absolute inset-0 bg-[#CEFF00] rounded-md shadow-xs -z-0"
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
                     />
                   )}
-                  <span className="relative z-10">{pos}</span>
+                  <span className={`relative z-10 ${isActive ? 'text-black font-extrabold' : ''}`}>{pos}</span>
                 </button>
               );
             })}
@@ -548,14 +548,14 @@ export default function ScoutingPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsWeightsModalOpen(true)}
-            className="h-9 flex items-center gap-1.5 px-3 border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 shadow-xs transition-colors"
+            className="h-9 flex items-center gap-1.5 px-3 border border-[#27272A] bg-[#121215] hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-zinc-300 shadow-xs transition-colors"
           >
             <SlidersHorizontal size={13} />
             <span>Weights</span>
           </button>
           <button
             onClick={() => showToast('Shortlist exported to CSV')}
-            className="h-9 flex items-center gap-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors"
+            className="h-9 flex items-center gap-1.5 px-3.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-lg shadow-xs shadow-[#CEFF00]/20 transition-all"
           >
             <Download size={13} />
             <span>Export</span>
@@ -611,8 +611,8 @@ export default function ScoutingPage() {
                     onClick={() => handleSelectCandidate(rec)}
                     className={`p-3 rounded-xl cursor-pointer transition-all border active:scale-[0.99] ${
                       isSelected
-                        ? 'border-slate-900 dark:border-zinc-300 bg-slate-100/80 dark:bg-zinc-800/50 shadow-xs'
-                        : 'border-slate-200/80 dark:border-[#27272A] bg-slate-50/50 dark:bg-[#151518] hover:border-slate-300 dark:hover:border-zinc-600 hover:bg-slate-100/60 dark:hover:bg-[#1A1A1E]'
+                        ? 'border-[#CEFF00] bg-[#18181D] shadow-sm shadow-[#CEFF00]/10'
+                        : 'border-[#27272A] bg-[#151518] hover:border-zinc-700 hover:bg-[#1A1A1E]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -622,8 +622,8 @@ export default function ScoutingPage() {
                         <div className="relative shrink-0">
                           <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs ${
                             isSelected
-                              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
-                              : 'bg-slate-100 dark:bg-[#1E1E24] text-slate-700 dark:text-zinc-300'
+                              ? 'bg-[#CEFF00] text-black shadow-xs'
+                              : 'bg-[#1E1E24] text-zinc-300'
                           }`}>
                             {getInitials(rec.player.name)}
                           </div>
@@ -633,10 +633,10 @@ export default function ScoutingPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          <div className="text-xs font-bold text-white truncate">
                             {rec.player.name}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
+                          <div className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
                             <ClubCrest code={rec.player.team?.code || rec.player.team?.name || ''} size={13} />
                             <span>{rec.player.team?.name} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
                           </div>
@@ -644,11 +644,11 @@ export default function ScoutingPage() {
                       </div>
 
                       {/* Right: Match Percentage (Clean Editorial Style) */}
-                      <div className="text-right shrink-0 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#18181C] border border-slate-200/60 dark:border-[#27272A] font-mono">
-                        <div className="text-xs font-black tabular-nums text-slate-900 dark:text-zinc-100 leading-none">
+                      <div className="text-right shrink-0 px-2.5 py-1 rounded-lg bg-[#18181C] border border-[#27272A] font-mono">
+                        <div className={`text-xs font-black tabular-nums leading-none ${rec.matchPercentage >= 85 ? 'text-[#CEFF00]' : 'text-zinc-100'}`}>
                           {rec.matchPercentage.toFixed(1)}%
                         </div>
-                        <span className="text-[8px] uppercase tracking-wider font-bold text-slate-400 dark:text-zinc-500 block mt-0.5">
+                        <span className="text-[8px] uppercase tracking-wider font-bold text-zinc-500 block mt-0.5">
                           Match
                         </span>
                       </div>
@@ -656,11 +656,11 @@ export default function ScoutingPage() {
                     </div>
 
                     {/* Metric Badges & Action Button */}
-                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-[#222227]">
+                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[#222227]">
                       <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                         {rec.highlightMetrics.slice(0, 2).map((m, idx) => (
-                          <span key={idx} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E1E24] text-slate-600 dark:text-zinc-400 text-[10px] font-mono truncate">
-                            {m.label}: <strong className="text-slate-900 dark:text-zinc-200">{m.value}</strong>
+                          <span key={idx} className="px-1.5 py-0.5 rounded bg-[#1E1E24] text-zinc-400 text-[10px] font-mono truncate">
+                            {m.label}: <strong className="text-zinc-200">{m.value}</strong>
                           </span>
                         ))}
                       </div>
@@ -673,8 +673,8 @@ export default function ScoutingPage() {
                         }}
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold font-mono transition-all shrink-0 active:scale-95 ${
                           isSelected
-                            ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
-                            : 'bg-slate-100 dark:bg-[#25252B] text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-[#2F2F36]'
+                            ? 'bg-[#CEFF00] text-black font-black shadow-xs'
+                            : 'bg-[#25252B] text-zinc-300 hover:bg-[#2F2F36]'
                         }`}
                       >
                         {isSelected ? (
@@ -779,12 +779,12 @@ export default function ScoutingPage() {
               
               {/* Legend */}
               <div className="flex items-center gap-3 text-xs font-mono">
-                <span className="flex items-center gap-1.5 text-slate-900 dark:text-white font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#475569] dark:bg-zinc-400" />
+                <span className="flex items-center gap-1.5 text-white font-semibold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.5)]" />
                   {anchorPlayer.name.split(' ')[1] || anchorPlayer.name}
                 </span>
-                <span className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#0284C7]" />
+                <span className="flex items-center gap-1.5 text-[#00D2FF] font-semibold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF] shadow-[0_0_6px_rgba(0,210,255,0.5)]" />
                   {comparisonTarget.player.name.split(' ')[1] || comparisonTarget.player.name}
                 </span>
               </div>
@@ -806,8 +806,8 @@ export default function ScoutingPage() {
               </div>
 
               {/* Metric Duel Bars (6 cols) */}
-              <div className="md:col-span-6 flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-slate-100 dark:border-[#27272A] pt-4 md:pt-0 md:pl-6 font-mono">
-                <span className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block">
+              <div className="md:col-span-6 flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-[#27272A] pt-4 md:pt-0 md:pl-6 font-mono">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold block">
                   Per 90 Metrics
                 </span>
 
@@ -820,28 +820,28 @@ export default function ScoutingPage() {
                     <div key={m.label} className="text-xs">
                       {/* Metric Name & Values */}
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className={`font-bold ${anchorWins ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-500 dark:text-zinc-400'}`}>
+                        <span className={`font-bold ${anchorWins ? 'text-[#CEFF00]' : 'text-zinc-400'}`}>
                           {m.anchorVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
-                        <span className="text-[11px] text-slate-600 dark:text-zinc-300 font-medium text-center truncate px-2 font-sans">
+                        <span className="text-[11px] text-zinc-300 font-medium text-center truncate px-2 font-sans">
                           {m.label}
                         </span>
-                        <span className={`font-bold ${!anchorWins ? 'text-sky-600 dark:text-sky-400' : 'text-slate-500 dark:text-zinc-400'}`}>
+                        <span className={`font-bold ${!anchorWins ? 'text-[#00D2FF]' : 'text-zinc-400'}`}>
                           {m.targetVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
                       </div>
 
                       {/* Side-by-Side Duel Bar */}
-                      <div className="grid grid-cols-2 gap-1.5 h-1.5 bg-slate-100 dark:bg-[#18181C] rounded-full overflow-hidden">
+                      <div className="grid grid-cols-2 gap-1.5 h-1.5 bg-[#18181C] rounded-full overflow-hidden">
                         <div className="flex justify-end">
                           <div
-                            className="h-full bg-slate-700 dark:bg-zinc-300 rounded-full transition-all duration-300"
+                            className="h-full bg-[#CEFF00] rounded-full transition-all duration-300"
                             style={{ width: `${anchorPct}%` }}
                           />
                         </div>
                         <div className="flex justify-start">
                           <div
-                            className="h-full bg-[#0284C7] rounded-full transition-all duration-300"
+                            className="h-full bg-[#00D2FF] rounded-full transition-all duration-300"
                             style={{ width: `${targetPct}%` }}
                           />
                         </div>

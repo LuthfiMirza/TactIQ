@@ -406,7 +406,7 @@ export default function MatchCenterPage() {
               onClick={() => setFilterTab(tab)}
               className={`min-h-[34px] sm:min-h-[36px] px-2 sm:px-4 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all active:scale-95 flex items-center justify-center ${
                 filterTab === tab
-                  ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                  ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
               }`}
             >
@@ -498,10 +498,10 @@ export default function MatchCenterPage() {
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
                     </span>
-                    <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
                       {periodInfo.statusText}
                     </span>
                   </div>
@@ -560,7 +560,7 @@ export default function MatchCenterPage() {
               {/* xG Momentum Bar — Symmetrical Layout */}
               <div className="mt-3.5 px-3 py-2.5 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[11px] font-mono">
-                  <span className="font-bold text-[#DA291C] flex items-center gap-1">
+                  <span className="font-bold text-tactiq-coral flex items-center gap-1">
                     <span>MUN</span>
                     <span className="text-slate-400 dark:text-zinc-500 font-normal">·</span>
                     <span>4.62 xG</span>
@@ -568,15 +568,15 @@ export default function MatchCenterPage() {
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-sans font-semibold">
                     xG Momentum
                   </span>
-                  <span className="font-bold text-[#6CABDD] flex items-center gap-1">
+                  <span className="font-bold text-tactiq-cyan flex items-center gap-1">
                     <span>0.38 xG</span>
                     <span className="text-slate-400 dark:text-zinc-500 font-normal">·</span>
                     <span>MCI</span>
                   </span>
                 </div>
                 <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800 gap-0.5">
-                  <div className="h-full bg-[#DA291C] rounded-full transition-all duration-500" style={{ width: '92%' }} />
-                  <div className="h-full bg-[#6CABDD] rounded-full transition-all duration-500" style={{ width: '8%' }} />
+                  <div className="h-full bg-tactiq-coral rounded-full transition-all duration-500" style={{ width: '92%' }} />
+                  <div className="h-full bg-tactiq-cyan rounded-full transition-all duration-500" style={{ width: '8%' }} />
                 </div>
               </div>
             </div>
@@ -585,16 +585,16 @@ export default function MatchCenterPage() {
             <div className="pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A]">
               <div className="flex items-center justify-between text-xs font-mono pb-1.5">
                 <div className="flex items-center justify-between w-full sm:justify-start sm:gap-4 text-[10px] sm:text-[11px]">
-                  <span className="text-red-600 dark:text-red-400 font-bold">MUN {periodInfo.munProb}</span>
+                  <span className="text-tactiq-coral font-bold">MUN {periodInfo.munProb}</span>
                   <span className="text-slate-500 dark:text-zinc-400">Draw {periodInfo.drawProb}</span>
-                  <span className="text-sky-700 dark:text-sky-400 font-bold">MCI {periodInfo.mciProb}</span>
+                  <span className="text-tactiq-cyan font-bold">MCI {periodInfo.mciProb}</span>
                 </div>
               </div>
               
               <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full flex overflow-hidden">
-                <div className="h-full bg-[#DA291C] transition-all duration-300" style={{ width: periodInfo.munWidth }} />
+                <div className="h-full bg-tactiq-coral transition-all duration-300" style={{ width: periodInfo.munWidth }} />
                 <div className="h-full bg-slate-300 dark:bg-zinc-600 transition-all duration-300" style={{ width: periodInfo.drawWidth }} />
-                <div className="h-full bg-[#6CABDD] transition-all duration-300" style={{ width: periodInfo.mciWidth }} />
+                <div className="h-full bg-tactiq-cyan transition-all duration-300" style={{ width: periodInfo.mciWidth }} />
               </div>
             </div>
           </div>
@@ -612,7 +612,7 @@ export default function MatchCenterPage() {
                     onClick={() => setMatchTab(tab)}
                     className={`py-2 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all text-center shrink-0 ${
                       isActive
-                        ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                        ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                         : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-800/40'
                     }`}
                   >
@@ -636,7 +636,7 @@ export default function MatchCenterPage() {
                         onClick={() => setStatsPeriod(period)}
                         className={`flex-1 sm:flex-initial min-h-[32px] sm:min-h-[36px] px-3 sm:px-5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all active:scale-95 text-center ${
                           isActive
-                            ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                            ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                             : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
@@ -1041,7 +1041,7 @@ export default function MatchCenterPage() {
 
               <button
                 onClick={() => setShowAiModal(true)}
-                className="w-full mt-1.5 sm:mt-2 py-2 bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 font-semibold text-xs rounded-lg transition-colors shadow-xs"
+                className="w-full mt-1.5 sm:mt-2 py-2 bg-[#CEFF00] hover:bg-[#b8e600] text-black font-black text-xs rounded-lg transition-all shadow-xs shadow-[#CEFF00]/15"
               >
                 View Full Probabilities
               </button>

@@ -255,30 +255,30 @@ export default function HomePage() {
                   onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                     selectedLeague === 'all' && !liveOnly
-                      ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
-                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                      ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
+                      : 'text-zinc-300 hover:bg-[#1A1A1E]'
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-zinc-500'} />
+                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-[#CEFF00]' : 'text-zinc-500'} />
                     All Matches
                   </span>
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono font-medium">24</span>
+                  <span className="text-[11px] text-zinc-400 font-mono font-medium">24</span>
                 </button>
 
                 <button
                   onClick={() => setLiveOnly(!liveOnly)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                     liveOnly
-                      ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
-                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                      ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
+                      : 'text-zinc-300 hover:bg-[#1A1A1E]'
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-tactiq-coral" />
                     Live Matches
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#27272A] text-slate-900 dark:text-zinc-200">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#27272A] text-zinc-200">
                     2 LIVE
                   </span>
                 </button>
@@ -313,8 +313,8 @@ export default function HomePage() {
                       onClick={() => setSelectedLeague(league.id)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         isActive
-                          ? 'bg-slate-100 dark:bg-[#1E1E24] text-slate-900 dark:text-white font-bold'
-                          : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                          ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
+                          : 'text-zinc-300 hover:bg-[#1A1A1E]'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 min-w-0">
@@ -343,7 +343,7 @@ export default function HomePage() {
                 onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
                   selectedLeague === 'all' && !liveOnly
-                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                     : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
                 }`}
               >
@@ -354,7 +354,7 @@ export default function HomePage() {
                 onClick={() => setLiveOnly(!liveOnly)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
                   liveOnly
-                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                     : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
                 }`}
               >
@@ -370,7 +370,7 @@ export default function HomePage() {
                     onClick={() => { setSelectedLeague(league.id); setLiveOnly(false); }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-2 ${
                       isActive
-                        ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
+                        ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                         : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
                     }`}
                   >
@@ -392,7 +392,7 @@ export default function HomePage() {
                   onClick={() => setSelectedDate('yesterday')}
                   className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     selectedDate === 'yesterday'
-                      ? 'bg-slate-900 dark:bg-zinc-200 text-white dark:text-zinc-900 font-bold'
+                      ? 'bg-[#CEFF00] text-black font-extrabold'
                       : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
                   }`}
                 >
@@ -403,7 +403,7 @@ export default function HomePage() {
                   onClick={() => setSelectedDate('today')}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     selectedDate === 'today'
-                      ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                      ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                       : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
                   }`}
                 >
@@ -414,7 +414,7 @@ export default function HomePage() {
                   onClick={() => setSelectedDate('tomorrow')}
                   className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     selectedDate === 'tomorrow'
-                      ? 'bg-slate-900 dark:bg-zinc-200 text-white dark:text-zinc-900 font-bold'
+                      ? 'bg-[#CEFF00] text-black font-extrabold'
                       : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
                   }`}
                 >
@@ -474,10 +474,10 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
                         <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
                         </span>
-                        <span className="text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
                           {liveFeaturedMatch.minute}
                         </span>
                       </div>
@@ -536,13 +536,13 @@ export default function HomePage() {
                   <div className="mt-3 sm:mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 text-[11px] font-mono">
-                        <span className="font-bold text-red-600 dark:text-red-400">xG {liveFeaturedMatch.xgHome}</span>
+                        <span className="font-bold text-tactiq-coral">xG {liveFeaturedMatch.xgHome}</span>
                         <span className="text-slate-300 dark:text-zinc-600">—</span>
-                        <span className="font-bold text-sky-600 dark:text-sky-400">xG {liveFeaturedMatch.xgAway}</span>
+                        <span className="font-bold text-tactiq-cyan">xG {liveFeaturedMatch.xgAway}</span>
                       </div>
                       <Link
                         href="/match-center"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:text-tactiq-green dark:hover:text-tactiq-green transition-colors"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-100 hover:text-[#CEFF00] transition-colors"
                       >
                         <span>Match Center</span>
                         <ArrowRight size={11} />
@@ -550,8 +550,8 @@ export default function HomePage() {
                     </div>
                     {/* Dual Color xG Bar */}
                     <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800 gap-0.5">
-                      <div className="h-full bg-[#EF0107] rounded-full transition-all duration-300" style={{ width: '58%' }} />
-                      <div className="h-full bg-[#6CABDD] rounded-full transition-all duration-300" style={{ width: '42%' }} />
+                      <div className="h-full bg-tactiq-coral rounded-full transition-all duration-300" style={{ width: '58%' }} />
+                      <div className="h-full bg-tactiq-cyan rounded-full transition-all duration-300" style={{ width: '42%' }} />
                     </div>
                   </div>
                 </div>
@@ -686,56 +686,56 @@ export default function HomePage() {
               </div>
 
               {/* Standings Rows */}
-              <div className="divide-y divide-slate-100 dark:divide-[#27272A] text-xs">
+              <div className="divide-y divide-[#27272A] text-xs">
                 {STANDINGS.map((row) => (
                   <div
                     key={row.rank}
-                    className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
+                    className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-[#1A1A1E] transition-colors"
                   >
-                    <span className="font-mono text-[11px] font-bold text-slate-500 dark:text-zinc-400">
+                    <span className={`font-mono text-[11px] ${row.rank === 1 ? 'font-black text-[#CEFF00]' : 'font-bold text-zinc-400'}`}>
                       {row.rank}
                     </span>
                     <div className="flex items-center gap-2 min-w-0 pr-1">
                       <ClubCrest code={row.club} size={15} />
-                      <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                      <span className="font-semibold text-zinc-200 truncate">
                         {row.club}
                       </span>
                     </div>
-                    <span className="font-mono text-slate-600 dark:text-zinc-400 text-center">{row.p}</span>
-                    <span className="font-mono text-slate-600 dark:text-zinc-400 text-center">{row.gd}</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white text-right">{row.pts}</span>
+                    <span className="font-mono text-zinc-400 text-center">{row.p}</span>
+                    <span className="font-mono text-zinc-400 text-center">{row.gd}</span>
+                    <span className="font-mono font-bold text-white text-right">{row.pts}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* 2. Top Performers */}
-            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
-              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
-                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <SoccerBallIcon size={14} className="text-slate-700 dark:text-zinc-300" />
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3.5 transition-colors">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#27272A]">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <SoccerBallIcon size={14} className="text-zinc-300" />
                   Top Scorers
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">GW 8</span>
+                <span className="text-[10px] text-zinc-400 font-mono">GW 8</span>
               </div>
 
               <div className="space-y-2.5">
                 {TOP_SCORERS.map((player, idx) => (
                   <div
                     key={player.name}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#1A1A1E] transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="font-mono text-xs font-bold text-slate-400 dark:text-zinc-500 w-3 text-center">
+                      <span className={`font-mono text-xs w-3 text-center ${idx === 0 ? 'text-[#CEFF00] font-black' : 'font-bold text-zinc-500'}`}>
                         {idx + 1}
                       </span>
                       <div className="min-w-0">
-                        <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
+                        <span className="text-xs font-bold text-white block truncate">
                           {player.name}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <ClubCrest code={player.club} size={13} />
-                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block truncate">
+                          <span className="text-[10px] text-zinc-400 block truncate">
                             {player.club}
                           </span>
                         </div>
@@ -743,10 +743,10 @@ export default function HomePage() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
+                      <span className={`font-mono font-bold text-xs ${idx === 0 ? 'text-[#CEFF00]' : 'text-white'}`}>
                         {player.goals}
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+                      <span className="text-[10px] text-zinc-500 font-mono">
                         G
                       </span>
                     </div>
