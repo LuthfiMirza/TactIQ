@@ -5,11 +5,11 @@ import Link from 'next/link';
 import {
   Trophy,
   Activity,
-  Flame,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
 } from 'lucide-react';
+import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 
 // ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
@@ -43,14 +43,14 @@ interface Match {
 }
 
 const LEAGUES = [
-  { id: 'all', name: 'All Matches', flag: '🌍', count: 24 },
-  { id: 'epl', name: 'Premier League', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', count: 8, popular: true },
-  { id: 'ucl', name: 'Champions League', flag: '🇪🇺', count: 6, popular: true },
-  { id: 'laliga', name: 'La Liga', flag: '🇪🇸', count: 5, popular: true },
-  { id: 'seriea', name: 'Serie A', flag: '🇮🇹', count: 4, popular: true },
-  { id: 'bundesliga', name: 'Bundesliga', flag: '🇩🇪', count: 4, popular: true },
-  { id: 'ligue1', name: 'Ligue 1', flag: '🇫🇷', count: 3, popular: false },
-  { id: 'eredivisie', name: 'Eredivisie', flag: '🇳🇱', count: 2, popular: false },
+  { id: 'all', name: 'All Matches', count: 24 },
+  { id: 'epl', name: 'Premier League', count: 8, popular: true },
+  { id: 'ucl', name: 'Champions League', count: 6, popular: true },
+  { id: 'laliga', name: 'La Liga', count: 5, popular: true },
+  { id: 'seriea', name: 'Serie A', count: 4, popular: true },
+  { id: 'bundesliga', name: 'Bundesliga', count: 4, popular: true },
+  { id: 'ligue1', name: 'Ligue 1', count: 3, popular: false },
+  { id: 'eredivisie', name: 'Eredivisie', count: 2, popular: false },
 ];
 
 const MATCHES: Match[] = [
@@ -260,7 +260,7 @@ export default function HomePage() {
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-[#00A83F] dark:text-[#10B981]' : 'text-slate-400 dark:text-zinc-500'} />
+                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-zinc-500'} />
                     All Matches
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono font-medium">24</span>
@@ -275,10 +275,10 @@ export default function HomePage() {
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
                     Live Matches
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#27272A] text-[#00A83F] dark:text-[#10B981]">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-[#27272A] text-slate-900 dark:text-zinc-200">
                     2 LIVE
                   </span>
                 </button>
@@ -317,8 +317,8 @@ export default function HomePage() {
                           : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                       }`}
                     >
-                      <span className="flex items-center gap-2.5">
-                        <span className="text-sm">{league.flag}</span>
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <LeagueLogo league={league.name} size={16} />
                         <span className="truncate">{league.name}</span>
                       </span>
                       <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
@@ -354,11 +354,11 @@ export default function HomePage() {
                 onClick={() => setLiveOnly(!liveOnly)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
                   liveOnly
-                    ? 'bg-[#00A83F] dark:bg-[#10B981] text-white font-bold shadow-xs'
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
                     : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
                 <span>Live (2)</span>
               </button>
 
@@ -368,13 +368,13 @@ export default function HomePage() {
                   <button
                     key={league.id}
                     onClick={() => { setSelectedLeague(league.id); setLiveOnly(false); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-2 ${
                       isActive
                         ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
                         : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
                     }`}
                   >
-                    <span>{league.flag}</span>
+                    <LeagueLogo league={league.name} size={14} />
                     <span>{league.name}</span>
                   </button>
                 );
@@ -403,7 +403,7 @@ export default function HomePage() {
                   onClick={() => setSelectedDate('today')}
                   className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     selectedDate === 'today'
-                      ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
+                      ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                       : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
                   }`}
                 >
@@ -434,7 +434,7 @@ export default function HomePage() {
                 {/* Match Header */}
                 <div className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#16161A] border-b border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
+                    <LeagueLogo league={liveFeaturedMatch.league} size={15} />
                     <span className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                       {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
                     </span>
@@ -445,70 +445,64 @@ export default function HomePage() {
                 {/* Scoreboard Block */}
                 <div className="p-3.5 sm:p-5">
                   
-                  {/* Symmetrical Grid: Home (1fr) - Center (Auto) - Away (1fr) */}
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-4">
+                  {/* Row 1: Symmetrical Clubs & Score */}
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                     
                     {/* Home Team Column */}
-                    <div className="flex flex-col items-end text-right min-w-0">
-                      {/* Name + Logo */}
-                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
-                          <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
-                          <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
-                        </span>
-                        <div
-                          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-xs shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]"
-                          style={{ backgroundColor: liveFeaturedMatch.homeColor }}
-                        >
-                          {liveFeaturedMatch.homeCode}
-                        </div>
-                      </div>
-
-                      {/* Home Scorers */}
-                      <div className="mt-1.5 sm:mt-2.5 space-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-                        {liveFeaturedMatch.scorers?.home.map((s, idx) => (
-                          <div key={idx} className="truncate max-w-[110px] sm:max-w-none">{s}</div>
-                        ))}
-                      </div>
+                    <div className="flex items-center justify-end gap-2 sm:gap-4 text-right min-w-0">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
+                        <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
+                        <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
+                      </span>
+                      <ClubCrest code={liveFeaturedMatch.homeCode} size={48} className="w-9 h-9 sm:w-12 sm:h-12 drop-shadow-xs" />
                     </div>
 
                     {/* Center Column: Score & Live Status */}
                     <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-36 shrink-0">
-                      <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2">
+                      <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2 font-mono">
                         <span>{liveFeaturedMatch.homeScore}</span>
                         <span className="text-slate-300 dark:text-slate-600 font-normal text-xl sm:text-3xl">-</span>
                         <span>{liveFeaturedMatch.awayScore}</span>
                       </div>
-                      <span className="text-[11px] sm:text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 whitespace-nowrap">
+                      <span className="text-[11px] sm:text-[13px] font-medium text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
                         {liveFeaturedMatch.minute} Live
                       </span>
                     </div>
 
                     {/* Away Team Column */}
-                    <div className="flex flex-col items-start text-left min-w-0">
-                      {/* Logo + Name */}
-                      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                        <div
-                          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-xs shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]"
-                          style={{ backgroundColor: liveFeaturedMatch.awayColor }}
-                        >
-                          {liveFeaturedMatch.awayCode}
-                        </div>
-                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
-                          <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
-                          <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
-                        </span>
-                      </div>
-
-                      {/* Away Scorers */}
-                      <div className="mt-1.5 sm:mt-2.5 space-y-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-                        {liveFeaturedMatch.scorers?.away.map((s, idx) => (
-                          <div key={idx} className="truncate max-w-[110px] sm:max-w-none">{s}</div>
-                        ))}
-                      </div>
+                    <div className="flex items-center justify-start gap-2 sm:gap-4 text-left min-w-0">
+                      <ClubCrest code={liveFeaturedMatch.awayCode} size={48} className="w-9 h-9 sm:w-12 sm:h-12 drop-shadow-xs" />
+                      <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight">
+                        <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
+                        <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
+                      </span>
                     </div>
 
                   </div>
+
+                  {/* Row 2: Dedicated Symmetrical Scorers List */}
+                  {(liveFeaturedMatch.scorers?.home?.length || liveFeaturedMatch.scorers?.away?.length) && (
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4 mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A]/70 text-xs">
+                      {/* Home Scorers */}
+                      <div className="text-right space-y-0.5 text-slate-600 dark:text-zinc-400 text-[11px] sm:text-xs">
+                        {liveFeaturedMatch.scorers?.home?.map((s, idx) => (
+                          <div key={idx} className="truncate">{s}</div>
+                        ))}
+                      </div>
+
+                      {/* Center Ball Icon */}
+                      <div className="flex items-center justify-center px-1.5 sm:px-6 w-20 sm:w-36 pt-0.5 text-slate-400 dark:text-zinc-500 select-none">
+                        <SoccerBallIcon size={13} className="text-slate-400 dark:text-zinc-500" />
+                      </div>
+
+                      {/* Away Scorers */}
+                      <div className="text-left space-y-0.5 text-slate-600 dark:text-zinc-400 text-[11px] sm:text-xs">
+                        {liveFeaturedMatch.scorers?.away?.map((s, idx) => (
+                          <div key={idx} className="truncate">{s}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Minimal xG strip + CTA */}
                   <div className="mt-3 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-slate-100 dark:border-[#27272A] flex items-center justify-between">
@@ -517,7 +511,7 @@ export default function HomePage() {
                     </span>
                     <Link
                       href="/match-center"
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00A83F] dark:text-[#10B981] hover:text-[#008734] dark:hover:text-[#059669] transition-colors"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:underline transition-colors"
                     >
                       <span>Match Center</span>
                       <ArrowRight size={11} />
@@ -545,7 +539,7 @@ export default function HomePage() {
                       </div>
                       <Link
                         href="/match-center"
-                        className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-[#00A83F] dark:hover:text-[#10B981] flex items-center gap-1 transition-colors"
+                        className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors"
                       >
                         <span>Standings</span>
                         <ChevronRight size={12} />
@@ -565,7 +559,7 @@ export default function HomePage() {
                             {/* Status Column */}
                             <div className="text-center font-mono">
                               {match.status === 'LIVE' ? (
-                                <span className="font-bold text-xs sm:text-[13px] text-[#00A83F] dark:text-[#10B981] tracking-tight">
+                                <span className="font-bold text-xs sm:text-[13px] text-rose-600 dark:text-rose-400 tracking-tight">
                                   {match.minute}
                                 </span>
                               ) : match.status === 'HT' ? (
@@ -584,16 +578,11 @@ export default function HomePage() {
                             </div>
 
                             {/* Teams & Scorers */}
-                            <div className="space-y-1 min-w-0 pr-1">
+                            <div className="space-y-1.5 min-w-0 pr-1">
                               {/* Home Row */}
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <div
-                                    className="w-4 h-4 rounded-sm flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                                    style={{ backgroundColor: match.homeColor }}
-                                  >
-                                    {match.homeCode[0]}
-                                  </div>
+                                  <ClubCrest code={match.homeCode} size={18} />
                                   <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
                                     {match.home}
                                   </span>
@@ -608,12 +597,7 @@ export default function HomePage() {
                               {/* Away Row */}
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <div
-                                    className="w-4 h-4 rounded-sm flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                                    style={{ backgroundColor: match.awayColor }}
-                                  >
-                                    {match.awayCode[0]}
-                                  </div>
+                                  <ClubCrest code={match.awayCode} size={18} />
                                   <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
                                     {match.away}
                                   </span>
@@ -647,10 +631,10 @@ export default function HomePage() {
             <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                  <LeagueLogo league="Premier League" size={16} />
                   <span className="text-xs font-bold text-slate-900 dark:text-white">Premier League Table</span>
                 </div>
-                <Link href="/match-center" className="text-[11px] font-semibold text-[#00A83F] dark:text-[#10B981] hover:underline">
+                <Link href="/match-center" className="text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:underline">
                   Full
                 </Link>
               </div>
@@ -671,14 +655,11 @@ export default function HomePage() {
                     key={row.rank}
                     className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
                   >
-                    <span className={`font-mono text-[11px] font-bold ${row.rank === 1 ? 'text-[#00A83F] dark:text-[#10B981]' : 'text-slate-500 dark:text-zinc-400'}`}>
+                    <span className="font-mono text-[11px] font-bold text-slate-500 dark:text-zinc-400">
                       {row.rank}
                     </span>
                     <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <div
-                        className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: row.color }}
-                      />
+                      <ClubCrest code={row.club} size={15} />
                       <span className="font-semibold text-slate-800 dark:text-zinc-200 truncate">
                         {row.club}
                       </span>
@@ -695,7 +676,7 @@ export default function HomePage() {
             <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
                 <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                  <Flame size={14} className="text-amber-500" />
+                  <SoccerBallIcon size={14} className="text-slate-700 dark:text-zinc-300" />
                   Top Scorers
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono">GW 8</span>
@@ -715,9 +696,12 @@ export default function HomePage() {
                         <span className="text-xs font-bold text-slate-900 dark:text-white block truncate">
                           {player.name}
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-zinc-400 block truncate">
-                          {player.club}
-                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <ClubCrest code={player.club} size={13} />
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block truncate">
+                            {player.club}
+                          </span>
+                        </div>
                       </div>
                     </div>
 

@@ -4,7 +4,12 @@ import React, { useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Info,
+  X,
 } from 'lucide-react';
+import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 
 interface MatchFixture {
   id: string;
@@ -273,19 +278,27 @@ function MatchStatRow({
   const isAwayWinner = awayNum > homeNum;
 
   return (
-    <div className="py-2 sm:py-2.5">
+    <div className="py-2">
       <div className="flex items-center justify-between text-xs mb-1 font-mono">
-        <span className={`w-14 sm:w-20 text-left truncate ${isHomeWinner ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+        <span className={`w-14 sm:w-16 text-left truncate transition-colors ${
+          isHomeWinner
+            ? 'font-bold text-slate-900 dark:text-white'
+            : 'text-slate-400 dark:text-zinc-500 font-normal'
+        }`}>
           {homeVal}
         </span>
-        <span className="text-[11px] sm:text-xs font-sans font-medium text-slate-600 dark:text-slate-300 text-center flex-1 truncate px-1 sm:px-2">
+        <span className="text-[11px] sm:text-xs font-sans font-medium text-slate-600 dark:text-zinc-300 text-center flex-1 truncate px-1">
           {label}
         </span>
-        <span className={`w-14 sm:w-20 text-right truncate ${isAwayWinner ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+        <span className={`w-14 sm:w-16 text-right truncate transition-colors ${
+          isAwayWinner
+            ? 'font-bold text-slate-900 dark:text-white'
+            : 'text-slate-400 dark:text-zinc-500 font-normal'
+        }`}>
           {awayVal}
         </span>
       </div>
-      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 gap-1">
+      <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800/80 gap-1">
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${homePct}%`, backgroundColor: homeColor }}
@@ -305,6 +318,51 @@ export default function MatchCenterPage() {
   const [statsPeriod, setStatsPeriod] = useState<'ALL' | '1ST' | '2ND'>('ALL');
   const [showAiModal, setShowAiModal] = useState(false);
 
+  const periodInfo = {
+    ALL: {
+      homeScore: 2,
+      awayScore: 1,
+      statusText: "68' Live",
+      badgeText: "68' LIVE",
+      scorersHome: ["B. Saka 34'", "G. Martinelli 58'"],
+      scorersAway: ["E. Haaland 42' (P)"],
+      arsProb: '58%',
+      drawProb: '24%',
+      mciProb: '18%',
+      arsWidth: '58%',
+      drawWidth: '24%',
+      mciWidth: '18%',
+    },
+    '1ST': {
+      homeScore: 1,
+      awayScore: 1,
+      statusText: 'Half Time (1st Half)',
+      badgeText: 'HT 1st Half',
+      scorersHome: ["B. Saka 34'"],
+      scorersAway: ["E. Haaland 42' (P)"],
+      arsProb: '51%',
+      drawProb: '30%',
+      mciProb: '19%',
+      arsWidth: '51%',
+      drawWidth: '30%',
+      mciWidth: '19%',
+    },
+    '2ND': {
+      homeScore: 1,
+      awayScore: 0,
+      statusText: "2nd Half (46'-68')",
+      badgeText: '2nd Half',
+      scorersHome: ["G. Martinelli 58'"],
+      scorersAway: ['–'],
+      arsProb: '64%',
+      drawProb: '22%',
+      mciProb: '14%',
+      arsWidth: '64%',
+      drawWidth: '22%',
+      mciWidth: '14%',
+    },
+  }[statsPeriod];
+
   const activeStats = STATS_DATA[statsPeriod];
 
   return (
@@ -316,7 +374,8 @@ export default function MatchCenterPage() {
           <button className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors shrink-0">
             <ChevronLeft size={14} />
           </button>
-          <div>
+          <div className="flex items-center gap-2.5">
+            <LeagueLogo league="Premier League" size={22} />
             <span className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">GW08 · Premier League</span>
           </div>
           <button className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] flex items-center justify-center text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shadow-xs transition-colors shrink-0">
@@ -332,7 +391,7 @@ export default function MatchCenterPage() {
               onClick={() => setFilterTab(tab)}
               className={`px-3 sm:px-3.5 py-1.5 rounded-md text-xs font-bold transition-colors ${
                 filterTab === tab
-                  ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
+                  ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
               }`}
             >
@@ -342,108 +401,120 @@ export default function MatchCenterPage() {
         </div>
       </div>
 
-      {/* ── Featured Match Card with Tabs ── */}
-      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-7 shadow-xs overflow-hidden transition-colors">
+      {/* ── Main Workspace: 2-Column Bento Grid on Desktop (8 cols + 4 cols) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Meta Header */}
-        <div className="relative flex flex-wrap items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-slate-100 dark:border-[#27272A]">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
-            <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider truncate max-w-[200px] sm:max-w-none">
-              Emirates Stadium · PL GW08
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 font-bold text-xs font-mono text-[#00A83F] dark:text-[#10B981]">
-            <span className="w-2 h-2 rounded-full bg-[#00A83F] dark:bg-[#10B981] animate-pulse" />
-            <span>68&apos; LIVE</span>
-          </div>
-        </div>
+        {/* ── Left Column: Match Hero & Detailed Tabs (8 cols) ── */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
 
-        {/* Score & Clubs */}
-        <div className="py-4 sm:py-8">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-8">
+          {/* ── Featured Match Card (Hero Scoreboard) ── */}
+          <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs overflow-hidden transition-colors">
             
-            {/* Home: Arsenal */}
-            <div className="flex items-center justify-end gap-2 sm:gap-4 text-right min-w-0">
-              <div className="min-w-0">
-                <h2 className="font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white leading-tight truncate">
-                  <span className="hidden sm:inline">Arsenal</span>
-                  <span className="sm:hidden">ARS</span>
-                </h2>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">1st in PL</span>
+            {/* Meta Header */}
+            <div className="relative flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-[#27272A]">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider truncate max-w-[200px] sm:max-w-none">
+                  Emirates Stadium · PL GW08
+                </span>
               </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-sm shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]">
-                ARS
-              </div>
-            </div>
-
-            {/* Monumental Center Score & Status */}
-            <div className="flex flex-col items-center justify-center px-1.5 sm:px-8 shrink-0">
-              <div className="flex items-center justify-center gap-2 sm:gap-4">
-                <span className="font-extrabold text-3xl sm:text-5xl text-slate-900 dark:text-white tracking-tight tabular-nums">2</span>
-                <span className="font-normal text-xl sm:text-3xl text-slate-300 dark:text-slate-600">-</span>
-                <span className="font-extrabold text-3xl sm:text-5xl text-slate-900 dark:text-white tracking-tight tabular-nums">1</span>
-              </div>
-              <span className="text-[11px] sm:text-sm font-medium text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
-                68&apos; Live
-              </span>
-            </div>
-
-            {/* Away: Manchester City */}
-            <div className="flex items-center justify-start gap-2 sm:gap-4 text-left min-w-0">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#6CABDD] to-[#458BB8] flex items-center justify-center font-black text-xs sm:text-sm text-white shadow-sm shrink-0 ring-2 ring-slate-100 dark:ring-[#27272A]">
-                MCI
-              </div>
-              <div className="min-w-0">
-                <h2 className="font-extrabold text-base sm:text-2xl text-slate-900 dark:text-white leading-tight truncate">
-                  <span className="hidden sm:inline">Man City</span>
-                  <span className="sm:hidden">MCI</span>
-                </h2>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">2nd in PL</span>
+              <div className="flex items-center gap-1.5 font-bold text-xs font-mono text-zinc-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <span className="text-slate-900 dark:text-zinc-200">{periodInfo.badgeText}</span>
               </div>
             </div>
 
+            {/* Score & Clubs */}
+            <div className="py-3 sm:py-5">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-6">
+                
+                {/* Home: Arsenal */}
+                <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold text-base sm:text-xl text-slate-900 dark:text-white leading-tight truncate">
+                      <span className="hidden sm:inline">Arsenal</span>
+                      <span className="sm:hidden">ARS</span>
+                    </h2>
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">1st in PL</span>
+                  </div>
+                  <ClubCrest code="ARS" size={44} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                </div>
+
+                {/* Monumental Center Score & Status */}
+                <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 shrink-0">
+                  <div className="flex items-center justify-center gap-2 sm:gap-3">
+                    <span className="font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                      {periodInfo.homeScore}
+                    </span>
+                    <span className="font-normal text-xl sm:text-2xl text-slate-300 dark:text-slate-600">-</span>
+                    <span className="font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                      {periodInfo.awayScore}
+                    </span>
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
+                    {periodInfo.statusText}
+                  </span>
+                </div>
+
+                {/* Away: Manchester City */}
+                <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
+                  <ClubCrest code="MCI" size={44} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold text-base sm:text-xl text-slate-900 dark:text-white leading-tight truncate">
+                      <span className="hidden sm:inline">Man City</span>
+                      <span className="sm:hidden">MCI</span>
+                    </h2>
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">2nd in PL</span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Symmetrical Scorers Row */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-6 mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100/80 dark:border-[#27272A] text-xs">
+                <div className="text-right space-y-0.5 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs min-h-[2.5rem]">
+                  {periodInfo.scorersHome.map((s, idx) => (
+                    <span key={idx} className="block truncate">{s}</span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center px-2 pt-1 text-slate-400 dark:text-zinc-500 text-xs select-none">
+                  <SoccerBallIcon size={13} className="text-slate-400 dark:text-zinc-500" />
+                </div>
+                <div className="text-left space-y-0.5 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs min-h-[2.5rem]">
+                  {periodInfo.scorersAway.map((s, idx) => (
+                    <span key={idx} className="block truncate">{s}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Live Win Probability Bar */}
+            <div className="pt-3 border-t border-slate-100 dark:border-[#27272A]">
+              <div className="flex items-center justify-between text-xs font-mono pb-1.5">
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="text-red-500 font-bold">ARS {periodInfo.arsProb}</span>
+                  <span className="text-slate-500 dark:text-zinc-400">Draw {periodInfo.drawProb}</span>
+                  <span className="text-sky-700 dark:text-sky-400 font-bold">MCI {periodInfo.mciProb}</span>
+                </div>
+              </div>
+              
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full flex overflow-hidden">
+                <div className="h-full bg-[#EF0107] transition-all duration-300" style={{ width: periodInfo.arsWidth }} />
+                <div className="h-full bg-slate-300 dark:bg-zinc-600 transition-all duration-300" style={{ width: periodInfo.drawWidth }} />
+                <div className="h-full bg-[#6CABDD] transition-all duration-300" style={{ width: periodInfo.mciWidth }} />
+              </div>
+            </div>
           </div>
 
-          {/* Symmetrical Scorers Row */}
-          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-8 mt-3 sm:mt-5 pt-2 sm:pt-3 border-t border-slate-100/80 dark:border-[#27272A] text-xs">
-            <div className="text-right space-y-0.5 sm:space-y-1 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs">
-              <span className="block truncate">B. Saka 34&apos;</span>
-              <span className="block truncate">G. Martinelli 58&apos;</span>
-            </div>
-            <div className="flex items-center justify-center px-2 sm:px-4 pt-0.5 text-slate-400 dark:text-zinc-500 text-xs select-none">
-              <span>⚽</span>
-            </div>
-            <div className="text-left space-y-0.5 sm:space-y-1 text-slate-600 dark:text-zinc-300 text-[11px] sm:text-xs">
-              <span className="block truncate">E. Haaland 42&apos; (P)</span>
-            </div>
-          </div>
-        </div>
+          {/* ── Detailed Tabs Card (Match Stats, H2H, Lineups, Table) ── */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-6 shadow-xs overflow-hidden transition-colors">
 
-        {/* Live Win Probability Bar */}
-        <div className="pt-4 border-t border-slate-100 dark:border-[#27272A]">
-          <div className="flex items-center justify-between text-xs font-mono pb-2">
-            <div className="flex items-center gap-5">
-              <span className="text-[#00A83F] dark:text-[#10B981] font-bold">ARS 58%</span>
-              <span className="text-slate-500 dark:text-zinc-400">Draw 24%</span>
-              <span className="text-sky-700 dark:text-sky-400 font-bold">MCI 18%</span>
-            </div>
-          </div>
-          
-          <div className="w-full h-2 bg-slate-100 dark:bg-zinc-800 rounded-full flex overflow-hidden">
-            <div className="h-full bg-[#00A83F] dark:bg-[#10B981]" style={{ width: '58%' }} />
-            <div className="h-full bg-slate-300 dark:bg-zinc-600" style={{ width: '24%' }} />
-            <div className="h-full bg-sky-500" style={{ width: '18%' }} />
-          </div>
-        </div>
-
-        {/* ── Match Tabs Bar ── */}
-        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-[#27272A] pt-6 pb-2.5 overflow-x-auto">
+            {/* ── Match Tabs Bar ── */}
+        <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-100 dark:border-[#27272A] pt-4 sm:pt-6 pb-2.5 overflow-x-auto no-scrollbar">
           {(['stats', 'h2h', 'lineups', 'table'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setMatchTab(tab)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
                 matchTab === tab
                   ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
@@ -458,15 +529,15 @@ export default function MatchCenterPage() {
         {matchTab === 'stats' && (
           <div className="pt-4 space-y-6">
             {/* Period Selector (ALL · 1ST · 2ND) */}
-            <div className="flex items-center justify-center gap-1.5 pb-2">
+            <div className="flex items-center justify-center gap-2 pb-2">
               {(['ALL', '1ST', '2ND'] as const).map((period) => (
                 <button
                   key={period}
                   onClick={() => setStatsPeriod(period)}
-                  className={`px-4 py-1 rounded-full text-xs font-bold transition-all ${
+                  className={`min-h-[40px] px-4 sm:px-5 py-2 rounded-full text-xs font-bold transition-all active:scale-95 ${
                     statsPeriod === period
-                      ? 'bg-[#00A83F] dark:bg-[#10B981] text-white shadow-xs'
-                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                      ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
+                      : 'text-slate-600 dark:text-zinc-400 bg-slate-100/70 dark:bg-zinc-800/70 hover:bg-slate-200 dark:hover:bg-zinc-700'
                   }`}
                 >
                   {period === 'ALL' ? 'All Match' : period === '1ST' ? '1st Half' : '2nd Half'}
@@ -562,27 +633,17 @@ export default function MatchCenterPage() {
                       <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
                         {h.homeShort}
                       </span>
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
-                        style={{ backgroundColor: h.homeColor }}
-                      >
-                        {h.homeShort}
-                      </div>
+                      <ClubCrest code={h.homeShort} size={20} />
                     </div>
 
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums shrink-0 text-center min-w-[38px]">
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums shrink-0 text-center min-w-[38px] font-mono">
                       <span>{h.homeScore}</span>
                       <span className="text-slate-300 dark:text-slate-600 mx-1.5 font-normal">-</span>
                       <span>{h.awayScore}</span>
                     </div>
 
                     <div className="flex items-center justify-start gap-2 flex-1 text-left min-w-0">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
-                        style={{ backgroundColor: h.awayColor }}
-                      >
-                        {h.awayShort}
-                      </div>
+                      <ClubCrest code={h.awayShort} size={20} />
                       <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
                         {h.awayShort}
                       </span>
@@ -594,11 +655,11 @@ export default function MatchCenterPage() {
 
                   <div className="col-span-2 flex justify-end">
                     <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shadow-2xs ${
+                      className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-[10px] font-mono shrink-0 select-none shadow-2xs ${
                         h.formResult === 'W'
-                          ? 'bg-[#16A34A] text-white'
+                          ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
                           : h.formResult === 'D'
-                          ? 'bg-slate-400 dark:bg-[#3E4452] text-white'
+                          ? 'bg-slate-400 dark:bg-zinc-700 text-white'
                           : 'bg-rose-600 text-white'
                       }`}
                       title={h.outcomeBadge}
@@ -619,16 +680,16 @@ export default function MatchCenterPage() {
             <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
               <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60 dark:border-[#27272A]">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#EF0107]" />
+                  <ClubCrest code="ARS" size={20} />
                   <span className="font-bold text-xs text-slate-900 dark:text-white">Arsenal</span>
                 </div>
                 <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                   {LINEUPS.home.formation}
                 </span>
               </div>
-              <div className="space-y-1.5 text-xs">
+              <div className="space-y-1 text-xs">
                 {LINEUPS.home.starters.map((player) => (
-                  <div key={player.num} className="flex items-center justify-between py-1 px-1 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24]">
+                  <div key={player.num} className="h-7 flex items-center justify-between px-2 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24] transition-colors">
                     <div className="flex items-center gap-2.5">
                       <span className="w-5 text-right font-mono text-slate-400 text-[11px]">{player.num}</span>
                       <span className="font-semibold text-slate-900 dark:text-white">{player.name}</span>
@@ -644,16 +705,16 @@ export default function MatchCenterPage() {
             <div className="bg-slate-50/70 dark:bg-[#16161A] rounded-xl p-4 border border-slate-100 dark:border-[#27272A]">
               <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-200/60 dark:border-[#27272A]">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-[#6CABDD]" />
+                  <ClubCrest code="MCI" size={20} />
                   <span className="font-bold text-xs text-slate-900 dark:text-white">Man City</span>
                 </div>
                 <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                   {LINEUPS.away.formation}
                 </span>
               </div>
-              <div className="space-y-1.5 text-xs">
+              <div className="space-y-1 text-xs">
                 {LINEUPS.away.starters.map((player) => (
-                  <div key={player.num} className="flex items-center justify-between py-1 px-1 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24]">
+                  <div key={player.num} className="h-7 flex items-center justify-between px-2 rounded hover:bg-slate-100/60 dark:hover:bg-[#1E1E24] transition-colors">
                     <div className="flex items-center gap-2.5">
                       <span className="w-5 text-right font-mono text-slate-400 text-[11px]">{player.num}</span>
                       <span className="font-semibold text-slate-900 dark:text-white">{player.name}</span>
@@ -683,8 +744,9 @@ export default function MatchCenterPage() {
 
               {LEAGUE_STANDINGS.map((row) => (
                 <div key={row.rank} className="flex justify-between py-2 items-center hover:bg-slate-50 dark:hover:bg-[#1A1A1E] px-1 rounded transition-colors">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <span className="text-slate-500 dark:text-slate-400 w-3 font-bold">{row.rank}</span>
+                    <ClubCrest code={row.club} size={16} />
                     <span className="font-bold text-slate-900 dark:text-white">{row.club}</span>
                   </div>
                   <div className="flex gap-4 items-center tabular-nums">
@@ -705,116 +767,204 @@ export default function MatchCenterPage() {
           </div>
         )}
 
-      </div>
+          </div>
+        </div>
 
-      {/* ── Lower Workspace: Fixtures & Simulation ───────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left 8 cols: GW08 Fixtures */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 shadow-xs transition-colors">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-1">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">GW08 Fixtures</h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">4 Matches</span>
+        {/* ── Right Column: Context Sidebar (4 cols - Sticky on Desktop) ── */}
+        <div className="lg:col-span-4 flex flex-col gap-5 lg:sticky lg:top-24">
+          
+          {/* 1. Live Table Impact Widget */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-[#27272A]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Live Table Impact
+              </h3>
+              <span className="text-[10px] font-mono text-zinc-400 font-semibold bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
+                GW08 LIVE
+              </span>
+            </div>
+
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between py-1 text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 border-b border-slate-100 dark:border-[#222227]">
+                <span>Club</span>
+                <div className="flex gap-3">
+                  <span className="w-4 text-center">P</span>
+                  <span className="w-6 text-center">GD</span>
+                  <span className="w-8 text-right font-bold">PTS</span>
+                </div>
+              </div>
+
+              {LEAGUE_STANDINGS.map((row) => {
+                const isArsenal = row.club === 'Arsenal';
+                const isCity = row.club === 'Man City';
+                return (
+                  <div
+                    key={row.rank}
+                    className={`flex justify-between items-center py-1.5 px-2 rounded-lg transition-colors ${
+                      isArsenal
+                        ? 'bg-red-500/10 border border-red-500/20 text-slate-900 dark:text-white'
+                        : isCity
+                        ? 'bg-sky-500/10 border border-sky-500/20 text-slate-900 dark:text-white'
+                        : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={`w-3.5 text-xs font-bold ${isArsenal ? 'text-red-500' : isCity ? 'text-sky-400' : 'text-slate-400'}`}>
+                        {row.rank}
+                      </span>
+                      <ClubCrest code={row.club} size={16} />
+                      <span className="font-bold text-xs truncate">{row.club}</span>
+                      {isArsenal && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold text-zinc-300 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none">
+                          <TrendingUp size={10} className="text-emerald-400 shrink-0" />
+                          1
+                        </span>
+                      )}
+                      {isCity && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold text-zinc-400 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none">
+                          <TrendingDown size={10} className="text-rose-400 shrink-0" />
+                          1
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-3 items-center tabular-nums text-xs">
+                      <span className="w-4 text-center text-slate-400">{row.played}</span>
+                      <span className="w-6 text-center text-slate-400">{row.gd}</span>
+                      <span className="w-8 text-right font-bold text-slate-900 dark:text-white">
+                        {row.pts}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#27272A] text-[11px] text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Info size={13} className="text-zinc-400 shrink-0" />
+              <span>Arsenal overtake City to lead the table by +2 pts.</span>
+            </div>
+          </div>
+
+          {/* 2. AI Simulation Matrix Widget */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-[#27272A]">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Simulation Matrix
+              </h3>
+              <span className="text-[10px] font-mono text-zinc-400 font-semibold bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
+                10K RUNS
+              </span>
+            </div>
+
+            <div className="space-y-3 font-mono">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 dark:text-zinc-400">ARS Win Expectancy</span>
+                <span className="text-slate-900 dark:text-white font-bold text-sm">82.4%</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-slate-900 dark:bg-zinc-200 rounded-full" style={{ width: '82.4%' }} />
+              </div>
+
+              {/* Top Projected Scorelines */}
+              <div className="pt-2 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 block">
+                  Projected Full-Time
+                </span>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 bg-slate-100 dark:bg-[#1E1E24] rounded-lg border border-slate-300 dark:border-zinc-700">
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">2 - 1</span>
+                    <span className="text-[10px] text-slate-900 dark:text-white font-bold">34.2%</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">2 - 2</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">21.8%</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">3 - 1</span>
+                    <span className="text-[10px] text-slate-500 dark:text-zinc-400">16.4%</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowAiModal(true)}
+                className="w-full mt-2 py-2 bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 font-mono font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
+              >
+                View Full Probabilities
+              </button>
+            </div>
+          </div>
+
+          {/* 3. GW08 Matchday Fixtures Rail */}
+          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-2">
+              <div className="flex items-center gap-2">
+                <LeagueLogo league="Premier League" size={16} />
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white">
+                  GW08 Fixtures Rail
+                </h3>
+              </div>
+              <span className="text-[11px] font-mono text-slate-500 dark:text-zinc-400 font-medium">4 Matches</span>
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
               {MATCHDAY_FIXTURES.map((fix) => (
                 <div
                   key={fix.id}
-                  className="py-3 sm:py-3.5 px-2 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-xl transition-colors grid grid-cols-12 items-center gap-2 sm:gap-4"
+                  className="py-2.5 px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors flex items-center gap-2 text-xs"
                 >
-                  <div className="col-span-3 flex flex-col justify-center">
-                    <span className={`text-xs font-bold ${
-                      fix.timeOrStatus === 'FT' ? 'text-[#10B981]' : 'text-slate-900 dark:text-white'
-                    }`}>
-                      {fix.timeOrStatus}
+                  {/* Status & Sub-info (Left Slot: 46px) */}
+                  <div className="w-[46px] shrink-0 flex flex-col items-start leading-none gap-1">
+                    <span
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded inline-block text-center min-w-[38px] ${
+                        fix.timeOrStatus === 'FT'
+                          ? 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-semibold'
+                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                      }`}
+                    >
+                      {fix.timeOrStatus.split(' ')[0]}
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      {fix.venue}
+                    <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 pl-0.5 truncate max-w-full">
+                      {fix.xgHome !== undefined ? `xG ${fix.xgHome}` : fix.venue.split(' ')[0]}
                     </span>
                   </div>
 
-                  <div className="col-span-6 flex items-center justify-between gap-2 sm:gap-3">
-                    <div className="flex items-center justify-end gap-2 flex-1 text-right min-w-0">
-                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                  {/* Symmetrical Center Matchup (Home Rata Kanan - Anchor Tengah - Away Rata Kiri) */}
+                  <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-2 min-w-0 pr-1">
+                    {/* Home Team (Rata Kanan) */}
+                    <div className="flex items-center justify-end gap-1.5 min-w-0 text-right">
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                         {fix.homeTeam}
                       </span>
-                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
-                        {fix.homeShort}
-                      </span>
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
-                        style={{ backgroundColor: fix.homeColor }}
-                      >
-                        {fix.homeShort}
-                      </div>
+                      <ClubCrest code={fix.homeShort} size={18} />
                     </div>
 
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums shrink-0 text-center min-w-[38px]">
+                    {/* Center Anchor: Score or VS */}
+                    <div className="w-10 text-center font-mono shrink-0 select-none">
                       {fix.homeScore !== undefined ? (
-                        <>
-                          <span>{fix.homeScore}</span>
-                          <span className="text-slate-300 dark:text-slate-600 mx-1.5 font-normal">-</span>
-                          <span>{fix.awayScore}</span>
-                        </>
+                        <span className="font-bold text-xs text-slate-900 dark:text-white tabular-nums">
+                          {fix.homeScore} - {fix.awayScore}
+                        </span>
                       ) : (
-                        <span className="text-slate-400 dark:text-slate-500 font-medium text-xs">VS</span>
+                        <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500">
+                          vs
+                        </span>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-start gap-2 flex-1 text-left min-w-0">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-2xs"
-                        style={{ backgroundColor: fix.awayColor }}
-                      >
-                        {fix.awayShort}
-                      </div>
-                      <span className="sm:hidden text-xs font-bold text-slate-900 dark:text-white">
-                        {fix.awayShort}
-                      </span>
-                      <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate hidden sm:inline">
+                    {/* Away Team (Rata Kiri) */}
+                    <div className="flex items-center justify-start gap-1.5 min-w-0 text-left">
+                      <ClubCrest code={fix.awayShort} size={18} />
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                         {fix.awayTeam}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="col-span-3 flex flex-col items-end justify-center text-right">
-                    {fix.xgHome !== undefined ? (
-                      <span className="text-xs text-slate-900 dark:text-white font-bold tabular-nums">
-                        <span className="text-slate-500 font-normal text-[11px]">xG</span> {fix.xgHome} - {fix.xgAway}
-                      </span>
-                    ) : (
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                        {fix.projectedResult ?? 'Premier League'}
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Right 4 cols: Simulation Matrix */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 shadow-xs transition-colors">
-            <div className="border-b border-slate-100 dark:border-[#27272A] pb-3 mb-3 flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Simulation</span>
-              <span className="text-[10px] font-mono text-[#10B981] font-bold">10K runs</span>
-            </div>
-            
-            <div className="text-xs font-mono text-slate-600 dark:text-slate-300 mb-4">
-              ARS win probability: <span className="font-bold text-slate-900 dark:text-white">82%</span>
-            </div>
-
-            <button
-              onClick={() => setShowAiModal(true)}
-              className="w-full py-2.5 bg-slate-900 dark:bg-zinc-100 hover:bg-[#10B981] dark:hover:bg-[#10B981] text-white dark:text-zinc-900 dark:hover:text-white font-mono font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
-            >
-              View Matrix
-            </button>
-          </div>
         </div>
 
       </div>
@@ -825,8 +975,8 @@ export default function MatchCenterPage() {
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-6 shadow-2xl transition-colors" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Score Probabilities</span>
-              <button onClick={() => setShowAiModal(false)} className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-mono text-xs">
-                ✕
+              <button onClick={() => setShowAiModal(false)} className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-md transition-colors" aria-label="Close modal">
+                <X size={15} />
               </button>
             </div>
 
@@ -834,7 +984,7 @@ export default function MatchCenterPage() {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 bg-slate-100/70 dark:bg-[#1E1E24] rounded-lg border border-slate-300 dark:border-zinc-700">
                   <span className="text-base font-black text-slate-900 dark:text-white block">2 - 1</span>
-                  <span className="text-[10px] text-[#10B981] font-bold">34.2%</span>
+                  <span className="text-[10px] text-slate-900 dark:text-white font-bold">34.2%</span>
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-lg border border-slate-200 dark:border-[#27272A]">
                   <span className="text-base font-black text-slate-900 dark:text-white block">2 - 2</span>

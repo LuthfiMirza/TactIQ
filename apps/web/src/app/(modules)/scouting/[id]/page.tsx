@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { RadarChart } from '@/components/radar-chart';
+import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import type { PlayerDTO, PlayerSimilarityResponse } from '@tactiq/shared-types';
-import { ArrowLeft, Shield, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
 
 const FALLBACK_PLAYER: PlayerDTO = {
   id: 'player-kdb',
@@ -89,19 +90,19 @@ export default function PlayerProfilePage() {
             <div>
               <div className="flex items-center space-x-2.5">
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{player.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-tactiq-emerald/10 border border-tactiq-emerald/30 text-tactiq-emerald font-bold text-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs">
                   {player.position}
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-tactiq-muted font-medium">
-                <span className="flex items-center gap-1 text-slate-300">
-                  <Shield size={13} className="text-tactiq-cyan" />
-                  {player.team?.name || 'Club'}
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <ClubCrest code={player.team?.code || player.team?.name || ''} size={16} />
+                  <span>{player.team?.name || 'Club'}</span>
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Globe size={13} className="text-tactiq-emerald" />
-                  {player.nationality}
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <LeagueLogo league={player.team?.league || 'Premier League'} size={16} />
+                  <span>{player.team?.league || 'Premier League'}</span>
                 </span>
                 <span>•</span>
                 <span>Age: {player.age} yo</span>
@@ -226,8 +227,9 @@ export default function PlayerProfilePage() {
                     </div>
                     <div>
                       <div className="font-bold text-xs text-white">{item.player.name}</div>
-                      <div className="text-[11px] text-tactiq-muted">
-                        {item.player.team?.name || 'Club'} • {item.player.position}
+                      <div className="text-[11px] text-tactiq-muted flex items-center gap-1.5 mt-0.5">
+                        <ClubCrest code={item.player.team?.code || item.player.team?.name || ''} size={14} />
+                        <span>{item.player.team?.name || 'Club'} · {item.player.position}</span>
                       </div>
                     </div>
                   </div>

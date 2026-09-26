@@ -72,7 +72,7 @@ export const Sidebar: React.FC = () => {
             <span className="flex-1 truncate">{item.label}</span>
             {item.badge && item.badgeType === 'live' && (
               <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-tactiq-emeraldBg border border-tactiq-emeraldSubtle">
-                <span className="w-1.5 h-1.5 rounded-full bg-tactiq-emerald animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-tactiq-emerald" />
                 <span className="text-[10px] font-mono font-bold text-tactiq-emerald">{item.badge}</span>
               </span>
             )}
@@ -183,7 +183,7 @@ export const Sidebar: React.FC = () => {
             </div>
             {/* Live badge */}
             <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-tactiq-emerald animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-tactiq-emerald" />
               <span className="text-[9px] font-bold text-tactiq-emerald">68&apos;</span>
             </div>
           </div>

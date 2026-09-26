@@ -6,7 +6,7 @@
   --base: #F0F2F5;
   --surface: #FFFFFF;
   --border: #E2E8F0;
-  --primary: #00A83F;
+  --primary: #0F172A;
   --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-syne: 'Syne', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -15,7 +15,7 @@
   --base: #09090B;
   --surface: #121215;
   --border: #27272A;
-  --primary: #10B981;
+  --primary: #F8FAFC;
 }
 
 * {

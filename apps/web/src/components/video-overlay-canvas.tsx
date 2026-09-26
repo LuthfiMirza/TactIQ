@@ -379,7 +379,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* Matchup & Status */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 text-[10px] font-mono shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
             <span className="font-semibold">LIVE CV STREAM</span>
           </div>
 
@@ -450,7 +450,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* Clean Live Status Pill in Viewport */}
         <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/75 border border-white/10 text-[11px] font-mono text-white backdrop-blur-xs shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
             <span>2D Radar</span>
             <span className="text-slate-400">·</span>
             <span className="text-slate-300">Live</span>
@@ -464,7 +464,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           </div>
           {activeMoment && (
             <div className="px-2.5 py-1 bg-black/80 border border-white/10 rounded-md text-[11px] text-white font-mono font-medium flex items-center gap-1 backdrop-blur-xs">
-              <Award size={12} className="text-[#10B981]" />
+              <Award size={12} className="text-amber-400" />
               <span>{activeMoment.minute}&apos; {activeMoment.label}</span>
             </div>
           )}
@@ -483,7 +483,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
               onClick={() => seekToMoment(moment)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all shrink-0 ${
                 activeMoment?.minute === moment.minute
-                  ? 'bg-[#10B981] text-white font-bold shadow-xs'
+                  ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold shadow-xs'
                   : 'bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:text-slate-900 dark:hover:text-white shadow-xs'
               }`}
             >
@@ -502,7 +502,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-bold uppercase tracking-wider text-xs transition-all shadow-xs ${
               isSimulatingLocal
                 ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                : 'bg-[#10B981] text-white hover:bg-[#059669]'
+                : 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-slate-800 dark:hover:bg-white'
             }`}
           >
             {isSimulatingLocal ? <Pause size={14} /> : <Play size={14} />}
@@ -520,7 +520,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         </div>
 
         <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-mono text-[11px] hidden sm:flex">
-          <Activity size={14} className="text-[#10B981]" />
+          <Activity size={14} className="text-slate-500 dark:text-zinc-400" />
           <span>TactIQ Live Tracking Engine</span>
         </div>
       </div>

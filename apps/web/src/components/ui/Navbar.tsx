@@ -61,7 +61,7 @@ export const Navbar: React.FC = () => {
         {/* System Microservices Status Pill */}
         <div className="hidden md:flex items-center space-x-3 pl-4 border-l border-tactiq-border">
           <div className="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-tactiq-card border border-tactiq-border">
-            <span className="w-2 h-2 rounded-full bg-tactiq-emerald animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-tactiq-emerald" />
             <span className="text-[11px] font-mono text-slate-300">FastAPI & Express Live</span>
           </div>
         </div>

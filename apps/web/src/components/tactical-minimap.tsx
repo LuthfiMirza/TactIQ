@@ -299,7 +299,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       {/* Header with FIFA Specs & Tactical Phase */}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3">
         <div className="flex items-center gap-2">
-          <Compass size={15} className="text-[#10B981]" />
+          <Compass size={15} className="text-slate-900 dark:text-zinc-100" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
             2D Tactical Radar
           </span>
@@ -402,7 +402,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           <span>Man City (11)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+          <span className="w-2 h-2 rounded-full bg-amber-400" />
           <span>Live Ball</span>
         </div>
       </div>

@@ -2,12 +2,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { RadarChart } from '@/components/radar-chart';
+import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import type { PlayerDTO } from '@tactiq/shared-types';
 import {
   SlidersHorizontal,
   Download,
   Check,
   ChevronDown,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -144,20 +147,235 @@ const INITIAL_RECOMMENDATIONS: ScoutingRecommendation[] = [
   },
 ];
 
+const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecommendation[]> = {
+  MF: INITIAL_RECOMMENDATIONS,
+  FW: [
+    {
+      player: {
+        id: 'rec-saka', teamId: 'team-ars',
+        name: 'Bukayo Saka', position: 'FWD',
+        nationality: 'ENG', age: 22, marketValue: 140000000,
+        photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=256&q=80',
+        team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 86, shooting: 84, passing: 83, dribbling: 89, defending: 65, physical: 78, vision: 87 },
+      },
+      matchPercentage: 93.5,
+      highlightMetrics: [{ label: '1v1 Take-ons', value: '96%' }, { label: 'Box Touches', value: '94%' }, { label: 'xG + xA', value: '91%' }],
+      per90: { sca: 5.60, penaltyBoxPasses: 3.10, highTurnoverRegains: 1.80, pressPassPct: 83.4 },
+      tacticalRole: 'Inverted Winger',
+    },
+    {
+      player: {
+        id: 'rec-palmer', teamId: 'team-che',
+        name: 'Cole Palmer', position: 'FWD',
+        nationality: 'ENG', age: 22, marketValue: 90000000,
+        photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=256&q=80',
+        team: { id: 'team-che', name: 'Chelsea', code: 'CHE', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 80, shooting: 86, passing: 88, dribbling: 87, defending: 55, physical: 72, vision: 92 },
+      },
+      matchPercentage: 91.2,
+      highlightMetrics: [{ label: 'Key Passes', value: '97%' }, { label: 'Finishing', value: '92%' }, { label: 'Penalty Conversion', value: '99%' }],
+      per90: { sca: 5.92, penaltyBoxPasses: 2.85, highTurnoverRegains: 1.35, pressPassPct: 82.0 },
+      tacticalRole: 'Inside Forward / AM',
+    },
+    {
+      player: {
+        id: 'rec-yamal', teamId: 'team-bar',
+        name: 'Lamine Yamal', position: 'FWD',
+        nationality: 'ESP', age: 17, marketValue: 150000000,
+        photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=256&q=80',
+        team: { id: 'team-bar', name: 'Barcelona', code: 'BAR', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 88, shooting: 80, passing: 87, dribbling: 92, defending: 48, physical: 64, vision: 91 },
+      },
+      matchPercentage: 89.8,
+      highlightMetrics: [{ label: 'Dribble Success', value: '98%' }, { label: 'Cross Accuracy', value: '93%' }, { label: 'SCA p90', value: '92%' }],
+      per90: { sca: 6.10, penaltyBoxPasses: 3.25, highTurnoverRegains: 1.15, pressPassPct: 81.5 },
+      tacticalRole: 'Creative Winger',
+    },
+    {
+      player: {
+        id: 'rec-olise', teamId: 'team-bay',
+        name: 'Michael Olise', position: 'FWD',
+        nationality: 'FRA', age: 22, marketValue: 65000000,
+        photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80',
+        team: { id: 'team-bay', name: 'Bayern München', code: 'BAY', logoUrl: '', league: 'Bundesliga' },
+        attributes: { pace: 84, shooting: 82, passing: 86, dribbling: 88, defending: 58, physical: 73, vision: 89 },
+      },
+      matchPercentage: 88.0,
+      highlightMetrics: [{ label: 'Dead-ball Threat', value: '95%' }, { label: 'Progressive Carries', value: '89%' }, { label: 'Chances Created', value: '88%' }],
+      per90: { sca: 5.30, penaltyBoxPasses: 2.70, highTurnoverRegains: 1.40, pressPassPct: 84.1 },
+      tacticalRole: 'Wide Playmaker',
+    },
+    {
+      player: {
+        id: 'rec-williams', teamId: 'team-ath',
+        name: 'Nico Williams', position: 'FWD',
+        nationality: 'ESP', age: 22, marketValue: 70000000,
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&q=80',
+        team: { id: 'team-ath', name: 'Athletic Club', code: 'ATH', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 93, shooting: 79, passing: 81, dribbling: 89, defending: 45, physical: 74, vision: 82 },
+      },
+      matchPercentage: 86.4,
+      highlightMetrics: [{ label: 'Sprint Speed', value: '99%' }, { label: 'Carry Into Box', value: '91%' }, { label: 'Transition Threat', value: '90%' }],
+      per90: { sca: 4.90, penaltyBoxPasses: 2.45, highTurnoverRegains: 1.20, pressPassPct: 78.6 },
+      tacticalRole: 'Direct Winger',
+    },
+  ],
+  DF: [
+    {
+      player: {
+        id: 'rec-saliba', teamId: 'team-ars',
+        name: 'William Saliba', position: 'DEF',
+        nationality: 'FRA', age: 23, marketValue: 80000000,
+        photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=256&q=80',
+        team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 83, shooting: 40, passing: 82, dribbling: 76, defending: 89, physical: 84, vision: 78 },
+      },
+      matchPercentage: 95.1,
+      highlightMetrics: [{ label: 'Defensive Duels', value: '97%' }, { label: 'Pass Accuracy', value: '94%' }, { label: 'Recovery Pace', value: '92%' }],
+      per90: { sca: 1.45, penaltyBoxPasses: 0.65, highTurnoverRegains: 2.80, pressPassPct: 91.2 },
+      tacticalRole: 'Ball-Playing Defender',
+    },
+    {
+      player: {
+        id: 'rec-bastoni', teamId: 'team-int',
+        name: 'Alessandro Bastoni', position: 'DEF',
+        nationality: 'ITA', age: 25, marketValue: 70000000,
+        photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=256&q=80',
+        team: { id: 'team-int', name: 'Inter Milan', code: 'INT', logoUrl: '', league: 'Serie A' },
+        attributes: { pace: 78, shooting: 45, passing: 86, dribbling: 79, defending: 87, physical: 82, vision: 84 },
+      },
+      matchPercentage: 92.4,
+      highlightMetrics: [{ label: 'Prog. Passes', value: '96%' }, { label: 'Wide Overlaps', value: '91%' }, { label: 'Aerial Duels', value: '88%' }],
+      per90: { sca: 2.10, penaltyBoxPasses: 1.15, highTurnoverRegains: 2.30, pressPassPct: 89.4 },
+      tacticalRole: 'Wide Centre-Back',
+    },
+    {
+      player: {
+        id: 'rec-lukeba', teamId: 'team-rbl',
+        name: 'Castello Lukeba', position: 'DEF',
+        nationality: 'FRA', age: 21, marketValue: 40000000,
+        photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=256&q=80',
+        team: { id: 'team-rbl', name: 'RB Leipzig', code: 'RBL', logoUrl: '', league: 'Bundesliga' },
+        attributes: { pace: 80, shooting: 38, passing: 79, dribbling: 74, defending: 84, physical: 81, vision: 75 },
+      },
+      matchPercentage: 89.0,
+      highlightMetrics: [{ label: 'Tackles Won', value: '91%' }, { label: 'Interceptions', value: '89%' }, { label: 'Line Breaking', value: '85%' }],
+      per90: { sca: 1.20, penaltyBoxPasses: 0.50, highTurnoverRegains: 2.45, pressPassPct: 88.0 },
+      tacticalRole: 'Covering Defender',
+    },
+    {
+      player: {
+        id: 'rec-hincapie', teamId: 'team-b04',
+        name: 'Piero Hincapié', position: 'DEF',
+        nationality: 'ECU', age: 22, marketValue: 40000000,
+        photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80',
+        team: { id: 'team-b04', name: 'Bayer Leverkusen', code: 'B04', logoUrl: '', league: 'Bundesliga' },
+        attributes: { pace: 82, shooting: 42, passing: 78, dribbling: 75, defending: 83, physical: 83, vision: 76 },
+      },
+      matchPercentage: 87.5,
+      highlightMetrics: [{ label: 'Aggressive Press', value: '92%' }, { label: 'Ground Duels', value: '87%' }, { label: 'Flexibility', value: '90%' }],
+      per90: { sca: 1.35, penaltyBoxPasses: 0.70, highTurnoverRegains: 2.60, pressPassPct: 86.5 },
+      tacticalRole: 'Hybrid LCB/LB',
+    },
+    {
+      player: {
+        id: 'rec-scalvini', teamId: 'team-ata',
+        name: 'Giorgio Scalvini', position: 'DEF',
+        nationality: 'ITA', age: 20, marketValue: 45000000,
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&q=80',
+        team: { id: 'team-ata', name: 'Atalanta', code: 'ATA', logoUrl: '', league: 'Serie A' },
+        attributes: { pace: 74, shooting: 52, passing: 77, dribbling: 72, defending: 85, physical: 82, vision: 79 },
+      },
+      matchPercentage: 86.0,
+      highlightMetrics: [{ label: 'Aerial Dominance', value: '93%' }, { label: 'Anticipation', value: '89%' }, { label: 'Midfield Step-ins', value: '88%' }],
+      per90: { sca: 1.60, penaltyBoxPasses: 0.80, highTurnoverRegains: 2.70, pressPassPct: 85.8 },
+      tacticalRole: 'Stopper / Libero',
+    },
+  ],
+  GK: [
+    {
+      player: {
+        id: 'rec-raya', teamId: 'team-ars',
+        name: 'David Raya', position: 'GK',
+        nationality: 'ESP', age: 28, marketValue: 40000000,
+        photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=256&q=80',
+        team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 60, shooting: 25, passing: 86, dribbling: 65, defending: 82, physical: 78, vision: 88 },
+      },
+      matchPercentage: 94.8,
+      highlightMetrics: [{ label: 'Box Claims', value: '98%' }, { label: 'Long Pass Dist', value: '95%' }, { label: 'PSxG +/-', value: '+3.8' }],
+      per90: { sca: 0.65, penaltyBoxPasses: 0.20, highTurnoverRegains: 0.90, pressPassPct: 85.0 },
+      tacticalRole: 'Sweeper Keeper',
+    },
+    {
+      player: {
+        id: 'rec-costa', teamId: 'team-por',
+        name: 'Diogo Costa', position: 'GK',
+        nationality: 'POR', age: 24, marketValue: 45000000,
+        photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=256&q=80',
+        team: { id: 'team-por', name: 'FC Porto', code: 'POR', logoUrl: '', league: 'Liga Portugal' },
+        attributes: { pace: 62, shooting: 22, passing: 84, dribbling: 64, defending: 85, physical: 80, vision: 85 },
+      },
+      matchPercentage: 92.1,
+      highlightMetrics: [{ label: 'Penalty Stops', value: '99%' }, { label: 'Reflex Saves', value: '93%' }, { label: 'Short Buildup', value: '91%' }],
+      per90: { sca: 0.55, penaltyBoxPasses: 0.15, highTurnoverRegains: 0.85, pressPassPct: 86.2 },
+      tacticalRole: 'Modern Shot-Stopper',
+    },
+    {
+      player: {
+        id: 'rec-verbruggen', teamId: 'team-bha',
+        name: 'Bart Verbruggen', position: 'GK',
+        nationality: 'NED', age: 22, marketValue: 22000000,
+        photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=256&q=80',
+        team: { id: 'team-bha', name: 'Brighton', code: 'BHA', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 61, shooting: 20, passing: 85, dribbling: 67, defending: 81, physical: 77, vision: 86 },
+      },
+      matchPercentage: 89.7,
+      highlightMetrics: [{ label: 'Press Composure', value: '96%' }, { label: 'Midfield Launches', value: '90%' }, { label: 'High Claims', value: '88%' }],
+      per90: { sca: 0.60, penaltyBoxPasses: 0.22, highTurnoverRegains: 0.80, pressPassPct: 87.5 },
+      tacticalRole: 'Press-Baiting Sweeper',
+    },
+    {
+      player: {
+        id: 'rec-digregorio', teamId: 'team-juv',
+        name: 'Michele Di Gregorio', position: 'GK',
+        nationality: 'ITA', age: 27, marketValue: 20000000,
+        photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80',
+        team: { id: 'team-juv', name: 'Juventus', code: 'JUV', logoUrl: '', league: 'Serie A' },
+        attributes: { pace: 58, shooting: 20, passing: 81, dribbling: 60, defending: 86, physical: 81, vision: 80 },
+      },
+      matchPercentage: 88.2,
+      highlightMetrics: [{ label: 'Save Ratio', value: '94%' }, { label: 'Close-Range Reflexes', value: '92%' }, { label: 'Consistency', value: '90%' }],
+      per90: { sca: 0.40, penaltyBoxPasses: 0.10, highTurnoverRegains: 0.70, pressPassPct: 83.0 },
+      tacticalRole: 'Traditional Reflex Keeper',
+    },
+    {
+      player: {
+        id: 'rec-chevalier', teamId: 'team-lil',
+        name: 'Lucas Chevalier', position: 'GK',
+        nationality: 'FRA', age: 22, marketValue: 25000000,
+        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&q=80',
+        team: { id: 'team-lil', name: 'Lille OSC', code: 'LIL', logoUrl: '', league: 'Ligue 1' },
+        attributes: { pace: 63, shooting: 20, physical: 79, vision: 82, defending: 83, passing: 80, dribbling: 62 },
+      },
+      matchPercentage: 86.8,
+      highlightMetrics: [{ label: '1v1 Suppression', value: '93%' }, { label: 'Cross Claiming', value: '89%' }, { label: 'Agility', value: '91%' }],
+      per90: { sca: 0.45, penaltyBoxPasses: 0.12, highTurnoverRegains: 0.75, pressPassPct: 82.5 },
+      tacticalRole: 'Athletic Shot-Stopper',
+    },
+  ],
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const getFlag = (nat?: string) => {
-  switch (nat) {
-    case 'NOR': return '🇳🇴';
-    case 'BEL': return '🇧🇪';
-    case 'ENG': return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
-    case 'HUN': return '🇭🇺';
-    case 'USA': return '🇺🇸';
-    case 'TUR': return '🇹🇷';
-    case 'RUS': return '🇷🇺';
-    case 'DEN': return '🇩🇰';
-    default: return '⚽';
-  }
+  if (!nat) return null;
+  return (
+    <span className="inline-flex items-center justify-center px-1 py-0.5 rounded bg-slate-900/90 dark:bg-zinc-800 text-white dark:text-zinc-200 font-mono text-[8px] font-extrabold border border-slate-700/60 dark:border-zinc-700 leading-none shadow-2xs">
+      {nat}
+    </span>
+  );
 };
 
 const getInitials = (name: string) => {
@@ -178,7 +396,7 @@ function MiniPitch({ position }: { position: string }) {
       <circle cx="52" cy="34" r="1.5" fill="#94A3B8"/>
       <rect x="1" y="16" width="16" height="36" stroke="#CBD5E1" strokeWidth="0.75"/>
       <rect x="87" y="16" width="16" height="36" stroke="#CBD5E1" strokeWidth="0.75"/>
-      <circle cx={dotX} cy={dotY} r="4.5" fill="#10B981" />
+      <circle cx={dotX} cy={dotY} r="4.5" fill="#3B82F6" />
       <circle cx={dotX} cy={dotY} r="1.5" fill="#FFFFFF" />
     </svg>
   );
@@ -195,8 +413,8 @@ const MATCH_STATS = [
 export default function ScoutingPage() {
   const [anchorPlayer, setAnchorPlayer] = useState(BENCHMARK_PLAYERS[0]);
   const [selectedCluster, setSelectedCluster] = useState<'GK' | 'DF' | 'MF' | 'FW'>('MF');
-  const [recommendations] = useState<ScoutingRecommendation[]>(INITIAL_RECOMMENDATIONS);
-  const [comparisonTarget, setComparisonTarget] = useState<ScoutingRecommendation>(INITIAL_RECOMMENDATIONS[0]);
+  const [recommendations, setRecommendations] = useState<ScoutingRecommendation[]>(CLUSTER_RECOMMENDATIONS.MF);
+  const [comparisonTarget, setComparisonTarget] = useState<ScoutingRecommendation>(CLUSTER_RECOMMENDATIONS.MF[0]);
   const [sortBy, setSortBy] = useState<'similarity' | 'value' | 'age'>('similarity');
   const [isAnchorSelectorOpen, setIsAnchorSelectorOpen] = useState(false);
   const [isWeightsModalOpen, setIsWeightsModalOpen] = useState(false);
@@ -205,6 +423,27 @@ export default function ScoutingPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleClusterSelect = (cluster: 'GK' | 'DF' | 'MF' | 'FW') => {
+    setSelectedCluster(cluster);
+    const list = CLUSTER_RECOMMENDATIONS[cluster] || [];
+    setRecommendations(list);
+    if (list.length > 0) {
+      setComparisonTarget(list[0]);
+      showToast(`Showing ${cluster} shortlist`);
+    }
+  };
+
+  const handleSelectCandidate = (rec: ScoutingRecommendation) => {
+    setComparisonTarget(rec);
+    showToast(`Comparing: ${rec.player.name}`);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      const el = document.getElementById('comparison-arena');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   };
 
   const sortedRecommendations = useMemo(() => {
@@ -231,8 +470,8 @@ export default function ScoutingPage() {
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-[#10B981] text-white font-mono font-bold text-xs flex items-center gap-2 rounded-lg shadow-xl">
-          <Check size={14} className="text-white" />
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 px-4 py-2 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-mono font-bold text-xs flex items-center gap-2 rounded-lg shadow-xl border border-slate-700/50 dark:border-zinc-300">
+          <Check size={14} />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -246,26 +485,30 @@ export default function ScoutingPage() {
           <div className="relative">
             <button
               onClick={() => setIsAnchorSelectorOpen(!isAnchorSelectorOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-lg text-xs font-bold text-slate-800 dark:text-zinc-100 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] shadow-xs transition-colors"
+              className="h-9 flex items-center gap-2 px-3 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-lg text-xs font-bold text-slate-800 dark:text-zinc-100 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] shadow-xs transition-colors"
             >
-              <span className="text-[#10B981]">Anchor:</span>
+              <ClubCrest code={anchorPlayer.team?.code || ''} size={16} />
+              <span className="text-slate-500 dark:text-zinc-400">Anchor:</span>
               <span>{anchorPlayer.name}</span>
-              <ChevronDown size={13} className="text-slate-500 dark:text-zinc-400" />
+              <ChevronDown size={13} className="text-slate-500 dark:text-zinc-400 ml-0.5" />
             </button>
 
             {isAnchorSelectorOpen && (
-              <div className="absolute top-full left-0 mt-1 z-30 w-64 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-[#27272A]">
+              <div className="absolute top-full left-0 mt-1 z-30 w-72 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-[#27272A]">
                 {BENCHMARK_PLAYERS.map((p) => (
                   <button
                     key={p.id}
                     onClick={() => { setAnchorPlayer(p); setIsAnchorSelectorOpen(false); showToast(`Benchmark: ${p.name}`); }}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left"
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3"
                   >
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</div>
-                      <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">{p.team?.name} · {p.position2}</div>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ClubCrest code={p.team?.code || ''} size={20} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name}</div>
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">{p.team?.name} · {p.position2}</div>
+                      </div>
                     </div>
-                    <span className="text-xs font-mono font-bold text-[#10B981]">{p.estValueFormatted}</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">{p.estValueFormatted}</span>
                   </button>
                 ))}
               </div>
@@ -273,14 +516,14 @@ export default function ScoutingPage() {
           </div>
 
           {/* Position Clusters */}
-          <div className="flex items-center border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] rounded-lg p-0.5 shadow-xs">
+          <div className="h-9 flex items-center border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] rounded-lg p-0.5 shadow-xs">
             {(['GK', 'DF', 'MF', 'FW'] as const).map((pos) => (
               <button
                 key={pos}
-                onClick={() => setSelectedCluster(pos)}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                onClick={() => handleClusterSelect(pos)}
+                className={`h-full px-3.5 rounded-md text-xs font-bold transition-all flex items-center justify-center ${
                   selectedCluster === pos
-                    ? 'bg-[#10B981] text-white shadow-xs'
+                    ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs'
                     : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                 }`}
               >
@@ -294,14 +537,14 @@ export default function ScoutingPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsWeightsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 shadow-xs transition-colors"
+            className="h-9 flex items-center gap-1.5 px-3 border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-slate-700 dark:text-zinc-300 shadow-xs transition-colors"
           >
             <SlidersHorizontal size={13} />
             <span>Weights</span>
           </button>
           <button
             onClick={() => showToast('Shortlist exported to CSV')}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold rounded-lg shadow-xs transition-colors"
+            className="h-9 flex items-center gap-1.5 px-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold rounded-lg shadow-xs transition-colors"
           >
             <Download size={13} />
             <span>Export</span>
@@ -354,13 +597,10 @@ export default function ScoutingPage() {
                 return (
                   <div
                     key={rec.player.id}
-                    onClick={() => {
-                      setComparisonTarget(rec);
-                      showToast(`Comparing: ${rec.player.name}`);
-                    }}
-                    className={`p-3 rounded-xl cursor-pointer transition-all my-1.5 border ${
+                    onClick={() => handleSelectCandidate(rec)}
+                    className={`p-3 rounded-xl cursor-pointer transition-all my-1.5 border active:scale-[0.99] ${
                       isSelected
-                        ? 'border-slate-300 dark:border-zinc-600 bg-slate-100/80 dark:bg-[#1E1E24] shadow-xs'
+                        ? 'border-slate-900/60 dark:border-zinc-400 bg-slate-100/70 dark:bg-zinc-800/40 shadow-xs'
                         : 'border-transparent hover:border-slate-200 dark:hover:border-[#27272A] hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                     }`}
                   >
@@ -371,7 +611,7 @@ export default function ScoutingPage() {
                         <div className="relative shrink-0">
                           <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs ${
                             isSelected
-                              ? 'bg-[#10B981] text-white shadow-2xs'
+                              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
                               : 'bg-slate-100 dark:bg-[#1E1E24] text-slate-700 dark:text-zinc-300'
                           }`}>
                             {getInitials(rec.player.name)}
@@ -385,17 +625,16 @@ export default function ScoutingPage() {
                           <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                             {rec.player.name}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5 font-mono">
-                            {rec.player.team?.name} · {rec.player.age}y · <span className="text-[#10B981] font-bold">{valueFormatted}</span>
+                          <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
+                            <ClubCrest code={rec.player.team?.code || rec.player.team?.name || ''} size={13} />
+                            <span>{rec.player.team?.name} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
                           </div>
                         </div>
                       </div>
 
                       {/* Right: Match Percentage */}
                       <div className="text-right shrink-0 font-mono">
-                        <div className={`text-sm font-bold tabular-nums ${
-                          isSelected ? 'text-[#10B981]' : 'text-slate-900 dark:text-white'
-                        }`}>
+                        <div className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
                           {rec.matchPercentage.toFixed(1)}%
                         </div>
                         <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold block">
@@ -405,13 +644,40 @@ export default function ScoutingPage() {
 
                     </div>
 
-                    {/* Metric Badges */}
-                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                      {rec.highlightMetrics.slice(0, 2).map((m, idx) => (
-                        <span key={idx} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E1E24] text-slate-600 dark:text-zinc-400 text-[10px] font-mono">
-                          {m.label}: <strong className="text-slate-900 dark:text-zinc-200">{m.value}</strong>
-                        </span>
-                      ))}
+                    {/* Metric Badges & Action Button */}
+                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-[#222227]">
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        {rec.highlightMetrics.slice(0, 2).map((m, idx) => (
+                          <span key={idx} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E1E24] text-slate-600 dark:text-zinc-400 text-[10px] font-mono truncate">
+                            {m.label}: <strong className="text-slate-900 dark:text-zinc-200">{m.value}</strong>
+                          </span>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectCandidate(rec);
+                        }}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold font-mono transition-all shrink-0 active:scale-95 ${
+                          isSelected
+                            ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-2xs'
+                            : 'bg-slate-100 dark:bg-[#25252B] text-slate-700 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-[#2F2F36]'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <>
+                            <Check size={11} className="stroke-[2.5]" />
+                            <span>Comparing</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Compare</span>
+                            <ArrowRight size={11} />
+                          </>
+                        )}
+                      </button>
                     </div>
 
                   </div>
@@ -424,7 +690,7 @@ export default function ScoutingPage() {
         </div>
 
         {/* ── RIGHT COLUMN: Comparison Arena (8 cols) ───────────────────────── */}
-        <div className="lg:col-span-8 flex flex-col gap-5">
+        <div id="comparison-arena" className="lg:col-span-8 flex flex-col gap-5 scroll-mt-20">
 
           {/* Card 1: Player Matchup Header */}
           <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-xs transition-colors">
@@ -433,7 +699,7 @@ export default function ScoutingPage() {
               {/* Anchor Profile (Left, 5 cols) */}
               <div className="md:col-span-5 flex items-center gap-3.5">
                 <div className="relative shrink-0">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center font-extrabold text-base sm:text-lg text-white shadow-xs">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center font-extrabold text-base sm:text-lg text-white shadow-xs">
                     {getInitials(anchorPlayer.name)}
                   </div>
                   <span className="absolute -bottom-1 -right-1 text-xs">
@@ -441,14 +707,15 @@ export default function ScoutingPage() {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#10B981] font-bold block">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block">
                     Anchor Player
                   </span>
                   <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                     {anchorPlayer.name}
                   </h2>
-                  <div className="text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
-                    {anchorPlayer.team?.name} · {anchorPlayer.age}y · <span className="font-bold text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</span>
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
+                    <ClubCrest code={anchorPlayer.team?.code || ''} size={16} />
+                    <span>{anchorPlayer.team?.name} · {anchorPlayer.age}y · <span className="font-bold text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</span></span>
                   </div>
                 </div>
               </div>
@@ -458,7 +725,7 @@ export default function ScoutingPage() {
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#18181C] flex items-center justify-center text-slate-500 dark:text-zinc-400 font-mono font-bold text-[11px]">
                   VS
                 </div>
-                <span className="text-[10px] font-mono font-bold text-[#10B981] mt-1 whitespace-nowrap">
+                <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white mt-1 whitespace-nowrap">
                   {comparisonTarget.matchPercentage.toFixed(1)}%
                 </span>
               </div>
@@ -472,8 +739,9 @@ export default function ScoutingPage() {
                   <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                     {comparisonTarget.player.name}
                   </h2>
-                  <div className="text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
-                    {comparisonTarget.player.team?.name} · {comparisonTarget.player.age}y · <span className="font-bold text-sky-600 dark:text-sky-400">€{(comparisonTarget.player.marketValue ? comparisonTarget.player.marketValue / 1e6 : 0).toFixed(0)}M</span>
+                  <div className="flex items-center justify-start md:justify-end gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
+                    <ClubCrest code={comparisonTarget.player.team?.code || ''} size={16} />
+                    <span>{comparisonTarget.player.team?.name} · {comparisonTarget.player.age}y · <span className="font-bold text-sky-600 dark:text-sky-400">€{(comparisonTarget.player.marketValue ? comparisonTarget.player.marketValue / 1e6 : 0).toFixed(0)}M</span></span>
                   </div>
                 </div>
 
@@ -501,7 +769,7 @@ export default function ScoutingPage() {
               {/* Legend */}
               <div className="flex items-center gap-3 text-xs font-mono">
                 <span className="flex items-center gap-1.5 text-slate-900 dark:text-white font-semibold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#475569] dark:bg-zinc-400" />
                   {anchorPlayer.name.split(' ')[1] || anchorPlayer.name}
                 </span>
                 <span className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
@@ -541,13 +809,13 @@ export default function ScoutingPage() {
                     <div key={m.label} className="text-xs">
                       {/* Metric Name & Values */}
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className={`font-bold ${anchorWins ? 'text-[#10B981]' : 'text-slate-700 dark:text-zinc-300'}`}>
+                        <span className={`font-bold ${anchorWins ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-500 dark:text-zinc-400'}`}>
                           {m.anchorVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
                         <span className="text-[11px] text-slate-600 dark:text-zinc-300 font-medium text-center truncate px-2 font-sans">
                           {m.label}
                         </span>
-                        <span className={`font-bold ${!anchorWins ? 'text-sky-600 dark:text-sky-400' : 'text-slate-700 dark:text-zinc-300'}`}>
+                        <span className={`font-bold ${!anchorWins ? 'text-sky-600 dark:text-sky-400' : 'text-slate-500 dark:text-zinc-400'}`}>
                           {m.targetVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
                       </div>
@@ -556,7 +824,7 @@ export default function ScoutingPage() {
                       <div className="grid grid-cols-2 gap-1.5 h-1.5 bg-slate-100 dark:bg-[#18181C] rounded-full overflow-hidden">
                         <div className="flex justify-end">
                           <div
-                            className="h-full bg-[#10B981] rounded-full transition-all duration-300"
+                            className="h-full bg-slate-700 dark:bg-zinc-300 rounded-full transition-all duration-300"
                             style={{ width: `${anchorPct}%` }}
                           />
                         </div>
@@ -586,7 +854,7 @@ export default function ScoutingPage() {
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                     {anchorPlayer.name.split(' ')[1]} Profile
                   </span>
-                  <span className="text-[10px] font-mono text-[#10B981] font-bold">{anchorPlayer.position2}</span>
+                  <span className="text-[10px] font-mono text-slate-700 dark:text-zinc-300 font-bold">{anchorPlayer.position2}</span>
                 </div>
 
                 <div className="h-28 rounded-lg border border-slate-200 dark:border-[#27272A] overflow-hidden mb-3.5 bg-slate-50 dark:bg-[#18181C]">
@@ -599,7 +867,7 @@ export default function ScoutingPage() {
                     <ul className="space-y-1 text-slate-700 dark:text-zinc-300 text-[11px]">
                       {anchorPlayer.strengths.slice(0, 3).map((s, i) => (
                         <li key={i} className="flex items-center gap-1.5">
-                          <span className="text-[#10B981] font-bold">+</span>
+                          <span className="text-slate-700 dark:text-zinc-300 font-bold">+</span>
                           <span className="truncate">{s}</span>
                         </li>
                       ))}
@@ -645,7 +913,7 @@ export default function ScoutingPage() {
                       {comparisonTarget.highlightMetrics.map((hm, i) => (
                         <li key={i} className="flex items-center justify-between py-0.5">
                           <span className="flex items-center gap-1.5">
-                            <span className="text-sky-600 dark:text-sky-400 font-bold">✓</span>
+                            <Check size={12} className="text-sky-600 dark:text-sky-400 stroke-[2.5] shrink-0" />
                             <span>{hm.label}</span>
                           </span>
                           <span className="font-bold text-slate-900 dark:text-white">{hm.value}</span>
@@ -695,7 +963,10 @@ export default function ScoutingPage() {
                   Recent Match Records ({anchorPlayer.name})
                 </h3>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">Premier League</span>
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-zinc-400">
+                <LeagueLogo league="Premier League" size={14} />
+                <span>Premier League</span>
+              </div>
             </div>
 
             {/* Table Header */}
@@ -716,6 +987,7 @@ export default function ScoutingPage() {
                     <span className={m.result === 'W' ? 'tq-form-w' : 'tq-form-d'}>
                       {m.result}
                     </span>
+                    <ClubCrest code={m.opponent} size={16} />
                     <span className="font-semibold text-slate-900 dark:text-white truncate">{m.opponent}</span>
                   </div>
                   <div className="text-center font-bold text-slate-900 dark:text-zinc-100">
@@ -742,8 +1014,8 @@ export default function ScoutingPage() {
           <div className="w-full max-w-sm rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-6 shadow-2xl transition-colors" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Scouting Weights</span>
-              <button onClick={() => setIsWeightsModalOpen(false)} className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white text-xs font-mono">
-                ✕
+              <button onClick={() => setIsWeightsModalOpen(false)} className="text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white p-1 rounded-md transition-colors" aria-label="Close modal">
+                <X size={15} />
               </button>
             </div>
             <div className="space-y-4">
@@ -756,10 +1028,10 @@ export default function ScoutingPage() {
                 <div key={label} className="font-mono text-xs">
                   <div className="flex justify-between mb-1.5">
                     <span className="text-slate-600 dark:text-zinc-300">{label}</span>
-                    <span className="text-[#10B981] font-bold">{val}%</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{val}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-100 dark:bg-[#18181C] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#10B981]" style={{ width: `${val}%` }} />
+                    <div className="h-full bg-slate-900 dark:bg-zinc-200" style={{ width: `${val}%` }} />
                   </div>
                 </div>
               ))}
@@ -769,7 +1041,7 @@ export default function ScoutingPage() {
                 setIsWeightsModalOpen(false);
                 showToast('Weights updated');
               }}
-              className="w-full mt-6 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
+              className="w-full mt-6 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-bold text-xs uppercase tracking-wider rounded-lg transition-colors shadow-xs"
             >
               Apply Weights
             </button>

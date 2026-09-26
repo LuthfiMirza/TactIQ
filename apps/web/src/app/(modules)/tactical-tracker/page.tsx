@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { VideoOverlayCanvas } from '@/components/video-overlay-canvas';
 import { TacticalMinimap } from '@/components/tactical-minimap';
+import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
 import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
 
@@ -84,32 +85,29 @@ export default function TacticalTrackerPage() {
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           {/* Match & Room Badge */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#EF0107] to-[#BA0C2F] flex items-center justify-center font-extrabold text-xs text-white shadow-xs shrink-0">
-                ARS
-              </div>
+            <div className="flex items-center gap-2.5">
+              <ClubCrest code="ARS" size={44} className="drop-shadow-xs" />
               <div className="flex flex-col items-center px-1.5 sm:px-2">
                 <span className="font-mono font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight tabular-nums">2 — 1</span>
-                <span className="text-[10px] font-mono text-[#10B981] font-bold whitespace-nowrap">68&apos; LIVE</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 font-bold whitespace-nowrap">68&apos; LIVE</span>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#6CABDD] to-[#458BB8] flex items-center justify-center font-extrabold text-xs text-white shadow-xs shrink-0">
-                MCI
-              </div>
+              <ClubCrest code="MCI" size={44} className="drop-shadow-xs" />
             </div>
 
             <div className="sm:border-l sm:border-slate-200 sm:dark:border-[#27272A] sm:pl-4">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#10B981] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-700 dark:text-zinc-300 font-bold">
                   2D Optical Radar
                 </span>
               </div>
               <h1 className="font-extrabold text-lg sm:text-xl lg:text-2xl text-slate-900 dark:text-white tracking-tight mt-0.5">
                 Tactical Tracker · Live Radar
               </h1>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Emirates Stadium · Premier League GW08
-              </p>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                <LeagueLogo league="Premier League" size={14} />
+                <span>Emirates Stadium · Premier League GW08</span>
+              </div>
             </div>
           </div>
 
@@ -118,7 +116,7 @@ export default function TacticalTrackerPage() {
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
               <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
@@ -129,7 +127,7 @@ export default function TacticalTrackerPage() {
 
       {pipelineMessage && (
         <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] rounded-xl text-xs font-mono text-slate-800 dark:text-zinc-200 flex items-center gap-2 shadow-xs">
-          <Activity size={14} className="text-[#10B981] shrink-0" />
+          <Activity size={14} className="text-slate-900 dark:text-zinc-100 shrink-0" />
           <span>{pipelineMessage}</span>
         </div>
       )}
@@ -191,7 +189,7 @@ export default function TacticalTrackerPage() {
                     : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#EF0107]" />
+                <ClubCrest code="ARS" size={13} />
                 <span>ARS (11)</span>
               </button>
               <button
@@ -202,7 +200,7 @@ export default function TacticalTrackerPage() {
                     : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#6CABDD]" />
+                <ClubCrest code="MCI" size={13} />
                 <span>MCI (11)</span>
               </button>
               <button
@@ -256,7 +254,7 @@ export default function TacticalTrackerPage() {
                                 : 'bg-gradient-to-br from-[#6CABDD] to-[#458BB8]'
                             }`}
                           >
-                            {isBall ? '⚽' : jNumber}
+                            {isBall ? <SoccerBallIcon size={14} className="text-white" /> : jNumber}
                           </div>
                           <div>
                             <span className="font-bold text-slate-900 dark:text-white text-xs block truncate">
@@ -304,7 +302,7 @@ export default function TacticalTrackerPage() {
                 })
               ) : (
                 <div className="py-12 text-center text-slate-500 dark:text-zinc-400 font-mono text-xs space-y-2">
-                  <AlertCircle size={20} className="mx-auto text-[#10B981]" />
+                  <AlertCircle size={20} className="mx-auto text-slate-400 dark:text-zinc-500" />
                   <p className="font-bold text-slate-900 dark:text-white">No entities match filter</p>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-400">
                     Select another filter tab or trigger the simulation stream.
@@ -316,7 +314,7 @@ export default function TacticalTrackerPage() {
             {/* Technical Calibration Specs Footer */}
             <div className="pt-2.5 border-t border-slate-100 dark:border-[#27272A] text-[10px] font-mono text-slate-500 dark:text-zinc-400 flex items-center justify-between">
               <span className="flex items-center gap-1">
-                <Crosshair size={11} className="text-[#10B981]" />
+                <Crosshair size={11} className="text-slate-700 dark:text-zinc-300" />
                 <span>Click player to lock target</span>
               </span>
               <span className="text-slate-900 dark:text-white font-semibold">Coordinate: [X, Y, Z]</span>

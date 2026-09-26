@@ -56,13 +56,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     {
       label: playerName,
       data: targetData,
-      backgroundColor: 'rgba(0, 168, 63, 0.18)',
-      borderColor: '#00A83F',
+      backgroundColor: 'rgba(71, 85, 105, 0.22)',
+      borderColor: '#475569',
       borderWidth: 2,
-      pointBackgroundColor: '#00A83F',
+      pointBackgroundColor: '#475569',
       pointBorderColor: '#FFFFFF',
       pointHoverBackgroundColor: '#FFFFFF',
-      pointHoverBorderColor: '#00A83F',
+      pointHoverBorderColor: '#475569',
       pointRadius: 4,
       pointHoverRadius: 6,
     },
@@ -102,6 +102,10 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   const options = {
     responsive: true,
     maintainAspectRatio: true,
+    animation: {
+      duration: 400,
+      easing: 'easeOutQuart' as const,
+    },
     scales: {
       r: {
         angleLines: {
@@ -149,7 +153,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
       tooltip: {
         backgroundColor: '#121215',
         titleColor: '#FFFFFF',
-        bodyColor: '#10B981',
+        bodyColor: '#E2E8F0',
         borderColor: '#27272A',
         borderWidth: 1,
         padding: 10,
@@ -161,7 +165,12 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   return (
     <div className={`relative flex items-center justify-center p-2 bg-slate-50/60 dark:bg-[#18181C] rounded-xl border border-slate-100 dark:border-[#27272A] transition-colors ${className}`}>
       <div className="w-full max-w-[380px] h-[320px]">
-        <Radar data={chartData} options={options} />
+        <Radar
+          key={`${playerName}-${comparisonPlayerName}-${datasets.map(d => d.data.join(',')).join('-')}`}
+          data={chartData}
+          options={options}
+          redraw={true}
+        />
       </div>
     </div>
   );
