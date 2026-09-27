@@ -723,7 +723,7 @@ export default function MatchCenterPage() {
                           <span
                             className={`w-5 h-5 rounded flex items-center justify-center font-bold text-[9px] font-mono shrink-0 select-none ${
                               h.formResult === 'W'
-                                ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                                ? 'bg-emerald-600 text-white'
                                 : h.formResult === 'D'
                                 ? 'bg-slate-400 dark:bg-zinc-700 text-white'
                                 : 'bg-rose-600 text-white'
@@ -783,7 +783,7 @@ export default function MatchCenterPage() {
                           <span
                             className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-[10px] font-mono shrink-0 select-none shadow-2xs ${
                               h.formResult === 'W'
-                                ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                                ? 'bg-emerald-600 text-white'
                                 : h.formResult === 'D'
                                 ? 'bg-slate-400 dark:bg-zinc-700 text-white'
                                 : 'bg-rose-600 text-white'
