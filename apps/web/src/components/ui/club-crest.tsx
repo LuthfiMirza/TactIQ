@@ -112,6 +112,24 @@ export const CLUB_REGISTRY: Record<string, ClubInfo> = {
     logoUrl: 'https://media.api-sports.io/football/teams/65.png',
     color: '#DD0000',
   },
+  SOU: {
+    name: 'Southampton',
+    short: 'SOU',
+    logoUrl: 'https://media.api-sports.io/football/teams/41.png',
+    color: '#D71920',
+  },
+  LEI: {
+    name: 'Leicester City',
+    short: 'LEI',
+    logoUrl: 'https://media.api-sports.io/football/teams/46.png',
+    color: '#003090',
+  },
+  IPS: {
+    name: 'Ipswich Town',
+    short: 'IPS',
+    logoUrl: 'https://media.api-sports.io/football/teams/60.png',
+    color: '#00448A',
+  },
   // European top clubs
   RMA: {
     name: 'Real Madrid',
@@ -268,6 +286,15 @@ export const CLUB_ALIASES: Record<string, string> = {
   'BRENTFORD': 'BRE',
   'BOURNEMOUTH': 'BOU',
   'FULHAM': 'FUL',
+  'SOUTHAMPTON': 'SOU',
+  'SAINTS': 'SOU',
+  'SOU': 'SOU',
+  'LEICESTER': 'LEI',
+  'LEICESTER CITY': 'LEI',
+  'LEI': 'LEI',
+  'IPSWICH': 'IPS',
+  'IPSWICH TOWN': 'IPS',
+  'IPS': 'IPS',
 };
 
 // Aliases lookup helper (e.g. 'Man City' -> 'MCI' -> Manchester City)
