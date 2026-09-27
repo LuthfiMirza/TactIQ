@@ -229,8 +229,10 @@ interface LineupPlayer {
   isCaptain?: boolean;
   isScorer?: boolean;
   photoUrl?: string;
-  x: number; // percentage 0 - 100
-  y: number; // percentage 0 - 100
+  x: number;  // Horizontal pitch X (0 - 100)
+  y: number;  // Horizontal pitch Y (0 - 100)
+  vx: number; // Vertical pitch X (0 - 100)
+  vy: number; // Vertical pitch Y (0 - 100)
 }
 
 interface TeamLineup {
@@ -244,34 +246,34 @@ const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
     formation: '4-2-3-1',
     teamRating: 7.4,
     starters: [
-      { num: 24, name: 'André Onana', shortName: 'Onana', pos: 'GK', rating: 7.1, x: 7, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/202641.png' },
-      { num: 20, name: 'Diogo Dalot', shortName: 'Dalot', pos: 'RB', rating: 6.8, x: 19, y: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/216051.png' },
-      { num: 4, name: 'Matthijs de Ligt', shortName: 'De Ligt', pos: 'CB', rating: 7.2, x: 17, y: 39, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 6, name: 'Lisandro Martínez', shortName: 'Martínez', pos: 'CB', rating: 7.4, x: 17, y: 61, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png' },
-      { num: 23, name: 'Luke Shaw', shortName: 'Shaw', pos: 'LB', rating: 6.7, x: 19, y: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png' },
-      { num: 18, name: 'Casemiro', shortName: 'Casemiro', pos: 'DM', rating: 7.3, x: 29, y: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/112465.png' },
-      { num: 37, name: 'Kobbie Mainoo', shortName: 'Mainoo', pos: 'CM', rating: 7.0, x: 29, y: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 17, name: 'Alejandro Garnacho', shortName: 'Garnacho', pos: 'RW', rating: 7.6, x: 39, y: 18, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
-      { num: 8, name: 'Bruno Fernandes', shortName: 'Fernandes', pos: 'AM', rating: 8.5, isCaptain: true, isScorer: true, x: 38, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/141746.png' },
-      { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 39, y: 82, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
-      { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 45, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
+      { num: 24, name: 'André Onana', shortName: 'Onana', pos: 'GK', rating: 7.1, x: 6, y: 50, vx: 50, vy: 93, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/202641.png' },
+      { num: 20, name: 'Diogo Dalot', shortName: 'Dalot', pos: 'RB', rating: 6.8, x: 17, y: 16, vx: 82, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/216051.png' },
+      { num: 4, name: 'Matthijs de Ligt', shortName: 'De Ligt', pos: 'CB', rating: 7.2, x: 16, y: 39, vx: 61, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
+      { num: 6, name: 'Lisandro Martínez', shortName: 'Martínez', pos: 'CB', rating: 7.4, x: 16, y: 61, vx: 39, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png' },
+      { num: 23, name: 'Luke Shaw', shortName: 'Shaw', pos: 'LB', rating: 6.7, x: 17, y: 84, vx: 18, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png' },
+      { num: 18, name: 'Casemiro', shortName: 'Casemiro', pos: 'DM', rating: 7.3, x: 26, y: 38, vx: 39, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/112465.png' },
+      { num: 37, name: 'Kobbie Mainoo', shortName: 'Mainoo', pos: 'CM', rating: 7.0, x: 26, y: 62, vx: 61, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
+      { num: 17, name: 'Alejandro Garnacho', shortName: 'Garnacho', pos: 'RW', rating: 7.6, x: 37, y: 18, vx: 82, vy: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
+      { num: 8, name: 'Bruno Fernandes', shortName: 'Fernandes', pos: 'AM', rating: 8.5, isCaptain: true, isScorer: true, x: 32, y: 50, vx: 50, vy: 63, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/141746.png' },
+      { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 37, y: 82, vx: 18, vy: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
+      { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 43, y: 50, vx: 50, vy: 54, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
     ],
   },
   away: {
     formation: '4-1-4-1',
     teamRating: 7.0,
     starters: [
-      { num: 31, name: 'Ederson', shortName: 'Ederson', pos: 'GK', rating: 6.3, x: 93, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png' },
-      { num: 24, name: 'Joško Gvardiol', shortName: 'Gvardiol', pos: 'LB', rating: 6.9, x: 81, y: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 25, name: 'Manuel Akanji', shortName: 'Akanji', pos: 'CB', rating: 6.6, x: 83, y: 39, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/224568.png' },
-      { num: 3, name: 'Rúben Dias', shortName: 'Dias', pos: 'CB', rating: 6.8, x: 83, y: 61, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171314.png' },
-      { num: 2, name: 'Kyle Walker', shortName: 'Walker', pos: 'RB', rating: 6.7, isCaptain: true, x: 81, y: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/58621.png' },
-      { num: 16, name: 'Rodri', shortName: 'Rodri', pos: 'DM', rating: 7.4, x: 71, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 11, name: 'Jérémy Doku', shortName: 'Doku', pos: 'LM', rating: 7.1, x: 61, y: 18, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png' },
-      { num: 17, name: 'Kevin De Bruyne', shortName: 'De Bruyne', pos: 'AM', rating: 7.8, x: 62, y: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png' },
-      { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 62, y: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
-      { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 61, y: 82, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
-      { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 55, y: 50, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
+      { num: 31, name: 'Ederson', shortName: 'Ederson', pos: 'GK', rating: 6.3, x: 94, y: 50, vx: 50, vy: 7, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png' },
+      { num: 24, name: 'Joško Gvardiol', shortName: 'Gvardiol', pos: 'LB', rating: 6.9, x: 83, y: 16, vx: 18, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
+      { num: 25, name: 'Manuel Akanji', shortName: 'Akanji', pos: 'CB', rating: 6.6, x: 84, y: 39, vx: 39, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/224568.png' },
+      { num: 3, name: 'Rúben Dias', shortName: 'Dias', pos: 'CB', rating: 6.8, x: 84, y: 61, vx: 61, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171314.png' },
+      { num: 2, name: 'Kyle Walker', shortName: 'Walker', pos: 'RB', rating: 6.7, isCaptain: true, x: 83, y: 84, vx: 82, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/58621.png' },
+      { num: 16, name: 'Rodri', shortName: 'Rodri', pos: 'DM', rating: 7.4, x: 74, y: 50, vx: 50, vy: 28, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
+      { num: 11, name: 'Jérémy Doku', shortName: 'Doku', pos: 'LM', rating: 7.1, x: 63, y: 18, vx: 18, vy: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png' },
+      { num: 17, name: 'Kevin De Bruyne', shortName: 'De Bruyne', pos: 'AM', rating: 7.8, x: 68, y: 38, vx: 39, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png' },
+      { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 68, y: 62, vx: 61, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
+      { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 63, y: 82, vx: 82, vy: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
+      { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 57, y: 50, vx: 50, vy: 46, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
     ],
   },
 };
@@ -329,6 +331,94 @@ function MatchStatRow({
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${awayPct}%`, backgroundColor: awayColor }}
         />
+      </div>
+    </div>
+  );
+}
+
+function PitchPlayerNode({
+  p,
+  isHome,
+  isVertical = false,
+}: {
+  p: LineupPlayer;
+  isHome: boolean;
+  isVertical?: boolean;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const posX = isVertical ? p.vx : p.x;
+  const posY = isVertical ? p.vy : p.y;
+
+  return (
+    <div
+      className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer transition-transform hover:z-30 hover:scale-110 pointer-events-auto"
+      style={{ left: `${posX}%`, top: `${posY}%` }}
+    >
+      <div className="relative">
+        {/* Circular Avatar / Team Jersey Badge Fallback */}
+        <div
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ${
+            isHome ? 'ring-red-500/40' : 'ring-sky-400/40'
+          } overflow-hidden shadow-md flex items-center justify-center select-none ${
+            isHome ? 'bg-[#1E1113]' : 'bg-[#0E1726]'
+          }`}
+        >
+          {!imgError && p.photoUrl ? (
+            <img
+              src={p.photoUrl}
+              alt={p.name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-top"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div
+              className={`w-full h-full flex flex-col items-center justify-center font-mono font-black text-xs leading-none ${
+                isHome ? 'text-red-400 bg-red-950/70' : 'text-sky-300 bg-sky-950/70'
+              }`}
+            >
+              <span>{p.num}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Rating Badge */}
+        <div
+          className={`absolute -top-1 -right-2 px-1 py-0.2 rounded-full font-mono text-[9px] font-bold leading-tight shadow-xs select-none border border-black/40 ${
+            p.rating >= 8.0
+              ? 'bg-sky-500 text-white font-black'
+              : p.rating >= 7.0
+              ? 'bg-emerald-600 text-white'
+              : p.rating >= 6.0
+              ? 'bg-amber-600 text-white'
+              : 'bg-rose-600 text-white'
+          }`}
+        >
+          {p.rating.toFixed(1)}
+          {p.rating >= 8.5 && <span className="ml-0.5 text-[8px]">★</span>}
+        </div>
+
+        {/* Scorer Indicator */}
+        {p.isScorer && (
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-slate-900 border border-white/40 flex items-center justify-center text-[9px] shadow-xs">
+            ⚽
+          </div>
+        )}
+
+        {/* Captain Armband */}
+        {p.isCaptain && !p.isScorer && (
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs">
+            C
+          </div>
+        )}
+      </div>
+
+      {/* Clean Player Number & Name (No bulky black box, pure drop-shadow text) */}
+      <div className="mt-1 flex items-center gap-1 text-center select-none">
+        <span className="font-mono text-zinc-400 text-[9px] font-bold drop-shadow-sm">{p.num}</span>
+        <span className="text-white text-[10px] sm:text-[11px] font-semibold tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] max-w-[76px] truncate">
+          {p.shortName}
+        </span>
       </div>
     </div>
   );
@@ -443,37 +533,76 @@ export default function MatchCenterPage() {
           <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500 dark:text-zinc-400">
             GW08 Matches
           </span>
-          <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
-            Swipe ➔
+          <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+            <span>Swipe</span>
+            <span className="text-tactiq-lime font-bold">➔</span>
           </span>
         </div>
         <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 snap-x -mx-3 px-3 sm:mx-0 sm:px-0">
-          {MATCHDAY_FIXTURES.map((fix) => (
-            <div
-              key={fix.id}
-              className="snap-start shrink-0 w-60 sm:w-64 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-colors"
-            >
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-zinc-400 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-[#27272A]">
-                <span className="font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200">
-                  {fix.timeOrStatus}
-                </span>
-                <span className="truncate max-w-[110px]">{fix.venue}</span>
+          {MATCHDAY_FIXTURES.map((fix) => {
+            const isFinished = fix.statusType === 'FINISHED';
+            return (
+              <div
+                key={fix.id}
+                className="snap-start shrink-0 w-64 rounded-2xl border border-slate-200/90 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-colors flex flex-col justify-between gap-2.5"
+              >
+                {/* Header: Competition & Status Badge */}
+                <div className="flex items-center justify-between text-[10px] font-mono pb-1 border-b border-slate-100 dark:border-[#222227]">
+                  <span className="font-medium text-slate-500 dark:text-zinc-400 truncate">Premier League</span>
+                  <span
+                    className={`font-bold px-1.5 py-0.5 rounded text-[9px] ${
+                      isFinished
+                        ? 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'
+                        : 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                    }`}
+                  >
+                    {fix.timeOrStatus}
+                  </span>
+                </div>
+
+                {/* Main Matchup: Stacked Crests & Big Center Score */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-0.5">
+                  {/* Home Team */}
+                  <div className="flex flex-col items-center text-center gap-1 min-w-0">
+                    <ClubCrest code={fix.homeShort} size={28} className="drop-shadow-xs" />
+                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-full">
+                      {fix.homeTeam}
+                    </span>
+                  </div>
+
+                  {/* Score / VS Center */}
+                  <div className="flex flex-col items-center justify-center px-1">
+                    <span className="font-black text-lg font-mono text-slate-900 dark:text-white tracking-tight tabular-nums">
+                      {isFinished ? `${fix.homeScore} : ${fix.awayScore}` : 'vs'}
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 font-semibold uppercase">
+                      {isFinished ? 'FT' : 'Kickoff'}
+                    </span>
+                  </div>
+
+                  {/* Away Team */}
+                  <div className="flex flex-col items-center text-center gap-1 min-w-0">
+                    <ClubCrest code={fix.awayShort} size={28} className="drop-shadow-xs" />
+                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-full">
+                      {fix.awayTeam}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Footer: Tactical Strip (xG or Venue) */}
+                <div className="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-slate-100 dark:border-[#222227] text-slate-500 dark:text-zinc-400">
+                  <span className="truncate max-w-[120px]">{fix.venue}</span>
+                  {fix.xgHome !== undefined ? (
+                    <span className="font-semibold text-slate-700 dark:text-zinc-300">
+                      xG {fix.xgHome} - {fix.xgAway}
+                    </span>
+                  ) : (
+                    <span className="text-tactiq-lime font-bold">Preview</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center justify-between gap-1.5 text-xs">
-                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <ClubCrest code={fix.homeShort} size={18} />
-                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.homeTeam}</span>
-                </div>
-                <div className="font-mono font-bold text-xs text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800/60 shrink-0">
-                  {fix.homeScore !== undefined ? `${fix.homeScore} - ${fix.awayScore}` : 'vs'}
-                </div>
-                <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
-                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.awayTeam}</span>
-                  <ClubCrest code={fix.awayShort} size={18} />
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -490,12 +619,13 @@ export default function MatchCenterPage() {
 
             {/* Score & Clubs */}
             <div className="relative">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6 py-1">
                 
-                {/* Home: Manchester United */}
-                <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
+                {/* Home: Manchester United (Stacked) */}
+                <div className="flex flex-col items-center sm:items-end justify-center text-center sm:text-right min-w-0 gap-1.5">
+                  <ClubCrest code="MUN" size={44} className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 drop-shadow-md" />
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
+                    <h2 className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white leading-tight truncate">
                       <span className="hidden sm:inline">Man United</span>
                       <span className="sm:hidden">Man Utd</span>
                     </h2>
@@ -503,11 +633,10 @@ export default function MatchCenterPage() {
                       5th in PL
                     </span>
                   </div>
-                  <ClubCrest code="MUN" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                 </div>
 
                 {/* Monumental Center Score & Status */}
-                <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-32 shrink-0">
+                <div className="flex flex-col items-center justify-center px-1 sm:px-6 w-24 sm:w-36 shrink-0">
                   <div className="flex items-center justify-center gap-1.5 sm:gap-3">
                     <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
                       {periodInfo.homeScore}
@@ -517,22 +646,22 @@ export default function MatchCenterPage() {
                       {periodInfo.awayScore}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                  <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full bg-tactiq-coral/10 border border-tactiq-coral/20">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
                     </span>
-                    <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
+                    <span className="text-[10px] sm:text-[11px] font-bold font-mono text-tactiq-coral whitespace-nowrap">
                       {periodInfo.statusText}
                     </span>
                   </div>
                 </div>
 
-                {/* Away: Manchester City */}
-                <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
-                  <ClubCrest code="MCI" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                {/* Away: Manchester City (Stacked) */}
+                <div className="flex flex-col items-center sm:items-start justify-center text-center sm:text-left min-w-0 gap-1.5">
+                  <ClubCrest code="MCI" size={44} className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 drop-shadow-md" />
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
+                    <h2 className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white leading-tight truncate">
                       Man City
                     </h2>
                     <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
@@ -541,42 +670,40 @@ export default function MatchCenterPage() {
                   </div>
                 </div>
 
-                {/* Scorers Row in the SAME Grid — 100% Mathematically Centered */}
-                {(periodInfo.scorersHome.filter(s => s && s !== '–').length > 0 ||
-                  periodInfo.scorersAway.filter(s => s && s !== '–').length > 0) && (
-                  <>
-                    <div className="col-span-3 border-t border-slate-100/80 dark:border-[#27272A]/70 my-2.5 sm:my-3" />
-
-                    {/* Home Scorers (Right-aligned, max width up to center column) */}
-                    <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
-                      {periodInfo.scorersHome
-                        .filter(s => s && s !== '–')
-                        .map((s, idx) => (
-                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
-                            {s}
-                          </div>
-                        ))}
-                    </div>
-
-                    {/* Center Ball Icon (Top-aligned with the first scorer line on the center column track) */}
-                    <div className="self-start flex justify-center items-center h-4 sm:h-4.5 w-20 sm:w-32 shrink-0 pt-0.5">
-                      <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
-                    </div>
-
-                    {/* Away Scorers (Left-aligned, or empty to preserve symmetrical column track) */}
-                    <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
-                      {periodInfo.scorersAway
-                        .filter(s => s && s !== '–')
-                        .map((s, idx) => (
-                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
-                            {s}
-                          </div>
-                        ))}
-                    </div>
-                  </>
-                )}
-
               </div>
+
+              {/* Integrated Scorers Box (Clean Symmetrical Card) */}
+              {(periodInfo.scorersHome.filter(s => s && s !== '–').length > 0 ||
+                periodInfo.scorersAway.filter(s => s && s !== '–').length > 0) && (
+                <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-50/70 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  {/* Home Scorers */}
+                  <div className="space-y-0.5 text-right min-w-0">
+                    {periodInfo.scorersHome
+                      .filter(s => s && s !== '–')
+                      .map((s, idx) => (
+                        <div key={idx} className="font-medium text-slate-700 dark:text-zinc-300 truncate text-[11px]">
+                          {s}
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Center Ball Icon */}
+                  <div className="flex justify-center items-center px-1.5 shrink-0">
+                    <SoccerBallIcon size={13} className="text-slate-400 dark:text-zinc-500" />
+                  </div>
+
+                  {/* Away Scorers */}
+                  <div className="space-y-0.5 text-left min-w-0">
+                    {periodInfo.scorersAway
+                      .filter(s => s && s !== '–')
+                      .map((s, idx) => (
+                        <div key={idx} className="font-medium text-slate-700 dark:text-zinc-300 truncate text-[11px]">
+                          {s}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               {/* xG Momentum Bar — Symmetrical Layout */}
               <div className="mt-3.5 px-3 py-2.5 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
@@ -839,10 +966,10 @@ export default function MatchCenterPage() {
                     </span>
                   </div>
 
-                  {/* Mobile Swipe Cue */}
-                  <div className="sm:hidden text-[10px] font-mono text-slate-400 dark:text-zinc-500 flex items-center gap-1 shrink-0 px-1">
-                    <span>Swipe</span>
-                    <span className="text-tactiq-lime font-bold">➔</span>
+                  {/* Orientation Indicator */}
+                  <div className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 flex items-center gap-1 shrink-0 px-1">
+                    <span className="md:hidden">Vertical Pitch</span>
+                    <span className="hidden md:inline">2D Tactical Board</span>
                   </div>
 
                   {/* Away Team (Man City) */}
@@ -860,168 +987,111 @@ export default function MatchCenterPage() {
                   </div>
                 </div>
 
-                {/* Pitch Surface Container (Option A: Smooth Horizontal Scroll on Mobile) */}
-                <div className="w-full overflow-x-auto no-scrollbar rounded-2xl border border-slate-200/80 dark:border-[#27272A] bg-slate-950 shadow-inner">
-                  <div className="relative min-w-[700px] h-[440px] sm:h-[480px] w-full overflow-hidden select-none bg-[#0D1812] dark:bg-[#0A140F]">
-                    
-                    {/* Pitch Grass Mowing Alternating Stripes */}
-                    <div className="absolute inset-0 grid grid-cols-12 pointer-events-none opacity-40">
-                      {Array.from({ length: 12 }).map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={idx % 2 === 0 ? 'bg-white/[0.025]' : 'bg-black/[0.05]'}
-                        />
-                      ))}
-                    </div>
-
-                    {/* SVG Pitch Tactical Markings (1000 x 600 Coordinate System) */}
-                    <svg
-                      viewBox="0 0 1000 600"
-                      preserveAspectRatio="none"
-                      className="absolute inset-0 w-full h-full pointer-events-none stroke-white/20"
-                      fill="none"
-                      strokeWidth="1.5"
-                    >
-                      {/* Touchlines Outer Rect */}
-                      <rect x="24" y="24" width="952" height="552" rx="4" vectorEffect="non-scaling-stroke" />
-                      
-                      {/* Halfway Line */}
-                      <line x1="500" y1="24" x2="500" y2="576" vectorEffect="non-scaling-stroke" />
-                      
-                      {/* Center Circle & Spot */}
-                      <circle cx="500" cy="300" r="75" vectorEffect="non-scaling-stroke" />
-                      <circle cx="500" cy="300" r="3.5" fill="rgba(255,255,255,0.4)" stroke="none" />
-                      
-                      {/* Home (Left) Penalty Box */}
-                      <rect x="24" y="145" width="155" height="310" vectorEffect="non-scaling-stroke" />
-                      {/* Home Goal Area (6-yard) */}
-                      <rect x="24" y="225" width="55" height="150" vectorEffect="non-scaling-stroke" />
-                      {/* Home Penalty Spot */}
-                      <circle cx="120" cy="300" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
-                      {/* Home Penalty Arc */}
-                      <path d="M 179 248 A 75 75 0 0 1 179 352" vectorEffect="non-scaling-stroke" />
-
-                      {/* Away (Right) Penalty Box */}
-                      <rect x="821" y="145" width="155" height="310" vectorEffect="non-scaling-stroke" />
-                      {/* Away Goal Area (6-yard) */}
-                      <rect x="921" y="225" width="55" height="150" vectorEffect="non-scaling-stroke" />
-                      {/* Away Penalty Spot */}
-                      <circle cx="880" cy="300" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
-                      {/* Away Penalty Arc */}
-                      <path d="M 821 248 A 75 75 0 0 0 821 352" vectorEffect="non-scaling-stroke" />
-
-                      {/* Corner Arcs */}
-                      <path d="M 24 39 A 15 15 0 0 0 39 24" vectorEffect="non-scaling-stroke" />
-                      <path d="M 24 561 A 15 15 0 0 1 39 576" vectorEffect="non-scaling-stroke" />
-                      <path d="M 961 24 A 15 15 0 0 1 976 39" vectorEffect="non-scaling-stroke" />
-                      <path d="M 961 576 A 15 15 0 0 0 976 561" vectorEffect="non-scaling-stroke" />
-                    </svg>
-
-                    {/* Players: Home Team (Man United) */}
-                    {LINEUPS.home.starters.map((p) => (
+                {/* ── 1. MOBILE VIEW: Full Vertical Pitch (< md) ── */}
+                <div className="md:hidden w-full h-[620px] rounded-2xl border border-slate-200/80 dark:border-[#27272A] bg-[#121215] relative overflow-hidden select-none shadow-inner">
+                  {/* Subtle Mowing Stripes (Vertical) */}
+                  <div className="absolute inset-0 grid grid-rows-10 pointer-events-none opacity-30">
+                    {Array.from({ length: 10 }).map((_, idx) => (
                       <div
-                        key={p.num}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer transition-transform hover:z-20 hover:scale-105"
-                        style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                      >
-                        <div className="relative">
-                          {/* Circular Headshot / Avatar */}
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ring-white/20 bg-zinc-800 overflow-hidden shadow-md flex items-center justify-center">
-                            <PlayerAvatar src={p.photoUrl} alt={p.name} className="w-full h-full object-cover object-top" />
-                          </div>
-
-                          {/* Rating Badge */}
-                          <div
-                            className={`absolute -top-1 -right-2 px-1 py-0.2 rounded-full font-mono text-[9px] font-bold leading-tight shadow-xs select-none border border-black/40 ${
-                              p.rating >= 8.0
-                                ? 'bg-sky-500 text-white font-black'
-                                : p.rating >= 7.0
-                                ? 'bg-emerald-600 text-white'
-                                : p.rating >= 6.0
-                                ? 'bg-amber-600 text-white'
-                                : 'bg-rose-600 text-white'
-                            }`}
-                          >
-                            {p.rating.toFixed(1)}
-                            {p.rating >= 8.5 && <span className="ml-0.5 text-[8px]">★</span>}
-                          </div>
-
-                          {/* Scorer Indicator */}
-                          {p.isScorer && (
-                            <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-slate-900 border border-white/40 flex items-center justify-center text-[9px] shadow-xs">
-                              ⚽
-                            </div>
-                          )}
-
-                          {/* Captain Armband */}
-                          {p.isCaptain && !p.isScorer && (
-                            <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs">
-                              C
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Jersey Number & Short Name */}
-                        <div className="mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-semibold tracking-tight shadow-sm max-w-[84px] truncate text-center border border-white/10">
-                          <span className="font-mono text-zinc-400 text-[9px]">{p.num}</span>
-                          <span className="truncate">{p.shortName}</span>
-                        </div>
-                      </div>
+                        key={idx}
+                        className={idx % 2 === 0 ? 'bg-white/[0.015]' : 'bg-black/[0.04]'}
+                      />
                     ))}
-
-                    {/* Players: Away Team (Man City) */}
-                    {LINEUPS.away.starters.map((p) => (
-                      <div
-                        key={p.num}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer transition-transform hover:z-20 hover:scale-105"
-                        style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                      >
-                        <div className="relative">
-                          {/* Circular Headshot / Avatar */}
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ring-white/20 bg-zinc-800 overflow-hidden shadow-md flex items-center justify-center">
-                            <PlayerAvatar src={p.photoUrl} alt={p.name} className="w-full h-full object-cover object-top" />
-                          </div>
-
-                          {/* Rating Badge */}
-                          <div
-                            className={`absolute -top-1 -right-2 px-1 py-0.2 rounded-full font-mono text-[9px] font-bold leading-tight shadow-xs select-none border border-black/40 ${
-                              p.rating >= 8.0
-                                ? 'bg-sky-500 text-white font-black'
-                                : p.rating >= 7.0
-                                ? 'bg-emerald-600 text-white'
-                                : p.rating >= 6.0
-                                ? 'bg-amber-600 text-white'
-                                : 'bg-rose-600 text-white'
-                            }`}
-                          >
-                            {p.rating.toFixed(1)}
-                            {p.rating >= 8.5 && <span className="ml-0.5 text-[8px]">★</span>}
-                          </div>
-
-                          {/* Scorer Indicator */}
-                          {p.isScorer && (
-                            <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-slate-900 border border-white/40 flex items-center justify-center text-[9px] shadow-xs">
-                              ⚽
-                            </div>
-                          )}
-
-                          {/* Captain Armband */}
-                          {p.isCaptain && !p.isScorer && (
-                            <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs">
-                              C
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Jersey Number & Short Name */}
-                        <div className="mt-1 flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-white text-[10px] font-semibold tracking-tight shadow-sm max-w-[84px] truncate text-center border border-white/10">
-                          <span className="font-mono text-zinc-400 text-[9px]">{p.num}</span>
-                          <span className="truncate">{p.shortName}</span>
-                        </div>
-                      </div>
-                    ))}
-
                   </div>
+
+                  {/* SVG Vertical Pitch Markings (600 x 1000) */}
+                  <svg
+                    viewBox="0 0 600 1000"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 w-full h-full pointer-events-none stroke-zinc-600/40 dark:stroke-zinc-700/60"
+                    fill="none"
+                    strokeWidth="1.5"
+                  >
+                    {/* Touchline Rect */}
+                    <rect x="20" y="20" width="560" height="960" rx="4" vectorEffect="non-scaling-stroke" />
+                    {/* Halfway Line */}
+                    <line x1="20" y1="500" x2="580" y2="500" vectorEffect="non-scaling-stroke" />
+                    {/* Center Circle & Spot */}
+                    <circle cx="300" cy="500" r="75" vectorEffect="non-scaling-stroke" />
+                    <circle cx="300" cy="500" r="3.5" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    {/* Top (Away) Penalty Box */}
+                    <rect x="140" y="20" width="320" height="155" vectorEffect="non-scaling-stroke" />
+                    <rect x="220" y="20" width="160" height="55" vectorEffect="non-scaling-stroke" />
+                    <circle cx="300" cy="120" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    <path d="M 248 175 A 75 75 0 0 0 352 175" vectorEffect="non-scaling-stroke" />
+                    {/* Bottom (Home) Penalty Box */}
+                    <rect x="140" y="825" width="320" height="155" vectorEffect="non-scaling-stroke" />
+                    <rect x="220" y="925" width="160" height="55" vectorEffect="non-scaling-stroke" />
+                    <circle cx="300" cy="880" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    <path d="M 248 825 A 75 75 0 0 1 352 825" vectorEffect="non-scaling-stroke" />
+                    {/* Corners */}
+                    <path d="M 35 20 A 15 15 0 0 0 20 35" vectorEffect="non-scaling-stroke" />
+                    <path d="M 565 20 A 15 15 0 0 1 580 35" vectorEffect="non-scaling-stroke" />
+                    <path d="M 20 965 A 15 15 0 0 0 35 980" vectorEffect="non-scaling-stroke" />
+                    <path d="M 580 965 A 15 15 0 0 1 565 980" vectorEffect="non-scaling-stroke" />
+                  </svg>
+
+                  {/* Players: Top Half (Man City, Away) */}
+                  {LINEUPS.away.starters.map((p) => (
+                    <PitchPlayerNode key={p.num} p={p} isHome={false} isVertical={true} />
+                  ))}
+
+                  {/* Players: Bottom Half (Man United, Home) */}
+                  {LINEUPS.home.starters.map((p) => (
+                    <PitchPlayerNode key={p.num} p={p} isHome={true} isVertical={true} />
+                  ))}
+                </div>
+
+                {/* ── 2. DESKTOP VIEW: Full Horizontal Pitch (>= md) ── */}
+                <div className="hidden md:block w-full h-[460px] lg:h-[480px] rounded-2xl border border-slate-200/80 dark:border-[#27272A] bg-[#121215] relative overflow-hidden select-none shadow-inner">
+                  {/* Subtle Mowing Stripes (Horizontal) */}
+                  <div className="absolute inset-0 grid grid-cols-12 pointer-events-none opacity-30">
+                    {Array.from({ length: 12 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={idx % 2 === 0 ? 'bg-white/[0.015]' : 'bg-black/[0.04]'}
+                      />
+                    ))}
+                  </div>
+
+                  {/* SVG Horizontal Pitch Markings (1000 x 600) */}
+                  <svg
+                    viewBox="0 0 1000 600"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 w-full h-full pointer-events-none stroke-zinc-600/40 dark:stroke-zinc-700/60"
+                    fill="none"
+                    strokeWidth="1.5"
+                  >
+                    <rect x="24" y="24" width="952" height="552" rx="4" vectorEffect="non-scaling-stroke" />
+                    <line x1="500" y1="24" x2="500" y2="576" vectorEffect="non-scaling-stroke" />
+                    <circle cx="500" cy="300" r="75" vectorEffect="non-scaling-stroke" />
+                    <circle cx="500" cy="300" r="3.5" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    {/* Left (Home) */}
+                    <rect x="24" y="145" width="155" height="310" vectorEffect="non-scaling-stroke" />
+                    <rect x="24" y="225" width="55" height="150" vectorEffect="non-scaling-stroke" />
+                    <circle cx="120" cy="300" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    <path d="M 179 248 A 75 75 0 0 1 179 352" vectorEffect="non-scaling-stroke" />
+                    {/* Right (Away) */}
+                    <rect x="821" y="145" width="155" height="310" vectorEffect="non-scaling-stroke" />
+                    <rect x="921" y="225" width="55" height="150" vectorEffect="non-scaling-stroke" />
+                    <circle cx="880" cy="300" r="3" fill="rgba(255,255,255,0.4)" stroke="none" />
+                    <path d="M 821 248 A 75 75 0 0 0 821 352" vectorEffect="non-scaling-stroke" />
+                    {/* Corners */}
+                    <path d="M 24 39 A 15 15 0 0 0 39 24" vectorEffect="non-scaling-stroke" />
+                    <path d="M 24 561 A 15 15 0 0 1 39 576" vectorEffect="non-scaling-stroke" />
+                    <path d="M 961 24 A 15 15 0 0 1 976 39" vectorEffect="non-scaling-stroke" />
+                    <path d="M 961 576 A 15 15 0 0 0 976 561" vectorEffect="non-scaling-stroke" />
+                  </svg>
+
+                  {/* Players: Home Team (Man United) */}
+                  {LINEUPS.home.starters.map((p) => (
+                    <PitchPlayerNode key={p.num} p={p} isHome={true} isVertical={false} />
+                  ))}
+
+                  {/* Players: Away Team (Man City) */}
+                  {LINEUPS.away.starters.map((p) => (
+                    <PitchPlayerNode key={p.num} p={p} isHome={false} isVertical={false} />
+                  ))}
                 </div>
 
                 {/* Tactical Legend Strip */}
@@ -1054,38 +1124,53 @@ export default function MatchCenterPage() {
               </div>
             )}
 
-            {/* ── Tab Content: TABLE ── */}
+            {/* ── Tab Content: TABLE (Locked Symmetrical CSS Grid) ── */}
             {matchTab === 'table' && (
               <div className="pt-3 sm:pt-4">
                 <div className="font-mono text-xs divide-y divide-slate-100 dark:divide-[#27272A]">
-                  <div className="flex justify-between py-1.5 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
-                    <span>Club</span>
-                    <div className="flex gap-2 sm:gap-4">
-                      <span className="w-4 sm:w-5 text-center">P</span>
-                      <span className="w-5 sm:w-6 text-center">GD</span>
-                      <span className="w-5 sm:w-6 text-right font-bold text-slate-900 dark:text-white">PTS</span>
-                      <span className="w-12 sm:w-14 text-right">Form</span>
-                    </div>
+                  {/* Table Header */}
+                  <div className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2 px-2.5 sm:px-3 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
+                    <span className="text-left">Club</span>
+                    <span className="text-center">P</span>
+                    <span className="text-center">GD</span>
+                    <span className="text-center text-slate-900 dark:text-white">PTS</span>
+                    <span className="text-center">Form</span>
                   </div>
 
+                  {/* Table Rows */}
                   {LEAGUE_STANDINGS.map((row) => (
-                    <div key={row.rank} className="flex justify-between py-2 items-center hover:bg-slate-50 dark:hover:bg-[#1A1A1E] px-0.5 sm:px-1 rounded transition-colors">
-                      <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
-                        <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs">{row.rank}</span>
+                    <div
+                      key={row.rank}
+                      className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
+                        <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs shrink-0">
+                          {row.rank}
+                        </span>
                         <ClubCrest code={row.club} size={16} />
-                        <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">{row.club}</span>
+                        <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
+                          {row.club}
+                        </span>
                       </div>
-                      <div className="flex gap-2 sm:gap-4 items-center tabular-nums text-[11px] sm:text-xs">
-                        <span className="w-4 sm:w-5 text-center text-slate-600 dark:text-slate-400">{row.played}</span>
-                        <span className="w-5 sm:w-6 text-center text-slate-600 dark:text-slate-400">{row.gd}</span>
-                        <span className="w-5 sm:w-6 text-right font-bold text-slate-900 dark:text-white">{row.pts}</span>
-                        <div className="w-12 sm:w-14 flex items-center justify-end gap-0.5 sm:gap-1">
-                          {row.form.map((f, i) => (
-                            <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
-                              {f}
-                            </span>
-                          ))}
-                        </div>
+
+                      <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs">
+                        {row.played}
+                      </span>
+
+                      <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs font-semibold">
+                        {row.gd}
+                      </span>
+
+                      <span className="text-center font-bold text-slate-900 dark:text-white tabular-nums text-[11px] sm:text-xs">
+                        {row.pts}
+                      </span>
+
+                      <div className="flex items-center justify-center gap-1">
+                        {row.form.map((f, i) => (
+                          <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
+                            {f}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   ))}
