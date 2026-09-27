@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, ArrowLeftRight, Check, Sparkles, TrendingUp, ShieldAlert, Award } from 'lucide-react';
+import { X, ArrowLeftRight, ChevronDown } from 'lucide-react';
 import { RadarChart } from '@/components/radar-chart';
 import { ClubCrest } from '@/components/ui/club-crest';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
@@ -93,22 +93,13 @@ export function PlayerComparisonModal({
       >
         {/* ── Modal Header ────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#27272A] bg-[#141418] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-[#CEFF00]">
-              <Sparkles size={16} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold tracking-widest text-[#CEFF00] uppercase">
-                  Tactical Dossier
-                </span>
-                <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span className="text-[10px] font-mono text-zinc-400">Head-to-Head Matrix</span>
-              </div>
-              <h2 id="comparison-modal-title" className="text-base sm:text-lg font-black text-white tracking-tight">
-                Dual Player Comparison Matrix
-              </h2>
-            </div>
+          <div>
+            <h2 id="comparison-modal-title" className="text-base sm:text-lg font-black text-white tracking-tight">
+              Player Comparison
+            </h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Side-by-side tactical radar & attribute breakdown
+            </p>
           </div>
 
           <button
@@ -125,13 +116,13 @@ export function PlayerComparisonModal({
           <div className="grid grid-cols-1 sm:grid-cols-11 items-center gap-3">
             
             {/* Player A Selector (5 cols) */}
-            <div className="sm:col-span-5 flex items-center gap-2">
+            <div className="sm:col-span-5 flex items-center gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
               <div className="relative flex-1">
                 <select
                   value={playerAId}
                   onChange={(e) => setPlayerAId(e.target.value)}
-                  className="w-full h-9 bg-[#1A1A20] border border-[#CEFF00]/40 focus:border-[#CEFF00] text-xs font-bold text-white pl-3 pr-8 rounded-lg outline-none cursor-pointer transition-colors"
+                  className="w-full h-10 appearance-none bg-[#1A1A20] border border-[#CEFF00]/40 focus:border-[#CEFF00] text-xs font-bold text-white pl-3.5 pr-10 rounded-xl outline-none cursor-pointer transition-colors"
                 >
                   {uniquePlayers.map((p) => (
                     <option key={`a-${p.id}`} value={p.id} className="bg-[#18181C] text-zinc-100">
@@ -139,6 +130,7 @@ export function PlayerComparisonModal({
                     </option>
                   ))}
                 </select>
+                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
@@ -154,13 +146,13 @@ export function PlayerComparisonModal({
             </div>
 
             {/* Player B Selector (5 cols) */}
-            <div className="sm:col-span-5 flex items-center gap-2">
+            <div className="sm:col-span-5 flex items-center gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.8)]" />
               <div className="relative flex-1">
                 <select
                   value={playerBId}
                   onChange={(e) => setPlayerBId(e.target.value)}
-                  className="w-full h-9 bg-[#1A1A20] border border-[#00D2FF]/40 focus:border-[#00D2FF] text-xs font-bold text-white pl-3 pr-8 rounded-lg outline-none cursor-pointer transition-colors"
+                  className="w-full h-10 appearance-none bg-[#1A1A20] border border-[#00D2FF]/40 focus:border-[#00D2FF] text-xs font-bold text-white pl-3.5 pr-10 rounded-xl outline-none cursor-pointer transition-colors"
                 >
                   {uniquePlayers.map((p) => (
                     <option key={`b-${p.id}`} value={p.id} className="bg-[#18181C] text-zinc-100">
@@ -168,6 +160,7 @@ export function PlayerComparisonModal({
                     </option>
                   ))}
                 </select>
+                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
@@ -327,9 +320,8 @@ export function PlayerComparisonModal({
 
         {/* ── Modal Footer ────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-t border-[#27272A] bg-[#141418] shrink-0">
-          <div className="text-[11px] text-zinc-400 font-mono hidden sm:flex items-center gap-1.5">
-            <Award size={13} className="text-[#CEFF00]" />
-            <span>TactIQ Dual Metric Comparison Engine</span>
+          <div className="text-xs text-zinc-500 font-mono hidden sm:block">
+            Esc to close
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
