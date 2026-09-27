@@ -6,6 +6,7 @@ import { TacticalMinimap } from '@/components/tactical-minimap';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
 import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
+import { api } from '@/lib/api';
 
 // keyed by `{team}_{jerseyNumber}` to avoid cross-team collisions
 const ROSTER_MAP: Record<string, { name: string; pos: string; dist: string }> = {
@@ -42,21 +43,11 @@ export default function TacticalTrackerPage() {
     setIsStartingPipeline(true);
     setPipelineMessage(null);
     try {
-      const res = await fetch('http://localhost:4000/api/v1/tracking/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: activeSessionId,
-          youtube_url: 'https://www.youtube.com/watch?v=sample_tactical_cam',
-        }),
+      const data = await api.startTracking({
+        session_id: activeSessionId,
+        youtube_url: 'https://www.youtube.com/watch?v=sample_tactical_cam',
       });
-
-      if (res.ok) {
-        const json = await res.json();
-        setPipelineMessage(json.data.message || 'Tracking pipeline triggered via Redis stream!');
-      } else {
-        throw new Error('Failed to start pipeline');
-      }
+      setPipelineMessage(data.message || 'Tracking pipeline triggered via Redis stream!');
     } catch {
       setPipelineMessage('Triggered locally. Click "Run Simulated Tracking" on the canvas controls to stream 10 FPS.');
     } finally {

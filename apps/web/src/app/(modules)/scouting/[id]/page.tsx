@@ -7,6 +7,7 @@ import { RadarChart } from '@/components/radar-chart';
 import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import type { PlayerDTO, PlayerSimilarityResponse } from '@tactiq/shared-types';
 import { ArrowLeft, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const FALLBACK_PLAYER: PlayerDTO = {
   id: 'player-kdb',
@@ -34,21 +35,19 @@ export default function PlayerProfilePage() {
     async function loadPlayerData() {
       setIsLoading(true);
       try {
-        const [playerRes, similarRes] = await Promise.all([
-          fetch(`http://localhost:4000/api/v1/players/${playerId}`),
-          fetch(`http://localhost:4000/api/v1/players/${playerId}/similar`),
+        const [playerData, similarData] = await Promise.allSettled([
+          api.getPlayerById(playerId),
+          api.getSimilarPlayers(playerId),
         ]);
 
-        if (playerRes.ok) {
-          const pJson = await playerRes.json();
-          setPlayer(pJson.data);
+        if (playerData.status === 'fulfilled') {
+          setPlayer(playerData.value);
         }
 
-        if (similarRes.ok) {
-          const sJson = await similarRes.json();
-          setSimilarityData(sJson.data);
-          if (sJson.data.similarPlayers?.length > 0) {
-            setComparisonPlayer(sJson.data.similarPlayers[0].player);
+        if (similarData.status === 'fulfilled') {
+          setSimilarityData(similarData.value);
+          if (similarData.value.similarPlayers?.length > 0) {
+            setComparisonPlayer(similarData.value.similarPlayers[0].player);
           }
         }
       } catch (err) {
