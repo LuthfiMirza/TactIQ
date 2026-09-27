@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ArrowLeftRight,
   X,
+  Search,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -558,14 +559,6 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const getFlag = (nat?: string) => {
-  if (!nat) return null;
-  return (
-    <span className="inline-flex items-center justify-center px-1 py-0.5 rounded bg-slate-900/90 dark:bg-zinc-800 text-white dark:text-zinc-200 font-mono text-[8px] font-extrabold border border-slate-700/60 dark:border-zinc-700 leading-none shadow-2xs">
-      {nat}
-    </span>
-  );
-};
 
 
 function MiniPitch({ position }: { position: string }) {
@@ -606,6 +599,8 @@ export default function ScoutingPage() {
   const [modalPlayerB, setModalPlayerB] = useState<PlayerDTO | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [anchorSearchQuery, setAnchorSearchQuery] = useState('');
+
   const allScoutingPlayers = useMemo(() => {
     const list: PlayerDTO[] = [...BENCHMARK_PLAYERS];
     Object.values(CLUSTER_RECOMMENDATIONS).forEach((recs) => {
@@ -613,6 +608,23 @@ export default function ScoutingPage() {
     });
     return list;
   }, []);
+
+  const filteredAnchorCandidates = useMemo(() => {
+    if (!anchorSearchQuery.trim()) return null;
+    const q = anchorSearchQuery.toLowerCase();
+    const pool = new Map<string, PlayerDTO>();
+    Object.values(BENCHMARK_PLAYERS_BY_CLUSTER).forEach((list) => list.forEach((p) => pool.set(p.id, p)));
+    Object.values(CLUSTER_RECOMMENDATIONS).forEach((list) => list.forEach((r) => pool.set(r.player.id, r.player)));
+
+    return Array.from(pool.values()).filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.team?.name?.toLowerCase().includes(q) ||
+        p.team?.code?.toLowerCase().includes(q) ||
+        p.position?.toLowerCase().includes(q) ||
+        p.nationality?.toLowerCase().includes(q)
+    );
+  }, [anchorSearchQuery]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -700,50 +712,139 @@ export default function ScoutingPage() {
             </button>
 
             {isAnchorSelectorOpen && (
-              <div className="absolute top-full left-0 mt-1 z-30 w-72 max-h-80 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-xl overflow-y-auto divide-y divide-slate-100 dark:divide-[#27272A]">
-                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
-                  {selectedCluster} Benchmarks
+              <div className="absolute top-full left-0 mt-1.5 z-30 w-80 max-h-96 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-2xl overflow-hidden flex flex-col divide-y divide-slate-100 dark:divide-[#27272A]">
+                {/* Search Bar Header */}
+                <div className="p-2.5 bg-slate-50 dark:bg-[#151518] shrink-0">
+                  <div className="relative flex items-center">
+                    <Search size={14} className="absolute left-2.5 text-zinc-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search player, club, position..."
+                      value={anchorSearchQuery}
+                      onChange={(e) => setAnchorSearchQuery(e.target.value)}
+                      autoFocus
+                      className="w-full bg-white dark:bg-[#1C1C22] border border-slate-300 dark:border-[#2B2B32] rounded-lg pl-8 pr-7 py-1.5 text-xs text-slate-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:border-[#CEFF00] transition-colors"
+                    />
+                    {anchorSearchQuery && (
+                      <button
+                        onClick={() => setAnchorSearchQuery('')}
+                        className="absolute right-2 text-zinc-400 hover:text-white p-0.5"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {(BENCHMARK_PLAYERS_BY_CLUSTER[selectedCluster] || []).map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => { setAnchorPlayer(p); setIsAnchorSelectorOpen(false); showToast(`Anchor: ${p.name}`); }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
-                      anchorPlayer.id === p.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <ClubCrest code={p.team?.code || ''} size={20} />
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name}</div>
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">{p.team?.name} · {p.position2}</div>
-                      </div>
-                    </div>
-                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">{p.estValueFormatted}</span>
-                  </button>
-                ))}
 
-                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
-                  Shortlist Candidates
-                </div>
-                {recommendations.map((r) => (
-                  <button
-                    key={`rec-anchor-${r.player.id}`}
-                    onClick={() => { handleSetAsAnchor(r.player, r); setIsAnchorSelectorOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
-                      anchorPlayer.id === r.player.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <ClubCrest code={r.player.team?.code || ''} size={20} />
-                      <div className="min-w-0">
-                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{r.player.name}</div>
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">{r.player.team?.name} · {r.tacticalRole}</div>
+                {/* Results List */}
+                <div className="overflow-y-auto divide-y divide-slate-100 dark:divide-[#27272A] flex-1">
+                  {filteredAnchorCandidates ? (
+                    filteredAnchorCandidates.length > 0 ? (
+                      <>
+                        <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
+                          Search Results ({filteredAnchorCandidates.length})
+                        </div>
+                        {filteredAnchorCandidates.map((p) => (
+                          <button
+                            key={`search-${p.id}`}
+                            onClick={() => {
+                              handleSetAsAnchor(p);
+                              setIsAnchorSelectorOpen(false);
+                              setAnchorSearchQuery('');
+                            }}
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
+                              anchorPlayer.id === p.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                                <PlayerAvatar src={p.photoUrl} alt={p.name} className="w-full h-full object-cover object-top" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name}</div>
+                                <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">
+                                  {p.team?.name} · {p.position} · {p.nationality}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">
+                              €{((p.marketValue || 0) / 1e6).toFixed(0)}M
+                            </span>
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="px-4 py-8 text-center text-xs text-zinc-500 font-mono">
+                        No players found for &ldquo;{anchorSearchQuery}&rdquo;
                       </div>
-                    </div>
-                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">€{((r.player.marketValue || 0) / 1e6).toFixed(0)}M</span>
-                  </button>
-                ))}
+                    )
+                  ) : (
+                    <>
+                      <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
+                        {selectedCluster} Benchmarks
+                      </div>
+                      {(BENCHMARK_PLAYERS_BY_CLUSTER[selectedCluster] || []).map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            setAnchorPlayer(p);
+                            setIsAnchorSelectorOpen(false);
+                            showToast(`Anchor: ${p.name}`);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
+                            anchorPlayer.id === p.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                              <PlayerAvatar src={p.photoUrl} alt={p.name} className="w-full h-full object-cover object-top" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name}</div>
+                              <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">
+                                {p.team?.name} · {p.position2}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">
+                            {p.estValueFormatted}
+                          </span>
+                        </button>
+                      ))}
+
+                      <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
+                        Shortlist Candidates
+                      </div>
+                      {recommendations.map((r) => (
+                        <button
+                          key={`rec-anchor-${r.player.id}`}
+                          onClick={() => {
+                            handleSetAsAnchor(r.player, r);
+                            setIsAnchorSelectorOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
+                            anchorPlayer.id === r.player.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                              <PlayerAvatar src={r.player.photoUrl} alt={r.player.name} className="w-full h-full object-cover object-top" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{r.player.name}</div>
+                              <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">
+                                {r.player.team?.name} · {r.tacticalRole}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">
+                            €{((r.player.marketValue || 0) / 1e6).toFixed(0)}M
+                          </span>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -867,9 +968,6 @@ export default function ScoutingPage() {
                             alt={rec.player.name}
                             className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-xs"
                           />
-                          <span className="absolute bottom-0 right-0 z-10 text-[9px] leading-none">
-                            {getFlag(rec.player.nationality)}
-                          </span>
                         </div>
 
                         <div className="min-w-0">
@@ -878,7 +976,7 @@ export default function ScoutingPage() {
                           </div>
                           <div className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
                             <ClubCrest code={rec.player.team?.code || rec.player.team?.name || ''} size={13} />
-                            <span>{rec.player.team?.name} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
+                            <span>{rec.player.team?.name} · {rec.player.nationality} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
                           </div>
                         </div>
                       </div>
@@ -945,78 +1043,72 @@ export default function ScoutingPage() {
 
           {/* Card 1: Player Matchup Header */}
           <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
-            <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-3 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-4 sm:gap-6">
               
               {/* Anchor Profile (Left, 5 cols) */}
-              <div className="md:col-span-5 flex items-center gap-3 sm:gap-3.5 min-w-0">
-                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs">
+              <div className="md:col-span-5 flex items-center gap-3.5 min-w-0">
+                <div className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs">
                   <PlayerAvatar
                     src={anchorPlayer.photoUrl}
                     alt={anchorPlayer.name}
                     className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
                   />
-                  <span className="absolute bottom-0.5 right-0.5 z-10 text-xs">
-                    {getFlag(anchorPlayer.nationality)}
-                  </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block mb-0.5">
                     Anchor Player
                   </span>
-                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate leading-tight">
                     {anchorPlayer.name}
                   </h2>
-                  <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-1">
                     <ClubCrest code={anchorPlayer.team?.code || ''} size={15} />
-                    <span className="truncate">{anchorPlayer.team?.name} · {anchorPlayer.age}y · <span className="font-bold text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</span></span>
+                    <span className="truncate">{anchorPlayer.team?.name} · {anchorPlayer.nationality} · {anchorPlayer.age}y · <strong className="text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</strong></span>
                   </div>
                 </div>
               </div>
 
-              {/* Match % (Center, 1 col) */}
-              <div className="md:col-span-1 flex flex-row md:flex-col items-center justify-between md:justify-center py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-100 dark:border-[#27272A] px-2 md:px-0">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-[#18181C] flex items-center justify-center text-slate-500 dark:text-zinc-400 font-mono font-bold text-[10px] sm:text-[11px]">
-                  VS
+              {/* Match % & Swap Bridge (Center, 2 cols) */}
+              <div className="md:col-span-2 flex flex-row md:flex-col items-center justify-between md:justify-center py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-100 dark:border-[#27272A] px-3 gap-2">
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A]">
+                  <span className="text-slate-500 dark:text-zinc-400 font-mono font-bold text-[10px]">
+                    VS
+                  </span>
+                  <span className="text-xs font-mono font-black text-slate-900 dark:text-white">
+                    {comparisonTarget.matchPercentage.toFixed(1)}%
+                  </span>
                 </div>
-                <span className="text-xs sm:text-[11px] font-mono font-bold text-slate-900 dark:text-white md:mt-1 whitespace-nowrap">
-                  {comparisonTarget.matchPercentage.toFixed(1)}%
-                </span>
+                <button
+                  onClick={() => handleSetAsAnchor(comparisonTarget.player, comparisonTarget)}
+                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold text-zinc-400 hover:text-[#CEFF00] hover:bg-[#CEFF00]/10 transition-colors border border-transparent hover:border-[#CEFF00]/30"
+                  title="Promote target player to anchor"
+                >
+                  <ArrowLeftRight size={10} />
+                  <span>Swap</span>
+                </button>
               </div>
 
               {/* Target Profile (Right, 5 cols) */}
-              <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-3 sm:gap-3.5 min-w-0 text-left md:text-right">
+              <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-3.5 min-w-0 text-left md:text-right">
                 <div className="min-w-0 flex-1 order-2 md:order-1">
-                  <div className="flex items-center justify-between md:justify-end gap-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-sky-600 dark:text-sky-400 font-bold block">
-                      Comparison
-                    </span>
-                    <button
-                      onClick={() => handleSetAsAnchor(comparisonTarget.player, comparisonTarget)}
-                      className="text-[10px] font-mono font-bold text-zinc-400 hover:text-[#CEFF00] flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded bg-zinc-800/60 hover:bg-zinc-800 border border-zinc-700/50"
-                      title="Set this player as the anchor"
-                    >
-                      <ArrowLeftRight size={10} />
-                      <span>Make Anchor</span>
-                    </button>
-                  </div>
-                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-sky-600 dark:text-sky-400 font-bold block mb-0.5">
+                    Comparison Target
+                  </span>
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate leading-tight">
                     {comparisonTarget.player.name}
                   </h2>
-                  <div className="flex items-center justify-start md:justify-end gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
+                  <div className="flex items-center justify-start md:justify-end gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-1">
                     <ClubCrest code={comparisonTarget.player.team?.code || ''} size={15} />
-                    <span className="truncate">{comparisonTarget.player.team?.name} · {comparisonTarget.player.age}y · <span className="font-bold text-sky-600 dark:text-sky-400">€{((comparisonTarget.player.marketValue || 0) / 1e6).toFixed(0)}M</span></span>
+                    <span className="truncate">{comparisonTarget.player.team?.name} · {comparisonTarget.player.nationality} · {comparisonTarget.player.age}y · <strong className="text-sky-600 dark:text-sky-400">€{((comparisonTarget.player.marketValue || 0) / 1e6).toFixed(0)}M</strong></span>
                   </div>
                 </div>
 
-                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs order-1 md:order-2">
+                <div className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs order-1 md:order-2">
                   <PlayerAvatar
                     src={comparisonTarget.player.photoUrl}
                     alt={comparisonTarget.player.name}
                     className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
                   />
-                  <span className="absolute bottom-0.5 right-0.5 z-10 text-xs">
-                    {getFlag(comparisonTarget.player.nationality)}
-                  </span>
                 </div>
               </div>
 
@@ -1052,6 +1144,7 @@ export default function ScoutingPage() {
                   <RadarChart
                     metrics={anchorPlayer.attributes}
                     playerName={anchorPlayer.name}
+                    showLegend={false}
                     {...(comparisonTarget.player.attributes
                       ? { comparisonMetrics: comparisonTarget.player.attributes, comparisonPlayerName: comparisonTarget.player.name }
                       : {})}
@@ -1074,26 +1167,26 @@ export default function ScoutingPage() {
                     <div key={m.label} className="text-xs">
                       {/* Metric Name & Values */}
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className={`font-bold ${anchorWins ? 'text-[#CEFF00]' : 'text-zinc-400'}`}>
+                        <span className={`font-bold tabular-nums ${anchorWins ? 'text-[#CEFF00]' : 'text-zinc-400'}`}>
                           {m.anchorVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
                         <span className="text-[11px] text-zinc-300 font-medium text-center truncate px-2 font-sans">
                           {m.label}
                         </span>
-                        <span className={`font-bold ${!anchorWins ? 'text-[#00D2FF]' : 'text-zinc-400'}`}>
+                        <span className={`font-bold tabular-nums ${!anchorWins ? 'text-[#00D2FF]' : 'text-zinc-400'}`}>
                           {m.targetVal.toFixed(m.unit === '%' ? 1 : 2)}{m.unit}
                         </span>
                       </div>
 
-                      {/* Side-by-Side Duel Bar */}
-                      <div className="grid grid-cols-2 gap-1.5 h-1.5 bg-[#18181C] rounded-full overflow-hidden">
-                        <div className="flex justify-end">
+                      {/* Side-by-Side Duel Bar with Solid Track */}
+                      <div className="grid grid-cols-2 gap-1.5 h-2 bg-[#18181C] border border-[#27272A]/60 rounded-full p-0.5 overflow-hidden">
+                        <div className="flex justify-end bg-zinc-900/50 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-[#CEFF00] rounded-full transition-all duration-300"
                             style={{ width: `${anchorPct}%` }}
                           />
                         </div>
-                        <div className="flex justify-start">
+                        <div className="flex justify-start bg-zinc-900/50 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-[#00D2FF] rounded-full transition-all duration-300"
                             style={{ width: `${targetPct}%` }}
