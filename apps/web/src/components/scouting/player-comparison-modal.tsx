@@ -84,15 +84,15 @@ export function PlayerComparisonModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[#27272A] bg-[#121215] shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-4xl h-[94dvh] sm:h-auto sm:max-h-[92vh] flex flex-col rounded-t-2xl sm:rounded-2xl border-t sm:border border-[#27272A] bg-[#121215] shadow-2xl overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-labelledby="comparison-modal-title"
       >
         {/* ── Modal Header ────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#27272A] bg-[#141418] shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#27272A] bg-[#141418] shrink-0">
           <div>
             <h2 id="comparison-modal-title" className="text-base sm:text-lg font-black text-white tracking-tight">
               Player Comparison
@@ -105,18 +105,18 @@ export function PlayerComparisonModal({
           <button
             onClick={onClose}
             aria-label="Close comparison modal"
-            className="w-8 h-8 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* ── Dual Picker Toolbar ──────────────────────────────────────── */}
-        <div className="px-5 sm:px-6 py-3.5 bg-[#16161B] border-b border-[#27272A] shrink-0">
-          <div className="grid grid-cols-1 sm:grid-cols-11 items-center gap-3">
+        <div className="px-4 sm:px-6 py-3 bg-[#16161B] border-b border-[#27272A] shrink-0">
+          <div className="flex flex-col sm:grid sm:grid-cols-11 items-center gap-2 sm:gap-3">
             
             {/* Player A Selector (5 cols) */}
-            <div className="sm:col-span-5 flex items-center gap-3">
+            <div className="w-full sm:col-span-5 flex items-center gap-2.5 sm:gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
               <div className="relative flex-1">
                 <select
@@ -135,18 +135,18 @@ export function PlayerComparisonModal({
             </div>
 
             {/* Center Swap Button (1 col) */}
-            <div className="sm:col-span-1 flex items-center justify-center">
+            <div className="w-full sm:col-span-1 flex items-center justify-center py-0.5 sm:py-0">
               <button
                 onClick={handleSwap}
                 title="Swap players"
-                className="w-8 h-8 rounded-full bg-[#1F1F26] border border-zinc-700/80 hover:border-zinc-500 text-zinc-300 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-xs"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1F1F26] border border-zinc-700/80 hover:border-zinc-500 text-zinc-300 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-xs"
               >
                 <ArrowLeftRight size={13} />
               </button>
             </div>
 
             {/* Player B Selector (5 cols) */}
-            <div className="sm:col-span-5 flex items-center gap-3">
+            <div className="w-full sm:col-span-5 flex items-center gap-2.5 sm:gap-3">
               <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.8)]" />
               <div className="relative flex-1">
                 <select
@@ -236,27 +236,28 @@ export function PlayerComparisonModal({
           </div>
 
           {/* Row 2: Radar Overlay & Head-to-Head Attributes */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center">
             
             {/* Left: Dual Spider Chart (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center p-4 rounded-xl border border-[#27272A] bg-[#15151A]/60">
-              <div className="flex items-center gap-4 mb-2">
+            <div className="lg:col-span-6 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl border border-[#27272A] bg-[#15151A]/60 w-full overflow-hidden">
+              <div className="flex items-center gap-4 mb-1 sm:mb-2">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00]" />
                   <span className="text-xs font-bold text-zinc-200">{playerA.name}</span>
                 </div>
-                <span className="text-zinc-600 text-xs">vs</span>
+                <span className="text-zinc-600 text-xs font-bold">vs</span>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF]" />
                   <span className="text-xs font-bold text-zinc-200">{playerB.name}</span>
                 </div>
               </div>
-              <div className="w-full max-w-[320px] aspect-square">
+              <div className="w-full max-w-[300px] sm:max-w-[340px] aspect-square flex items-center justify-center">
                 <RadarChart
                   metrics={playerA.attributes}
                   playerName={playerA.name}
                   comparisonMetrics={playerB.attributes}
                   comparisonPlayerName={playerB.name}
+                  className="!bg-transparent !border-0 !p-0 w-full"
                 />
               </div>
             </div>
@@ -319,7 +320,7 @@ export function PlayerComparisonModal({
         </div>
 
         {/* ── Modal Footer ────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-t border-[#27272A] bg-[#141418] shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 border-t border-[#27272A] bg-[#141418] shrink-0 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))]">
           <div className="text-xs text-zinc-500 font-mono hidden sm:block">
             Esc to close
           </div>
@@ -327,14 +328,14 @@ export function PlayerComparisonModal({
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
             <button
               onClick={handleSwap}
-              className="px-3.5 py-2 rounded-lg border border-zinc-700 hover:border-zinc-500 text-xs font-bold text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5"
+              className="flex-1 sm:flex-none h-11 sm:h-9 px-4 py-2 rounded-xl sm:rounded-lg border border-zinc-700 hover:border-zinc-500 text-xs font-bold text-zinc-300 hover:text-white transition-colors flex items-center justify-center gap-1.5 active:scale-95"
             >
               <ArrowLeftRight size={13} />
               <span>Swap</span>
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-[#CEFF00] hover:bg-[#bde800] text-black text-xs font-black transition-all active:scale-95 shadow-sm shadow-[#CEFF00]/20"
+              className="flex-1 sm:flex-none h-11 sm:h-9 px-6 py-2 rounded-xl sm:rounded-lg bg-[#CEFF00] hover:bg-[#bde800] text-black text-xs font-black transition-all active:scale-95 shadow-sm shadow-[#CEFF00]/20 flex items-center justify-center"
             >
               Done
             </button>
