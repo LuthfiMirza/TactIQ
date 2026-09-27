@@ -870,7 +870,7 @@ export default function MatchCenterPage() {
 
           {/* ── Navigasi Tab Mandiri (100% Di Luar Card) ── */}
           <div className="w-full flex items-center justify-between px-1 sm:px-0">
-            <div className="grid grid-cols-4 sm:flex sm:items-center gap-1 sm:gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
               {availableTabs.map((tab) => {
                 const isActive = matchTab === tab;
                 return (
@@ -878,7 +878,7 @@ export default function MatchCenterPage() {
                     key={tab}
                     type="button"
                     onClick={() => setMatchTab(tab)}
-                    className={`py-2 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all text-center shrink-0 cursor-pointer ${
+                    className={`flex-1 sm:flex-initial py-2 px-2.5 sm:px-4 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all text-center shrink-0 cursor-pointer ${
                       isActive
                         ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                         : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-zinc-800/40'
@@ -989,7 +989,7 @@ export default function MatchCenterPage() {
                   </div>
 
                   {/* Ringkasan Performa Poin 5 Laga (Ultra-Minimalist: Summary Poin Saja) */}
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800/60 text-xs font-mono">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800/60 text-xs font-mono">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <ClubCrest code="MUN" size={16} className="w-4 h-4 shrink-0" />
@@ -1185,43 +1185,43 @@ export default function MatchCenterPage() {
             {matchTab === 'h2h' && (
               <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-6 shadow-xs space-y-6">
                 
-                {/* ── Ringkasan Kapsul H2H (Terkunci Sumbu Tengah 50% & Logo Proporsional - Opsi A) ── */}
-                <div className="py-2.5 w-full flex items-center justify-center gap-3 sm:gap-5 select-none">
+                {/* ── Ringkasan Kapsul H2H (Terkunci Sumbu Tengah 50% & Logo Proporsional - Solid Opsi A) ── */}
+                <div className="py-2.5 w-full flex items-center justify-center gap-2 sm:gap-4 select-none">
                   {/* Crest Home (Ukuran Optik Proporsional: MUN Perisai Padat) */}
-                  <div className="w-12 h-12 flex items-center justify-end shrink-0">
-                    <ClubCrest code="MUN" size={36} className="w-9 h-9 sm:w-10 sm:h-10 drop-shadow-xs shrink-0" />
+                  <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-end shrink-0">
+                    <ClubCrest code="MUN" size={36} className="w-8.5 h-8.5 sm:w-10 sm:h-10 drop-shadow-xs shrink-0" />
                   </div>
 
                   {/* Kapsul Segmented Terpadu (Opsi A) */}
-                  <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-full shadow-xs gap-1">
+                  <div className="inline-flex items-center p-0.5 sm:p-1 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-full shadow-xs gap-0.5 sm:gap-1">
                     {/* Kapsul Home Wins */}
-                    <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#DA291C] text-white shadow-xs">
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#DA291C] text-white shadow-xs">
                       <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">2</span>
-                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider opacity-95">
+                      <span className="text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider opacity-95">
                         Wins
                       </span>
                     </div>
 
                     {/* Kapsul Titik Tengah (DRAWS) - Solid Neutral */}
-                    <div className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-slate-200 dark:bg-zinc-700 shadow-xs">
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-slate-200 dark:bg-zinc-700 shadow-xs">
                       <span className="font-extrabold text-xs sm:text-sm font-mono leading-none text-slate-900 dark:text-white">0</span>
-                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300">
+                      <span className="text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300">
                         Draws
                       </span>
                     </div>
 
                     {/* Kapsul Away Wins - Solid Sky Blue */}
-                    <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#6CABDD] text-slate-950 shadow-xs">
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#6CABDD] text-slate-950 shadow-xs">
                       <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">3</span>
-                      <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider">
+                      <span className="text-[9.5px] sm:text-[11px] font-extrabold uppercase tracking-wider">
                         Wins
                       </span>
                     </div>
                   </div>
 
                   {/* Crest Away (Ukuran Optik Proporsional: MCI Lingkaran) */}
-                  <div className="w-12 h-12 flex items-center justify-start shrink-0">
-                    <ClubCrest code="MCI" size={46} className="w-11 h-11 sm:w-12 sm:h-12 drop-shadow-xs shrink-0" />
+                  <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-start shrink-0">
+                    <ClubCrest code="MCI" size={46} className="w-10.5 h-10.5 sm:w-12 sm:h-12 drop-shadow-xs shrink-0" />
                   </div>
                 </div>
 
