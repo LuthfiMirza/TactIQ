@@ -178,11 +178,10 @@ export function PlayerComparisonModal({
             <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3 sm:p-4 relative overflow-hidden flex items-center gap-2.5 sm:gap-3.5">
               {/* Seamless Cutout Portrait */}
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 aspect-square shrink-0 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#CEFF00]/5 rounded-full blur-sm pointer-events-none" />
                 <PlayerAvatar
                   src={playerA.photoUrl}
                   alt={playerA.name}
-                  className="w-full h-full object-contain [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] drop-shadow-md"
+                  className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-md"
                 />
               </div>
 
@@ -214,11 +213,10 @@ export function PlayerComparisonModal({
             <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3 sm:p-4 relative overflow-hidden flex items-center gap-2.5 sm:gap-3.5">
               {/* Seamless Cutout Portrait */}
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 aspect-square shrink-0 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#00D2FF]/5 rounded-full blur-sm pointer-events-none" />
                 <PlayerAvatar
                   src={playerB.photoUrl}
                   alt={playerB.name}
-                  className="w-full h-full object-contain [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] drop-shadow-md"
+                  className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-md"
                 />
               </div>
 
@@ -252,19 +250,16 @@ export function PlayerComparisonModal({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
             
             {/* Left: Dual Spider Chart (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl border border-[#27272A] bg-[#15151A]/60 w-full overflow-hidden">
-              <div className="flex items-center gap-4 mb-1 sm:mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#CEFF00]" />
-                  <span className="text-[11px] sm:text-xs font-bold text-zinc-200">{playerA.name}</span>
-                </div>
-                <span className="text-zinc-600 text-xs font-bold">vs</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#00D2FF]" />
-                  <span className="text-[11px] sm:text-xs font-bold text-zinc-200">{playerB.name}</span>
-                </div>
+            <div className="lg:col-span-6 flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border border-[#27272A] bg-[#15151A]/60 w-full overflow-hidden">
+              <div className="w-full flex items-center justify-between mb-1 px-1">
+                <span className="text-[11px] sm:text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                  Tactical Radar
+                </span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {playerA.position} Profile
+                </span>
               </div>
-              <div className="w-full max-w-[260px] sm:max-w-[340px] aspect-square flex items-center justify-center">
+              <div className="w-full flex items-center justify-center">
                 <RadarChart
                   metrics={playerA.attributes}
                   playerName={playerA.name}

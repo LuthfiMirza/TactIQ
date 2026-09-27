@@ -22,6 +22,7 @@ interface RadarChartProps {
   comparisonMetrics?: PlayerRadarMetrics;
   comparisonPlayerName?: string;
   className?: string;
+  showLegend?: boolean;
 }
 
 export const RadarChart: React.FC<RadarChartProps> = ({
@@ -30,6 +31,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   comparisonMetrics,
   comparisonPlayerName = 'Comparison Player',
   className = '',
+  showLegend = true,
 }) => {
   const labels = ['Pace', 'Shooting', 'Passing', 'Dribbling', 'Defending', 'Physical', 'Vision'];
 
@@ -92,10 +94,18 @@ export const RadarChart: React.FC<RadarChartProps> = ({
 
   const options = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     animation: {
       duration: 400,
       easing: 'easeOutQuart' as const,
+    },
+    layout: {
+      padding: {
+        top: 12,
+        bottom: 6,
+        left: 8,
+        right: 8,
+      },
     },
     scales: {
       r: {
@@ -108,8 +118,9 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         },
         pointLabels: {
           color: '#E4E4E7',
+          padding: 4,
           font: {
-            size: 11,
+            size: 10,
             weight: 600 as const,
             family: 'Inter, system-ui, sans-serif',
           },
@@ -119,7 +130,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
           color: '#71717A',
           stepSize: 20,
           font: {
-            size: 9,
+            size: 8.5,
           },
         },
         min: 0,
@@ -128,16 +139,17 @@ export const RadarChart: React.FC<RadarChartProps> = ({
     },
     plugins: {
       legend: {
+        display: showLegend,
         position: 'bottom' as const,
         labels: {
           color: '#F4F4F5',
           font: {
-            size: 12,
+            size: 11,
             weight: 600 as const,
             family: 'Inter, system-ui, sans-serif',
           },
-          padding: 16,
-          boxWidth: 12,
+          padding: 10,
+          boxWidth: 8,
           usePointStyle: true,
         },
       },
@@ -155,7 +167,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
 
   return (
     <div className={`relative flex items-center justify-center p-2 bg-slate-50/60 dark:bg-[#18181C] rounded-xl border border-slate-100 dark:border-[#27272A] transition-colors ${className}`}>
-      <div className="w-full max-w-[380px] h-[320px]">
+      <div className="w-full max-w-[340px] h-[240px] sm:h-[280px]">
         <Radar
           key={`${playerName}-${comparisonPlayerName}-${datasets.map(d => d.data.join(',')).join('-')}`}
           data={chartData}
