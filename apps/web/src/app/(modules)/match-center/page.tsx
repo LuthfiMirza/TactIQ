@@ -985,12 +985,14 @@ export default function MatchCenterPage() {
                 
                 {/* ── RECENT FORM: SEAMLESS DUAL LINE TREND MOMENTUM GRAPH ── */}
                 <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-400">
-                      Recent Form Momentum (Last 5 Games)
+                  {/* Card Header: Responsive Title & Legend */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-400 truncate mr-2">
+                      <span className="sm:hidden">Recent Form (Last 5)</span>
+                      <span className="hidden sm:inline">Recent Form Momentum (Last 5 Games)</span>
                     </span>
                     {/* Legend Garis Minimalis */}
-                    <div className="flex items-center gap-3 text-[11px] font-mono">
+                    <div className="flex items-center gap-3 text-[11px] font-mono shrink-0">
                       <div className="flex items-center gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-[#DA291C]" />
                         <span className="font-bold text-slate-800 dark:text-zinc-200">MUN</span>
@@ -1002,75 +1004,97 @@ export default function MatchCenterPage() {
                     </div>
                   </div>
 
-                  {/* Kanvas Grafik Garis SVG Murni Tanpa Inner Card */}
-                  <div className="relative w-full h-[135px] sm:h-[150px] select-none pt-3 pb-1">
-                    
-                    {/* Garis Grid Horizontal Tipis (Win / Draw / Loss) */}
-                    <div className="absolute inset-x-1 top-4 bottom-4 flex flex-col justify-between pointer-events-none">
-                      <div className="border-b border-dashed border-slate-200 dark:border-zinc-800/60 flex justify-between">
-                        <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-500 font-bold -mt-2">WIN (+3)</span>
+                  {/* Kanvas Grafik Garis dengan Kolom Sumbu Y Khusus (Dedicated Y-Axis) */}
+                  <div className="relative w-full h-[140px] sm:h-[150px] select-none flex gap-1.5 sm:gap-2 pt-1 pb-1">
+                    {/* Dedicated Y-Axis Column (Kiri - Bebas Tabrakan) */}
+                    <div className="w-12 sm:w-14 shrink-0 relative h-full flex flex-col pointer-events-none select-none">
+                      <div className="absolute top-[16.67%] -translate-y-1/2 text-left">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold tracking-tight block">
+                          WIN <span className="opacity-75 text-[8.5px]">(+3)</span>
+                        </span>
                       </div>
-                      <div className="border-b border-dashed border-slate-200 dark:border-zinc-800/60 flex justify-between">
-                        <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-600 font-bold -mt-2">DRAW (+1)</span>
+                      <div className="absolute top-[50%] -translate-y-1/2 text-left">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-zinc-500 font-bold tracking-tight block">
+                          DRAW <span className="opacity-75 text-[8.5px]">(+1)</span>
+                        </span>
                       </div>
-                      <div className="border-b border-dashed border-slate-200 dark:border-zinc-800/60 flex justify-between">
-                        <span className="text-[9px] font-mono text-rose-500 font-bold -mt-2">LOSS (0)</span>
+                      <div className="absolute top-[83.33%] -translate-y-1/2 text-left">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-rose-500 font-bold tracking-tight block">
+                          LOSS <span className="opacity-75 text-[8.5px]">(0)</span>
+                        </span>
                       </div>
                     </div>
 
-                    {/* Garis SVG Tren */}
-                    <svg viewBox="0 0 360 120" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
-                      {/* Man United Line (Merah) */}
-                      <path
-                        d={`M ${getPointsPath(RECENT_FORM_DATA.home)}`}
-                        fill="none"
-                        stroke="#DA291C"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="drop-shadow-xs"
-                      />
-                      {/* Man City Line (Biru) */}
-                      <path
-                        d={`M ${getPointsPath(RECENT_FORM_DATA.away)}`}
-                        fill="none"
-                        stroke="#6CABDD"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="drop-shadow-xs"
-                      />
-                    </svg>
+                    {/* Plot Area Kanvas Garis (Kanan) */}
+                    <div className="flex-1 relative h-full">
+                      {/* Grid Lines Horizontal (Presisi Sempurna pada 16.67%, 50%, 83.33%) */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute inset-x-0 top-[16.67%] border-b border-dashed border-emerald-500/20 dark:border-emerald-500/15" />
+                        <div className="absolute inset-x-0 top-[50%] border-b border-dashed border-slate-200 dark:border-zinc-800/80" />
+                        <div className="absolute inset-x-0 top-[83.33%] border-b border-dashed border-rose-500/20 dark:border-rose-500/15" />
+                      </div>
 
-                    {/* Nodes Man United (Clean Static Red Dots) */}
-                    {RECENT_FORM_DATA.home.map((m, idx) => {
-                      const leftPercent = 8.5 + idx * 20.8;
-                      const topPercent = m.points === 3 ? 17 : m.points === 1 ? 50 : 83;
-                      return (
-                        <div
-                          key={`mun-dot-${idx}`}
-                          className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                          style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
-                        >
-                          <div className="w-3.5 h-3.5 rounded-full bg-[#DA291C] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
-                        </div>
-                      );
-                    })}
+                      {/* Garis SVG Tren */}
+                      <svg viewBox="0 0 360 120" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+                        {/* Man United Line (Merah) */}
+                        <path
+                          d={`M ${getPointsPath(RECENT_FORM_DATA.home)}`}
+                          fill="none"
+                          stroke="#DA291C"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="drop-shadow-xs"
+                        />
+                        {/* Man City Line (Biru) */}
+                        <path
+                          d={`M ${getPointsPath(RECENT_FORM_DATA.away)}`}
+                          fill="none"
+                          stroke="#6CABDD"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="drop-shadow-xs"
+                        />
+                      </svg>
 
-                    {/* Nodes Man City (Clean Static Blue Dots) */}
-                    {RECENT_FORM_DATA.away.map((m, idx) => {
-                      const leftPercent = 8.5 + idx * 20.8;
-                      const topPercent = m.points === 3 ? 17 : m.points === 1 ? 50 : 83;
-                      return (
-                        <div
-                          key={`mci-dot-${idx}`}
-                          className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                          style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
-                        >
-                          <div className="w-3.5 h-3.5 rounded-full bg-[#6CABDD] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
-                        </div>
-                      );
-                    })}
+                      {/* Nodes Man United (Clean Static Red Dots) */}
+                      {RECENT_FORM_DATA.home.map((m, idx) => {
+                        const leftPercent = 8.33 + idx * 20.833;
+                        const topPercent = m.points === 3 ? 16.67 : m.points === 1 ? 50 : 83.33;
+                        return (
+                          <div
+                            key={`mun-dot-${idx}`}
+                            className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                            style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
+                          >
+                            <div className="w-3.5 h-3.5 rounded-full bg-[#DA291C] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
+                          </div>
+                        );
+                      })}
+
+                      {/* Nodes Man City (Clean Static Blue Dots) */}
+                      {RECENT_FORM_DATA.away.map((m, idx) => {
+                        const leftPercent = 8.33 + idx * 20.833;
+                        const topPercent = m.points === 3 ? 16.67 : m.points === 1 ? 50 : 83.33;
+                        return (
+                          <div
+                            key={`mci-dot-${idx}`}
+                            className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                            style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
+                          >
+                            <div className="w-3.5 h-3.5 rounded-full bg-[#6CABDD] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Timeline Urutan Laga Minimalis */}
+                  <div className="flex items-center justify-between pl-14 sm:pl-16 pr-1 pt-1.5 pb-2 text-[9px] sm:text-[10px] font-mono text-slate-400 dark:text-zinc-500">
+                    <span>5 Matches Ago</span>
+                    <span className="text-[8px] sm:text-[9px] opacity-60">Timeline ➔</span>
+                    <span className="font-semibold text-slate-600 dark:text-zinc-400">Latest</span>
                   </div>
 
                   {/* Ringkasan Performa Poin 5 Laga (Ultra-Minimalist: Summary Poin Saja) */}
@@ -1080,7 +1104,7 @@ export default function MatchCenterPage() {
                         <ClubCrest code="MUN" size={16} className="w-4 h-4 shrink-0" />
                         <span className="font-semibold text-slate-800 dark:text-zinc-200">Man United</span>
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-white">
+                      <span className="font-bold text-slate-900 dark:text-white tabular-nums">
                         10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
                       </span>
                     </div>
@@ -1090,7 +1114,7 @@ export default function MatchCenterPage() {
                         <ClubCrest code="MCI" size={18} className="w-4.5 h-4.5 shrink-0" />
                         <span className="font-semibold text-slate-800 dark:text-zinc-200">Man City</span>
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-white">
+                      <span className="font-bold text-slate-900 dark:text-white tabular-nums">
                         10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
                       </span>
                     </div>
