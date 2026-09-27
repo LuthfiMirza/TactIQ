@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Trophy,
@@ -214,9 +214,14 @@ const TOP_SCORERS = [
 ];
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState<boolean>(false);
   const [selectedLeague, setSelectedLeague] = useState<string>('all');
   const [liveOnly, setLiveOnly] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter matches
   const filteredMatches = MATCHES.filter((m) => {
@@ -231,14 +236,17 @@ export default function HomePage() {
 
   // Group matches by league
   const groupedLeagues = Array.from(new Set(filteredMatches.map((m) => m.league)));
-
   const liveFeaturedMatch = MATCHES.find((m) => m.id === 'm1');
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#09090B] animate-pulse" />;
+  }
 
   return (
     <div className="min-h-screen bg-[#09090B] pb-16 pt-3 sm:pt-4 transition-colors duration-150">
       <div className="max-w-[1360px] mx-auto px-3 sm:px-6">
         
-        {/* ── Top Matchday Broadcast Ticker (Option A) ── */}
+        {/* ── Top Matchday Broadcast Ticker ── */}
         <MatchdayMarquee
           matches={MATCHES.map((m) => ({
             id: m.id,
@@ -253,11 +261,11 @@ export default function HomePage() {
           className="mb-4 sm:mb-5"
         />
 
-        {/* ── Main 3-Column Layout ────────────────────────────────────────── */}
+        {/* ── Main 3-Column Layout ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* ════════════════════════════════════════════════════════════════
-              COLUMN 1: Left Navigation & Pinned Leagues (3 cols / 250px)
+              COLUMN 1: Left Navigation & Pinned Leagues (3 cols / Non-Sticky)
              ════════════════════════════════════════════════════════════════ */}
           <aside className="hidden lg:flex flex-col gap-4 lg:col-span-3">
             
@@ -268,8 +276,9 @@ export default function HomePage() {
               </div>
               <div className="space-y-0.5">
                 <button
+                  type="button"
                   onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     selectedLeague === 'all' && !liveOnly
                       ? 'bg-zinc-800/60 text-white font-bold'
                       : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
@@ -285,8 +294,9 @@ export default function HomePage() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setLiveOnly(!liveOnly)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     liveOnly
                       ? 'bg-zinc-800/60 text-white font-bold'
                       : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
@@ -328,8 +338,9 @@ export default function HomePage() {
                   return (
                     <button
                       key={league.id}
+                      type="button"
                       onClick={() => setSelectedLeague(league.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         isActive
                           ? 'bg-zinc-800/60 text-white font-bold'
                           : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
@@ -355,11 +366,12 @@ export default function HomePage() {
              ════════════════════════════════════════════════════════════════ */}
           <main className="lg:col-span-6 flex flex-col gap-4">
             
-            {/* Mobile / Tablet Horizontal League & Filter Chips (lg:hidden) */}
+            {/* Mobile / Tablet Horizontal Filter Chips */}
             <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
               <button
+                type="button"
                 onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
                   selectedLeague === 'all' && !liveOnly
                     ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                     : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
@@ -369,8 +381,9 @@ export default function HomePage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setLiveOnly(!liveOnly)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                   liveOnly
                     ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                     : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
@@ -385,8 +398,9 @@ export default function HomePage() {
                 return (
                   <button
                     key={league.id}
+                    type="button"
                     onClick={() => { setSelectedLeague(league.id); setLiveOnly(false); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-2 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
                       isActive
                         ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                         : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
@@ -401,14 +415,18 @@ export default function HomePage() {
 
             {/* 1. Date Picker Bar */}
             <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-1.5 flex items-center justify-between transition-colors">
-              <button className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+              <button
+                type="button"
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
+              >
                 <ChevronLeft size={16} />
               </button>
 
               <div className="flex items-center gap-1">
                 <button
+                  type="button"
                   onClick={() => setSelectedDate('yesterday')}
-                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     selectedDate === 'yesterday'
                       ? 'bg-[#CEFF00] text-black font-extrabold'
                       : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
@@ -418,8 +436,9 @@ export default function HomePage() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setSelectedDate('today')}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     selectedDate === 'today'
                       ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
                       : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
@@ -429,8 +448,9 @@ export default function HomePage() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setSelectedDate('tomorrow')}
-                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     selectedDate === 'tomorrow'
                       ? 'bg-[#CEFF00] text-black font-extrabold'
                       : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
@@ -440,7 +460,10 @@ export default function HomePage() {
                 </button>
               </div>
 
-              <button className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0">
+              <button
+                type="button"
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
+              >
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -452,7 +475,7 @@ export default function HomePage() {
                 <div className="absolute -top-16 -left-16 w-48 h-48 bg-red-500/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -top-16 -right-16 w-48 h-48 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
                 
-                {/* Match Header — Seamless Integrated */}
+                {/* Match Header */}
                 <div className="relative flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 sm:gap-2">
                     <LeagueLogo league={liveFeaturedMatch.league} size={14} />
@@ -465,11 +488,9 @@ export default function HomePage() {
 
                 {/* Scoreboard Block */}
                 <div className="relative">
-                  
-                  {/* Symmetrical Clubs, Score & Scorers — Single Unified Grid */}
                   <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-4">
                     
-                    {/* Home Team Column */}
+                    {/* Home Team */}
                     <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
                       <div className="min-w-0">
                         <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight block">
@@ -483,7 +504,7 @@ export default function HomePage() {
                       <ClubCrest code={liveFeaturedMatch.homeCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                     </div>
 
-                    {/* Center Column: Score & Minute (Without 'Live' text) */}
+                    {/* Center Column: Score & Minute */}
                     <div className="flex flex-col items-center justify-center px-1.5 sm:px-4 w-20 sm:w-32 shrink-0">
                       <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2 font-mono">
                         <span>{liveFeaturedMatch.homeScore}</span>
@@ -501,7 +522,7 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* Away Team Column */}
+                    {/* Away Team */}
                     <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
                       <ClubCrest code={liveFeaturedMatch.awayCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                       <div className="min-w-0">
@@ -515,43 +536,43 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {/* Scorers Row in the SAME Grid — 100% Mathematically Centered */}
-                    {((liveFeaturedMatch.scorers?.home && liveFeaturedMatch.scorers.home.length > 0) ||
-                      (liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0)) && (
-                      <>
-                        <div className="col-span-3 border-t border-slate-100/80 dark:border-[#27272A]/70 my-2.5 sm:my-3" />
+                  </div>
 
-                        {/* Home Scorers (Right-aligned, max width up to center column) */}
-                        <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
-                          {liveFeaturedMatch.scorers?.home?.map((scorer, idx) => (
+                  {/* Pencetak Gol (Merapat Bersih ke Ikon Bola di Tengah) */}
+                  {((liveFeaturedMatch.scorers?.home && liveFeaturedMatch.scorers.home.length > 0) ||
+                    (liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0)) && (
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-2.5 mt-3 sm:mt-3.5">
+                      
+                      {/* Home Scorers (Rata Kanan merapat ke bola) */}
+                      <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
+                        {liveFeaturedMatch.scorers?.home?.map((scorer, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {scorer}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Center Ball Icon */}
+                      <div className="pt-0.5 shrink-0 flex items-center justify-center px-1">
+                        <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+                      </div>
+
+                      {/* Away Scorers (Rata Kiri merapat ke bola) */}
+                      <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
+                        {liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0 ? (
+                          liveFeaturedMatch.scorers.away.map((scorer, idx) => (
                             <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
                               {scorer}
                             </div>
-                          ))}
-                        </div>
+                          ))
+                        ) : null}
+                      </div>
 
-                        {/* Center Column: Soccer Ball Icon top-aligned with first scorer line */}
-                        <div className="self-start flex justify-center items-center h-4 sm:h-4.5 w-20 sm:w-32 shrink-0 pt-0.5">
-                          <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
-                        </div>
+                    </div>
+                  )}
 
-                        {/* Away Scorers (Left-aligned, or empty to preserve symmetrical column track) */}
-                        <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
-                          {liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0 ? (
-                            liveFeaturedMatch.scorers.away.map((scorer, idx) => (
-                              <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
-                                {scorer}
-                              </div>
-                            ))
-                          ) : null}
-                        </div>
-                      </>
-                    )}
-
-                  </div>
-
-                  {/* xG Momentum Bar + CTA */}
-                  <div className="mt-3 sm:mt-3.5 pt-2.5 sm:pt-3 border-t border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
+                  {/* xG Momentum Bar: UNBOXED / MINIMALIS (Tanpa Kotak Dalam) */}
+                  <div className="mt-3.5 pt-1.5 flex flex-col gap-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 text-[11px] font-mono">
                         <span className="font-bold text-tactiq-coral">xG {liveFeaturedMatch.xgHome}</span>
@@ -566,6 +587,7 @@ export default function HomePage() {
                         <ArrowRight size={11} />
                       </Link>
                     </div>
+
                     {/* Dual Color xG Bar */}
                     <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800 gap-0.5">
                       <div className="h-full bg-tactiq-coral rounded-full transition-all duration-300" style={{ width: '58%' }} />
@@ -678,7 +700,7 @@ export default function HomePage() {
           </main>
 
           {/* ════════════════════════════════════════════════════════════════
-              COLUMN 3: Right Contextual Rail - Standings & Leaders (3 cols)
+              COLUMN 3: Right Contextual Rail (3 cols / Non-Sticky)
              ════════════════════════════════════════════════════════════════ */}
           <aside className="flex flex-col gap-4 lg:col-span-3">
             
@@ -704,7 +726,7 @@ export default function HomePage() {
               </div>
 
               {/* Standings Rows */}
-              <div className="divide-y divide-[#27272A] text-xs">
+              <div className="divide-y divide-slate-100 dark:divide-[#27272A] text-xs">
                 {STANDINGS.map((row) => (
                   <div
                     key={row.rank}
