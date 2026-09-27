@@ -514,7 +514,7 @@ export default function MatchCenterPage() {
   const [showAiModal, setShowAiModal] = useState(false);
   const [isNotified, setIsNotified] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
-  const [isDevDockMinimized, setIsDevDockMinimized] = useState(false);
+  const [isScenarioOpen, setIsScenarioOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -648,7 +648,7 @@ export default function MatchCenterPage() {
           </button>
         </div>
 
-        {/* Header Production Actions: Remind Me & Share */}
+        {/* Header Production Actions: Remind Me, Share & Scenario Switcher */}
         <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center">
           {/* Match Alert Notification Button */}
           <button
@@ -675,6 +675,55 @@ export default function MatchCenterPage() {
             {copiedToast ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
             <span>{copiedToast ? 'Link Copied!' : 'Share'}</span>
           </button>
+
+          {/* Prototype Scenario Switcher Popover */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsScenarioOpen((prev) => !prev)}
+              title="Switch Prototype Scenario (Upcoming / Live / Finished)"
+              className={`min-h-[34px] sm:min-h-[36px] px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95 shadow-xs ${
+                isScenarioOpen
+                  ? 'bg-zinc-800 text-[#CEFF00] border-zinc-600'
+                  : 'bg-white dark:bg-[#121215] border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-zinc-700'
+              }`}
+            >
+              <FlaskConical size={14} className="text-[#CEFF00]" />
+              <span className="hidden sm:inline font-mono text-[11px]">{currentStatus}</span>
+            </button>
+
+            {isScenarioOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsScenarioOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#16161A] p-1.5 shadow-xl z-50 space-y-1">
+                  <div className="px-2 py-1 text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-bold border-b border-slate-100 dark:border-zinc-800/60 mb-1">
+                    Prototype Scenario
+                  </div>
+                  {(['UPCOMING', 'LIVE', 'FINISHED'] as const).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => {
+                        handleStatusChange(st);
+                        setIsScenarioOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                        currentStatus === st
+                          ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                          : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      <span>{st}</span>
+                      {currentStatus === st && <Check size={13} className="text-black" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1802,56 +1851,6 @@ export default function MatchCenterPage() {
           </div>
         </div>
       )}
-
-      {/* ── Discreet Prototype Scenario Controller (Floating Bottom Dock) ── */}
-      <div className="fixed bottom-4 right-4 z-40 select-none">
-        {isDevDockMinimized ? (
-          /* Minimized Trigger Button */
-          <button
-            type="button"
-            onClick={() => setIsDevDockMinimized(false)}
-            title="Open Scenario Switcher (Upcoming / Live / Finished)"
-            className="w-10 h-10 rounded-full bg-slate-900/90 dark:bg-zinc-800/90 text-white hover:bg-slate-950 dark:hover:bg-zinc-700 border border-slate-700 dark:border-zinc-600 shadow-xl backdrop-blur-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group"
-          >
-            <FlaskConical size={18} className="text-[#CEFF00] group-hover:rotate-12 transition-transform" />
-          </button>
-        ) : (
-          /* Expanded Floating Dock */
-          <div className="flex items-center gap-1 p-1 bg-slate-950/90 dark:bg-[#121215]/95 border border-slate-800 dark:border-zinc-700/80 rounded-2xl shadow-2xl backdrop-blur-md text-xs">
-            <div className="flex items-center gap-1.5 pl-2.5 pr-1.5 text-zinc-400 font-mono text-[10px] font-semibold">
-              <FlaskConical size={13} className="text-[#CEFF00]" />
-              <span className="hidden sm:inline">Scenario:</span>
-            </div>
-
-            <div className="flex items-center gap-0.5 bg-black/40 rounded-xl p-0.5 border border-white/5">
-              {(['UPCOMING', 'LIVE', 'FINISHED'] as const).map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => handleStatusChange(st)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer ${
-                    currentStatus === st
-                      ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsDevDockMinimized(true)}
-              title="Minimize controller"
-              className="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-colors ml-0.5 cursor-pointer"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        )}
-      </div>
-
     </div>
   );
 }
