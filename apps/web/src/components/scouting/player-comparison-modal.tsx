@@ -174,62 +174,74 @@ export function PlayerComparisonModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Player A Card (Lime) */}
-            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 bottom-0 w-1 bg-[#CEFF00]" />
-              <div className="flex items-center gap-3.5 pl-2">
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
-                  <PlayerAvatar src={playerA.photoUrl} alt={playerA.name} className="w-full h-full" />
+            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3.5 sm:p-4 relative overflow-hidden flex items-center gap-3 sm:gap-3.5">
+              {/* Seamless Cutout Portrait */}
+              <div className="relative w-13 h-13 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#CEFF00]/5 rounded-full blur-sm pointer-events-none" />
+                <PlayerAvatar
+                  src={playerA.photoUrl}
+                  alt={playerA.name}
+                  className="w-full h-full object-contain [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] drop-shadow-md"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.6)]" />
+                  <h3 className="text-sm font-extrabold text-white truncate">{playerA.name}</h3>
+                  <span className="px-1.5 py-0.5 rounded bg-[#CEFF00]/10 text-[#CEFF00] font-mono font-bold text-[10px]">
+                    {playerA.position}
+                  </span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-extrabold text-white truncate">{playerA.name}</h3>
-                    <span className="px-1.5 py-0.5 rounded bg-[#CEFF00]/15 text-[#CEFF00] font-mono font-bold text-[10px]">
-                      {playerA.position}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
-                    <ClubCrest code={playerA.team?.code || ''} size={14} />
-                    <span className="truncate">{playerA.team?.name}</span>
-                    <span className="text-zinc-600">·</span>
-                    <span>{playerA.nationality}</span>
-                    <span className="text-zinc-600">·</span>
-                    <span>{playerA.age} yrs</span>
-                  </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-zinc-400">
+                  <ClubCrest code={playerA.team?.code || ''} size={14} />
+                  <span className="truncate">{playerA.team?.name}</span>
+                  <span className="text-zinc-600">·</span>
+                  <span>{playerA.nationality}</span>
+                  <span className="text-zinc-600">·</span>
+                  <span>{playerA.age} yrs</span>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerA.marketValue)}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
-                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerA.marketValue)}</div>
+                <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
               </div>
             </div>
 
             {/* Player B Card (Cyan) */}
-            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bottom-0 w-1 bg-[#00D2FF]" />
-              <div className="flex items-center gap-3.5 pr-2">
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
-                  <PlayerAvatar src={playerB.photoUrl} alt={playerB.name} className="w-full h-full" />
+            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3.5 sm:p-4 relative overflow-hidden flex items-center gap-3 sm:gap-3.5">
+              {/* Seamless Cutout Portrait */}
+              <div className="relative w-13 h-13 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#00D2FF]/5 rounded-full blur-sm pointer-events-none" />
+                <PlayerAvatar
+                  src={playerB.photoUrl}
+                  alt={playerB.name}
+                  className="w-full h-full object-contain [mask-image:linear-gradient(to_bottom,black_80%,transparent_100%)] drop-shadow-md"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.6)]" />
+                  <h3 className="text-sm font-extrabold text-white truncate">{playerB.name}</h3>
+                  <span className="px-1.5 py-0.5 rounded bg-[#00D2FF]/10 text-[#00D2FF] font-mono font-bold text-[10px]">
+                    {playerB.position}
+                  </span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-extrabold text-white truncate">{playerB.name}</h3>
-                    <span className="px-1.5 py-0.5 rounded bg-[#00D2FF]/15 text-[#00D2FF] font-mono font-bold text-[10px]">
-                      {playerB.position}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
-                    <ClubCrest code={playerB.team?.code || ''} size={14} />
-                    <span className="truncate">{playerB.team?.name}</span>
-                    <span className="text-zinc-600">·</span>
-                    <span>{playerB.nationality}</span>
-                    <span className="text-zinc-600">·</span>
-                    <span>{playerB.age} yrs</span>
-                  </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-zinc-400">
+                  <ClubCrest code={playerB.team?.code || ''} size={14} />
+                  <span className="truncate">{playerB.team?.name}</span>
+                  <span className="text-zinc-600">·</span>
+                  <span>{playerB.nationality}</span>
+                  <span className="text-zinc-600">·</span>
+                  <span>{playerB.age} yrs</span>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerB.marketValue)}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
-                </div>
+              </div>
+
+              <div className="text-right shrink-0">
+                <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerB.marketValue)}</div>
+                <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
               </div>
             </div>
 

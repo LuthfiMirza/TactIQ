@@ -17,8 +17,12 @@ export function PlayerAvatar({ src, alt, className, size }: PlayerAvatarProps) {
   if (!src || failed) {
     return (
       <div
-        className={cn('flex items-center justify-center bg-zinc-800 text-zinc-500', className)}
-        style={size ? { width: size, height: size } : undefined}
+        className={cn('flex items-center justify-center bg-zinc-800/60 rounded-xl text-zinc-500 border border-zinc-700/50', className)}
+        style={{
+          ...(size ? { width: size, height: size } : {}),
+          maskImage: 'none',
+          WebkitMaskImage: 'none',
+        }}
       >
         <User className="w-1/2 h-1/2" />
       </div>

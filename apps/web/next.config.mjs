@@ -11,6 +11,22 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'media.api-sports.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'resources.premierleague.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'publish.realmadrid.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'thumb.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
     ],
   },
   experimental: {
