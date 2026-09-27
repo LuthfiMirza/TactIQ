@@ -17,7 +17,7 @@ import type { PlayerRadarMetrics } from '@tactiq/shared-types';
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 interface RadarChartProps {
-  metrics: PlayerRadarMetrics;
+  metrics?: PlayerRadarMetrics;
   playerName?: string;
   comparisonMetrics?: PlayerRadarMetrics;
   comparisonPlayerName?: string;

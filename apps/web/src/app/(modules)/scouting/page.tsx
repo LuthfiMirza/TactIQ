@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { RadarChart } from '@/components/radar-chart';
 import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
+import { PlayerComparisonModal } from '@/components/scouting/player-comparison-modal';
 import type { PlayerDTO } from '@tactiq/shared-types';
 import {
   SlidersHorizontal,
@@ -10,6 +11,7 @@ import {
   Check,
   ChevronDown,
   ArrowRight,
+  ArrowLeftRight,
   X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -419,7 +421,17 @@ export default function ScoutingPage() {
   const [sortBy, setSortBy] = useState<'similarity' | 'value' | 'age'>('similarity');
   const [isAnchorSelectorOpen, setIsAnchorSelectorOpen] = useState(false);
   const [isWeightsModalOpen, setIsWeightsModalOpen] = useState(false);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  const [modalPlayerB, setModalPlayerB] = useState<PlayerDTO | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const allScoutingPlayers = useMemo(() => {
+    const list: PlayerDTO[] = [...BENCHMARK_PLAYERS];
+    Object.values(CLUSTER_RECOMMENDATIONS).forEach((recs) => {
+      recs.forEach((r) => list.push(r.player));
+    });
+    return list;
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -546,6 +558,16 @@ export default function ScoutingPage() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setModalPlayerB(comparisonTarget.player);
+              setIsCompareModalOpen(true);
+            }}
+            className="h-9 flex items-center gap-1.5 px-3 border border-[#CEFF00]/40 bg-[#CEFF00]/10 hover:bg-[#CEFF00]/20 text-[#CEFF00] rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            <ArrowLeftRight size={13} />
+            <span>Compare Matrix</span>
+          </button>
           <button
             onClick={() => setIsWeightsModalOpen(true)}
             className="h-9 flex items-center gap-1.5 px-3 border border-[#27272A] bg-[#121215] hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-zinc-300 shadow-xs transition-colors"
@@ -1133,6 +1155,15 @@ export default function ScoutingPage() {
           </div>
         </div>
       )}
+
+      {/* ── Dual Player Comparison Matrix Modal (TSK-26) ────────────────────── */}
+      <PlayerComparisonModal
+        isOpen={isCompareModalOpen}
+        onClose={() => setIsCompareModalOpen(false)}
+        allPlayers={allScoutingPlayers}
+        initialPlayerA={anchorPlayer}
+        initialPlayerB={modalPlayerB}
+      />
 
     </div>
   );
