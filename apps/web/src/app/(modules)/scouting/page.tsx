@@ -29,54 +29,239 @@ interface ScoutingRecommendation {
 
 // ─── Benchmark Dataset ───────────────────────────────────────────────────────
 
-const BENCHMARK_PLAYERS: (PlayerDTO & {
+type BenchmarkPlayer = PlayerDTO & {
   estValueFormatted: string;
   rating: number;
   goals: number; assists: number; started: number; matches: number; minutes: number;
   position2: string;
   strengths: string[]; weaknesses: string[];
   per90: { sca: number; penaltyBoxPasses: number; highTurnoverRegains: number; pressPassPct: number };
-})[] = [
-  {
-    id: 'player-odegaard', teamId: 'team-ars',
-    name: 'Martin Ødegaard', position: 'MID', position2: 'AM / CM',
-    nationality: 'NOR', age: 25, marketValue: 110000000,
-    photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/184029.png',
-    team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
-    attributes: { pace: 76, shooting: 82, passing: 93, dribbling: 90, defending: 68, physical: 69, vision: 95 },
-    estValueFormatted: '€110M',
-    rating: 8.4, goals: 11, assists: 14, started: 28, matches: 30, minutes: 2520,
-    strengths: ['Line-breaking passes', 'Vision & Creativity', 'High pressing'],
-    weaknesses: ['Aerial duels', 'Physical strength'],
-    per90: { sca: 5.82, penaltyBoxPasses: 2.91, highTurnoverRegains: 1.42, pressPassPct: 84.6 },
-  },
-  {
-    id: 'player-kdb', teamId: 'team-mci',
-    name: 'Kevin De Bruyne', position: 'MID', position2: 'AM / CM',
-    nationality: 'BEL', age: 33, marketValue: 50000000,
-    photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png',
-    team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
-    attributes: { pace: 74, shooting: 88, passing: 95, dribbling: 87, defending: 65, physical: 78, vision: 97 },
-    estValueFormatted: '€50M',
-    rating: 8.9, goals: 8, assists: 19, started: 24, matches: 27, minutes: 2160,
-    strengths: ['Long-range passing', 'Shooting accuracy', 'Game reading'],
-    weaknesses: ['Injury recovery', 'Defensive recovery'],
-    per90: { sca: 6.42, penaltyBoxPasses: 3.45, highTurnoverRegains: 1.25, pressPassPct: 82.1 },
-  },
-  {
-    id: 'player-bellingham', teamId: 'team-rma',
-    name: 'Jude Bellingham', position: 'MID', position2: 'AM / CM',
-    nationality: 'ENG', age: 21, marketValue: 180000000,
-    photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/jude-bellingham/assets/BELLINGHAM_CARITA_1500X2000.png',
-    team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
-    attributes: { pace: 82, shooting: 87, passing: 89, dribbling: 90, defending: 80, physical: 85, vision: 91 },
-    estValueFormatted: '€180M',
-    rating: 9.1, goals: 21, assists: 9, started: 30, matches: 32, minutes: 2740,
-    strengths: ['Box-to-box runs', 'High pressing', 'Goal scoring'],
-    weaknesses: ['Tactical discipline', 'Foul frequency'],
-    per90: { sca: 5.12, penaltyBoxPasses: 2.35, highTurnoverRegains: 2.10, pressPassPct: 86.8 },
-  },
-];
+};
+
+const toBenchmarkPlayer = (player: PlayerDTO, rec?: ScoutingRecommendation): BenchmarkPlayer => {
+  return {
+    ...player,
+    estValueFormatted: `€${((player.marketValue || 0) / 1e6).toFixed(0)}M`,
+    rating: 8.6,
+    goals: player.position === 'FWD' ? 15 : player.position === 'MID' ? 7 : player.position === 'DEF' ? 2 : 0,
+    assists: player.position === 'MID' ? 10 : 3,
+    started: 24,
+    matches: 27,
+    minutes: 2250,
+    position2: player.position,
+    strengths: rec?.highlightMetrics?.map(m => m.label) || ['Tactical IQ', 'Consistency', 'Press Resistance'],
+    weaknesses: ['Aerial duels', 'Defensive recovery'],
+    per90: rec?.per90 || { sca: 4.8, penaltyBoxPasses: 2.1, highTurnoverRegains: 1.6, pressPassPct: 84.0 },
+  };
+};
+
+const BENCHMARK_PLAYERS_BY_CLUSTER: Record<'GK' | 'DF' | 'MF' | 'FW', BenchmarkPlayer[]> = {
+  MF: [
+    {
+      id: 'player-odegaard', teamId: 'team-ars',
+      name: 'Martin Ødegaard', position: 'MID', position2: 'AM / CM',
+      nationality: 'NOR', age: 25, marketValue: 110000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/184029.png',
+      team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 76, shooting: 82, passing: 93, dribbling: 90, defending: 68, physical: 69, vision: 95 },
+      estValueFormatted: '€110M',
+      rating: 8.4, goals: 11, assists: 14, started: 28, matches: 30, minutes: 2520,
+      strengths: ['Line-breaking passes', 'Vision & Creativity', 'High pressing'],
+      weaknesses: ['Aerial duels', 'Physical strength'],
+      per90: { sca: 5.82, penaltyBoxPasses: 2.91, highTurnoverRegains: 1.42, pressPassPct: 84.6 },
+    },
+    {
+      id: 'player-kdb', teamId: 'team-mci',
+      name: 'Kevin De Bruyne', position: 'MID', position2: 'AM / CM',
+      nationality: 'BEL', age: 33, marketValue: 50000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png',
+      team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 74, shooting: 88, passing: 95, dribbling: 87, defending: 65, physical: 78, vision: 97 },
+      estValueFormatted: '€50M',
+      rating: 8.9, goals: 8, assists: 19, started: 24, matches: 27, minutes: 2160,
+      strengths: ['Long-range passing', 'Shooting accuracy', 'Game reading'],
+      weaknesses: ['Injury recovery', 'Defensive recovery'],
+      per90: { sca: 6.42, penaltyBoxPasses: 3.45, highTurnoverRegains: 1.25, pressPassPct: 82.1 },
+    },
+    {
+      id: 'player-bellingham', teamId: 'team-rma',
+      name: 'Jude Bellingham', position: 'MID', position2: 'AM / CM',
+      nationality: 'ENG', age: 21, marketValue: 180000000,
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/jude-bellingham/assets/BELLINGHAM_CARITA_1500X2000.png',
+      team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+      attributes: { pace: 82, shooting: 87, passing: 89, dribbling: 90, defending: 80, physical: 85, vision: 91 },
+      estValueFormatted: '€180M',
+      rating: 9.1, goals: 21, assists: 9, started: 30, matches: 32, minutes: 2740,
+      strengths: ['Box-to-box runs', 'High pressing', 'Goal scoring'],
+      weaknesses: ['Tactical discipline', 'Foul frequency'],
+      per90: { sca: 5.12, penaltyBoxPasses: 2.35, highTurnoverRegains: 2.10, pressPassPct: 86.8 },
+    },
+  ],
+  FW: [
+    {
+      id: 'player-haaland', teamId: 'team-mci',
+      name: 'Erling Haaland', position: 'FWD', position2: 'ST / CF',
+      nationality: 'NOR', age: 24, marketValue: 180000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png',
+      team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 89, shooting: 93, passing: 70, dribbling: 81, defending: 45, physical: 88, vision: 76 },
+      estValueFormatted: '€180M',
+      rating: 9.2, goals: 27, assists: 5, started: 28, matches: 31, minutes: 2650,
+      strengths: ['Box Finishing', 'Aerial Power', 'Off-ball Runs'],
+      weaknesses: ['Link-up build up', 'Defensive work'],
+      per90: { sca: 3.40, penaltyBoxPasses: 1.65, highTurnoverRegains: 0.95, pressPassPct: 76.5 },
+    },
+    {
+      id: 'player-saka', teamId: 'team-ars',
+      name: 'Bukayo Saka', position: 'FWD', position2: 'RW / RM',
+      nationality: 'ENG', age: 23, marketValue: 140000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223340.png',
+      team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 86, shooting: 84, passing: 83, dribbling: 89, defending: 65, physical: 78, vision: 87 },
+      estValueFormatted: '€140M',
+      rating: 8.8, goals: 16, assists: 12, started: 27, matches: 29, minutes: 2410,
+      strengths: ['1v1 Take-ons', 'Box Touches', 'xG + xA'],
+      weaknesses: ['Right-foot consistency'],
+      per90: { sca: 5.60, penaltyBoxPasses: 3.10, highTurnoverRegains: 1.80, pressPassPct: 83.4 },
+    },
+    {
+      id: 'player-mbappe', teamId: 'team-rma',
+      name: 'Kylian Mbappé', position: 'FWD', position2: 'LW / CF',
+      nationality: 'FRA', age: 25, marketValue: 180000000,
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/mbappe/assets/MBAPPE_CARITA_1500X2000.png',
+      team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+      attributes: { pace: 97, shooting: 90, passing: 82, dribbling: 92, defending: 36, physical: 78, vision: 83 },
+      estValueFormatted: '€180M',
+      rating: 9.1, goals: 25, assists: 8, started: 28, matches: 30, minutes: 2550,
+      strengths: ['Sprint Speed', 'Transition Threat', 'Box Touches'],
+      weaknesses: ['Defensive tracking', 'Aerial duels'],
+      per90: { sca: 5.30, penaltyBoxPasses: 2.70, highTurnoverRegains: 1.40, pressPassPct: 84.1 },
+    },
+    {
+      id: 'player-palmer', teamId: 'team-che',
+      name: 'Cole Palmer', position: 'FWD', position2: 'AM / RW',
+      nationality: 'ENG', age: 22, marketValue: 110000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/244851.png',
+      team: { id: 'team-che', name: 'Chelsea', code: 'CHE', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 80, shooting: 86, passing: 88, dribbling: 87, defending: 55, physical: 72, vision: 92 },
+      estValueFormatted: '€110M',
+      rating: 8.9, goals: 22, assists: 11, started: 27, matches: 29, minutes: 2420,
+      strengths: ['Key Passes', 'Finishing', 'Penalty Conversion'],
+      weaknesses: ['Physical strength', 'Aerial recovery'],
+      per90: { sca: 5.92, penaltyBoxPasses: 2.85, highTurnoverRegains: 1.35, pressPassPct: 82.0 },
+    },
+  ],
+  DF: [
+    {
+      id: 'player-saliba', teamId: 'team-ars',
+      name: 'William Saliba', position: 'DEF', position2: 'CB',
+      nationality: 'FRA', age: 23, marketValue: 80000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/462424.png',
+      team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 83, shooting: 40, passing: 82, dribbling: 76, defending: 89, physical: 84, vision: 78 },
+      estValueFormatted: '€80M',
+      rating: 8.6, goals: 2, assists: 1, started: 32, matches: 32, minutes: 2880,
+      strengths: ['Defensive Duels', 'Pass Accuracy', 'Recovery Pace'],
+      weaknesses: ['Attacking set pieces'],
+      per90: { sca: 1.45, penaltyBoxPasses: 0.65, highTurnoverRegains: 2.80, pressPassPct: 91.2 },
+    },
+    {
+      id: 'player-vvd', teamId: 'team-liv',
+      name: 'Virgil van Dijk', position: 'DEF', position2: 'CB',
+      nationality: 'NED', age: 33, marketValue: 35000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/97032.png',
+      team: { id: 'team-liv', name: 'Liverpool', code: 'LIV', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 78, shooting: 60, passing: 84, dribbling: 72, defending: 91, physical: 89, vision: 80 },
+      estValueFormatted: '€35M',
+      rating: 8.9, goals: 4, assists: 2, started: 30, matches: 31, minutes: 2750,
+      strengths: ['Aerial Duels', 'Long Ball Accuracy', 'Leadership'],
+      weaknesses: ['Recovery sprint vs pure pace'],
+      per90: { sca: 1.80, penaltyBoxPasses: 0.85, highTurnoverRegains: 2.50, pressPassPct: 89.8 },
+    },
+    {
+      id: 'player-gvardiol', teamId: 'team-mci',
+      name: 'Joško Gvardiol', position: 'DEF', position2: 'LB / CB',
+      nationality: 'CRO', age: 22, marketValue: 75000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png',
+      team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 82, shooting: 68, passing: 84, dribbling: 82, defending: 85, physical: 84, vision: 81 },
+      estValueFormatted: '€75M',
+      rating: 8.6, goals: 5, assists: 3, started: 28, matches: 30, minutes: 2490,
+      strengths: ['Prog. Carries', 'Ground Duels', 'Line Breaking'],
+      weaknesses: ['Over-committing on overlaps'],
+      per90: { sca: 2.20, penaltyBoxPasses: 1.20, highTurnoverRegains: 2.45, pressPassPct: 89.5 },
+    },
+    {
+      id: 'player-rudiger', teamId: 'team-rma',
+      name: 'Antonio Rüdiger', position: 'DEF', position2: 'CB',
+      nationality: 'GER', age: 31, marketValue: 25000000,
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/antonio-rudiger/assets/RUDIGER_CARITA_1500X2000.png',
+      team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+      attributes: { pace: 84, shooting: 54, passing: 78, dribbling: 71, defending: 87, physical: 88, vision: 74 },
+      estValueFormatted: '€25M',
+      rating: 8.5, goals: 3, assists: 1, started: 29, matches: 31, minutes: 2680,
+      strengths: ['Aerial Duels', 'Sprint Speed', 'Aggressive Interceptions'],
+      weaknesses: ['Foul concession'],
+      per90: { sca: 1.30, penaltyBoxPasses: 0.40, highTurnoverRegains: 2.70, pressPassPct: 86.0 },
+    },
+  ],
+  GK: [
+    {
+      id: 'player-raya', teamId: 'team-ars',
+      name: 'David Raya', position: 'GK', position2: 'GK',
+      nationality: 'ESP', age: 29, marketValue: 45000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/154561.png',
+      team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 60, shooting: 25, passing: 86, dribbling: 65, defending: 82, physical: 78, vision: 88 },
+      estValueFormatted: '€45M',
+      rating: 8.5, goals: 0, assists: 0, started: 32, matches: 32, minutes: 2880,
+      strengths: ['Box Claims', 'Long Pass Dist', 'PSxG +/-'],
+      weaknesses: ['Near-post power shots'],
+      per90: { sca: 0.65, penaltyBoxPasses: 0.20, highTurnoverRegains: 0.90, pressPassPct: 85.0 },
+    },
+    {
+      id: 'player-alisson', teamId: 'team-liv',
+      name: 'Alisson Becker', position: 'GK', position2: 'GK',
+      nationality: 'BRA', age: 31, marketValue: 30000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/116535.png',
+      team: { id: 'team-liv', name: 'Liverpool', code: 'LIV', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 62, shooting: 22, passing: 86, dribbling: 66, defending: 89, physical: 82, vision: 87 },
+      estValueFormatted: '€30M',
+      rating: 8.8, goals: 0, assists: 0, started: 28, matches: 28, minutes: 2520,
+      strengths: ['1v1 Saves', 'Reflex Stops', 'Distribution'],
+      weaknesses: ['Hamstring strain susceptibility'],
+      per90: { sca: 0.58, penaltyBoxPasses: 0.18, highTurnoverRegains: 0.88, pressPassPct: 86.5 },
+    },
+    {
+      id: 'player-courtois', teamId: 'team-rma',
+      name: 'Thibaut Courtois', position: 'GK', position2: 'GK',
+      nationality: 'BEL', age: 32, marketValue: 28000000,
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/thibaut-courtois/assets/COURTOIS_CARITA_1500X2000.png',
+      team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+      attributes: { pace: 56, shooting: 20, passing: 78, dribbling: 58, defending: 90, physical: 85, vision: 81 },
+      estValueFormatted: '€28M',
+      rating: 8.7, goals: 0, assists: 0, started: 22, matches: 22, minutes: 1980,
+      strengths: ['Reach & Wingspan', 'Close-Range Reflexes', 'Aerial Control'],
+      weaknesses: ['Sweeping out of box'],
+      per90: { sca: 0.40, penaltyBoxPasses: 0.12, highTurnoverRegains: 0.75, pressPassPct: 84.0 },
+    },
+    {
+      id: 'player-ederson', teamId: 'team-mci',
+      name: 'Ederson', position: 'GK', position2: 'GK',
+      nationality: 'BRA', age: 31, marketValue: 35000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png',
+      team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 64, shooting: 30, passing: 93, dribbling: 72, defending: 84, physical: 80, vision: 93 },
+      estValueFormatted: '€35M',
+      rating: 8.6, goals: 0, assists: 1, started: 30, matches: 30, minutes: 2700,
+      strengths: ['Pass Range', 'Press Resistance', 'Sweeping Outside Box'],
+      weaknesses: ['Long shot conversion against'],
+      per90: { sca: 0.72, penaltyBoxPasses: 0.35, highTurnoverRegains: 1.05, pressPassPct: 91.0 },
+    },
+  ],
+};
+
+const BENCHMARK_PLAYERS = BENCHMARK_PLAYERS_BY_CLUSTER.MF;
 
 const INITIAL_RECOMMENDATIONS: ScoutingRecommendation[] = [
   {
@@ -440,8 +625,20 @@ export default function ScoutingPage() {
     setRecommendations(list);
     if (list.length > 0) {
       setComparisonTarget(list[0]);
+    }
+    const benchmarks = BENCHMARK_PLAYERS_BY_CLUSTER[cluster] || [];
+    if (benchmarks.length > 0) {
+      setAnchorPlayer(benchmarks[0]);
+      showToast(`${cluster} mode: Anchor set to ${benchmarks[0].name}`);
+    } else {
       showToast(`Showing ${cluster} shortlist`);
     }
+  };
+
+  const handleSetAsAnchor = (player: PlayerDTO, rec?: ScoutingRecommendation) => {
+    const newAnchor = toBenchmarkPlayer(player, rec);
+    setAnchorPlayer(newAnchor);
+    showToast(`Anchor set to ${player.name}`);
   };
 
   const handleSelectCandidate = (rec: ScoutingRecommendation) => {
@@ -503,12 +700,17 @@ export default function ScoutingPage() {
             </button>
 
             {isAnchorSelectorOpen && (
-              <div className="absolute top-full left-0 mt-1 z-30 w-72 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-[#27272A]">
-                {BENCHMARK_PLAYERS.map((p) => (
+              <div className="absolute top-full left-0 mt-1 z-30 w-72 max-h-80 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl shadow-xl overflow-y-auto divide-y divide-slate-100 dark:divide-[#27272A]">
+                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
+                  {selectedCluster} Benchmarks
+                </div>
+                {(BENCHMARK_PLAYERS_BY_CLUSTER[selectedCluster] || []).map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => { setAnchorPlayer(p); setIsAnchorSelectorOpen(false); showToast(`Benchmark: ${p.name}`); }}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3"
+                    onClick={() => { setAnchorPlayer(p); setIsAnchorSelectorOpen(false); showToast(`Anchor: ${p.name}`); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
+                      anchorPlayer.id === p.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <ClubCrest code={p.team?.code || ''} size={20} />
@@ -518,6 +720,28 @@ export default function ScoutingPage() {
                       </div>
                     </div>
                     <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">{p.estValueFormatted}</span>
+                  </button>
+                ))}
+
+                <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold bg-slate-50/50 dark:bg-zinc-900/50">
+                  Shortlist Candidates
+                </div>
+                {recommendations.map((r) => (
+                  <button
+                    key={`rec-anchor-${r.player.id}`}
+                    onClick={() => { handleSetAsAnchor(r.player, r); setIsAnchorSelectorOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors text-left gap-3 ${
+                      anchorPlayer.id === r.player.id ? 'bg-[#CEFF00]/10 text-[#CEFF00]' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ClubCrest code={r.player.team?.code || ''} size={20} />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{r.player.name}</div>
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 truncate">{r.player.team?.name} · {r.tacticalRole}</div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-zinc-200 shrink-0">€{((r.player.marketValue || 0) / 1e6).toFixed(0)}M</span>
                   </button>
                 ))}
               </div>
@@ -559,7 +783,7 @@ export default function ScoutingPage() {
               setModalPlayerB(comparisonTarget.player);
               setIsCompareModalOpen(true);
             }}
-            className="h-9 flex items-center gap-1.5 px-3 border border-[#CEFF00]/40 bg-[#CEFF00]/10 hover:bg-[#CEFF00]/20 text-[#CEFF00] rounded-lg text-xs font-bold transition-all shadow-xs"
+            className="h-9 flex items-center gap-1.5 px-3.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-lg shadow-xs shadow-[#CEFF00]/20 transition-all active:scale-[0.98]"
           >
             <ArrowLeftRight size={13} />
             <span>Compare Matrix</span>
@@ -573,7 +797,7 @@ export default function ScoutingPage() {
           </button>
           <button
             onClick={() => showToast('Shortlist exported to CSV')}
-            className="h-9 flex items-center gap-1.5 px-3.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-lg shadow-xs shadow-[#CEFF00]/20 transition-all"
+            className="h-9 flex items-center gap-1.5 px-3 border border-[#27272A] bg-[#121215] hover:bg-[#1A1A1E] rounded-lg text-xs font-bold text-zinc-300 shadow-xs transition-colors"
           >
             <Download size={13} />
             <span>Export</span>
@@ -637,13 +861,13 @@ export default function ScoutingPage() {
                       
                       {/* Left: Player Avatar + Details */}
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="relative shrink-0 w-9 h-9 flex items-center justify-center">
+                        <div className="relative shrink-0 w-9 h-9 rounded-xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center">
                           <PlayerAvatar
                             src={rec.player.photoUrl}
                             alt={rec.player.name}
                             className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-xs"
                           />
-                          <span className="absolute -bottom-0.5 -right-0.5 text-[10px] leading-none">
+                          <span className="absolute bottom-0 right-0 z-10 text-[9px] leading-none">
                             {getFlag(rec.player.nationality)}
                           </span>
                         </div>
@@ -720,67 +944,77 @@ export default function ScoutingPage() {
         <div id="comparison-arena" className="lg:col-span-8 flex flex-col gap-5 scroll-mt-20">
 
           {/* Card 1: Player Matchup Header */}
-          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-xs transition-colors">
-            <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-4 sm:gap-6">
+          <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-xs transition-colors">
+            <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-3 sm:gap-6">
               
               {/* Anchor Profile (Left, 5 cols) */}
-              <div className="md:col-span-5 flex items-center gap-3.5">
-                <div className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center">
+              <div className="md:col-span-5 flex items-center gap-3 sm:gap-3.5 min-w-0">
+                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs">
                   <PlayerAvatar
                     src={anchorPlayer.photoUrl}
                     alt={anchorPlayer.name}
                     className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 text-xs">
+                  <span className="absolute bottom-0.5 right-0.5 z-10 text-xs">
                     {getFlag(anchorPlayer.nationality)}
                   </span>
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold block">
                     Anchor Player
                   </span>
-                  <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                     {anchorPlayer.name}
                   </h2>
                   <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
-                    <ClubCrest code={anchorPlayer.team?.code || ''} size={16} />
-                    <span>{anchorPlayer.team?.name} · {anchorPlayer.age}y · <span className="font-bold text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</span></span>
+                    <ClubCrest code={anchorPlayer.team?.code || ''} size={15} />
+                    <span className="truncate">{anchorPlayer.team?.name} · {anchorPlayer.age}y · <span className="font-bold text-slate-900 dark:text-zinc-200">{anchorPlayer.estValueFormatted}</span></span>
                   </div>
                 </div>
               </div>
 
               {/* Match % (Center, 1 col) */}
-              <div className="md:col-span-1 flex flex-col items-center justify-center py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-100 dark:border-[#27272A]">
-                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#18181C] flex items-center justify-center text-slate-500 dark:text-zinc-400 font-mono font-bold text-[11px]">
+              <div className="md:col-span-1 flex flex-row md:flex-col items-center justify-between md:justify-center py-2 md:py-0 border-y md:border-y-0 md:border-x border-slate-100 dark:border-[#27272A] px-2 md:px-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 dark:bg-[#18181C] flex items-center justify-center text-slate-500 dark:text-zinc-400 font-mono font-bold text-[10px] sm:text-[11px]">
                   VS
                 </div>
-                <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white mt-1 whitespace-nowrap">
+                <span className="text-xs sm:text-[11px] font-mono font-bold text-slate-900 dark:text-white md:mt-1 whitespace-nowrap">
                   {comparisonTarget.matchPercentage.toFixed(1)}%
                 </span>
               </div>
 
               {/* Target Profile (Right, 5 cols) */}
-              <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-3.5 text-left md:text-right">
-                <div className="min-w-0 order-2 md:order-1">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-sky-600 dark:text-sky-400 font-bold block">
-                    Comparison
-                  </span>
-                  <h2 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
+              <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-3 sm:gap-3.5 min-w-0 text-left md:text-right">
+                <div className="min-w-0 flex-1 order-2 md:order-1">
+                  <div className="flex items-center justify-between md:justify-end gap-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-sky-600 dark:text-sky-400 font-bold block">
+                      Comparison
+                    </span>
+                    <button
+                      onClick={() => handleSetAsAnchor(comparisonTarget.player, comparisonTarget)}
+                      className="text-[10px] font-mono font-bold text-zinc-400 hover:text-[#CEFF00] flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded bg-zinc-800/60 hover:bg-zinc-800 border border-zinc-700/50"
+                      title="Set this player as the anchor"
+                    >
+                      <ArrowLeftRight size={10} />
+                      <span>Make Anchor</span>
+                    </button>
+                  </div>
+                  <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
                     {comparisonTarget.player.name}
                   </h2>
                   <div className="flex items-center justify-start md:justify-end gap-1.5 text-xs font-mono text-slate-500 dark:text-zinc-400 mt-0.5">
-                    <ClubCrest code={comparisonTarget.player.team?.code || ''} size={16} />
-                    <span>{comparisonTarget.player.team?.name} · {comparisonTarget.player.age}y · <span className="font-bold text-sky-600 dark:text-sky-400">€{(comparisonTarget.player.marketValue ? comparisonTarget.player.marketValue / 1e6 : 0).toFixed(0)}M</span></span>
+                    <ClubCrest code={comparisonTarget.player.team?.code || ''} size={15} />
+                    <span className="truncate">{comparisonTarget.player.team?.name} · {comparisonTarget.player.age}y · <span className="font-bold text-sky-600 dark:text-sky-400">€{((comparisonTarget.player.marketValue || 0) / 1e6).toFixed(0)}M</span></span>
                   </div>
                 </div>
 
-                <div className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center order-1 md:order-2">
+                <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center shadow-xs order-1 md:order-2">
                   <PlayerAvatar
                     src={comparisonTarget.player.photoUrl}
                     alt={comparisonTarget.player.name}
                     className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 text-xs">
+                  <span className="absolute bottom-0.5 right-0.5 z-10 text-xs">
                     {getFlag(comparisonTarget.player.nationality)}
                   </span>
                 </div>

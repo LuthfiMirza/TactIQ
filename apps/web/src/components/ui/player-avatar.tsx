@@ -17,7 +17,7 @@ export function PlayerAvatar({ src, alt, className, size }: PlayerAvatarProps) {
   if (!src || failed) {
     return (
       <div
-        className={cn('flex items-center justify-center bg-zinc-800/60 rounded-xl text-zinc-500 border border-zinc-700/50', className)}
+        className={cn('flex items-center justify-center bg-zinc-800/60 rounded-xl text-zinc-500 border border-zinc-700/50 shrink-0', className)}
         style={{
           ...(size ? { width: size, height: size } : {}),
           maskImage: 'none',
@@ -33,7 +33,7 @@ export function PlayerAvatar({ src, alt, className, size }: PlayerAvatarProps) {
     <img
       src={src}
       alt={alt}
-      className={cn('object-cover', className)}
+      className={cn('max-w-full max-h-full object-cover object-[center_top] shrink-0', className)}
       style={size ? { width: size, height: size } : undefined}
       onError={() => setFailed(true)}
     />
