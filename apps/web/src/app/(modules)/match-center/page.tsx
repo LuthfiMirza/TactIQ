@@ -774,9 +774,22 @@ export default function MatchCenterPage() {
         <div className="lg:col-span-8 flex flex-col gap-4 sm:gap-6 min-w-0">
 
           {/* Featured Match Card Dinamis */}
-          <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-xs overflow-hidden transition-colors flex flex-col gap-1 sm:gap-2">
+          <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-xs overflow-hidden transition-colors flex flex-col gap-2.5 sm:gap-3.5">
             <div className="absolute -top-20 -left-20 w-52 sm:w-60 h-52 sm:h-60 bg-red-600/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -top-20 -right-20 w-52 sm:w-60 h-52 sm:h-60 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Match Header */}
+            <div className="relative flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <LeagueLogo league="Premier League" size={14} />
+                <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
+                  Premier League · Matchday 8
+                </span>
+              </div>
+              <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">
+                Old Trafford
+              </span>
+            </div>
 
             <div className="relative">
               <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6">
@@ -829,8 +842,8 @@ export default function MatchCenterPage() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[10px] sm:text-[11px] font-mono font-bold text-zinc-300 mt-1 px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700/50">
-                          FT
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-zinc-400 mt-0.5 sm:mt-1 whitespace-nowrap">
+                          Full Time
                         </span>
                       )}
                     </>
