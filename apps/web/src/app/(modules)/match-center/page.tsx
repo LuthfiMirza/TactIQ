@@ -246,34 +246,34 @@ const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
     formation: '4-2-3-1',
     teamRating: 7.4,
     starters: [
-      { num: 24, name: 'André Onana', shortName: 'Onana', pos: 'GK', rating: 7.1, x: 6, y: 50, vx: 50, vy: 93, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/202641.png' },
-      { num: 20, name: 'Diogo Dalot', shortName: 'Dalot', pos: 'RB', rating: 6.8, x: 17, y: 16, vx: 82, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/216051.png' },
-      { num: 4, name: 'Matthijs de Ligt', shortName: 'De Ligt', pos: 'CB', rating: 7.2, x: 16, y: 39, vx: 61, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 6, name: 'Lisandro Martínez', shortName: 'Martínez', pos: 'CB', rating: 7.4, x: 16, y: 61, vx: 39, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png' },
-      { num: 23, name: 'Luke Shaw', shortName: 'Shaw', pos: 'LB', rating: 6.7, x: 17, y: 84, vx: 18, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png' },
-      { num: 18, name: 'Casemiro', shortName: 'Casemiro', pos: 'DM', rating: 7.3, x: 26, y: 38, vx: 39, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/112465.png' },
-      { num: 37, name: 'Kobbie Mainoo', shortName: 'Mainoo', pos: 'CM', rating: 7.0, x: 26, y: 62, vx: 61, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 17, name: 'Alejandro Garnacho', shortName: 'Garnacho', pos: 'RW', rating: 7.6, x: 37, y: 18, vx: 82, vy: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
-      { num: 8, name: 'Bruno Fernandes', shortName: 'Fernandes', pos: 'AM', rating: 8.5, isCaptain: true, isScorer: true, x: 32, y: 50, vx: 50, vy: 63, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/141746.png' },
-      { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 37, y: 82, vx: 18, vy: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
-      { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 43, y: 50, vx: 50, vy: 54, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
+      { num: 24, name: 'André Onana', shortName: 'Onana', pos: 'GK', rating: 7.1, x: 6, y: 50, vx: 50, vy: 94, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/202641.png' },
+      { num: 20, name: 'Diogo Dalot', shortName: 'Dalot', pos: 'RB', rating: 6.8, x: 16, y: 16, vx: 84, vy: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/216051.png' },
+      { num: 4, name: 'Matthijs de Ligt', shortName: 'De Ligt', pos: 'CB', rating: 7.2, x: 15, y: 38, vx: 62, vy: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
+      { num: 6, name: 'Lisandro Martínez', shortName: 'Martínez', pos: 'CB', rating: 7.4, x: 15, y: 62, vx: 38, vy: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png' },
+      { num: 23, name: 'Luke Shaw', shortName: 'Shaw', pos: 'LB', rating: 6.7, x: 16, y: 84, vx: 16, vy: 84, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png' },
+      { num: 18, name: 'Casemiro', shortName: 'Casemiro', pos: 'DM', rating: 7.3, x: 25, y: 38, vx: 38, vy: 75, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/112465.png' },
+      { num: 37, name: 'Kobbie Mainoo', shortName: 'Mainoo', pos: 'CM', rating: 7.0, x: 25, y: 62, vx: 62, vy: 75, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
+      { num: 17, name: 'Alejandro Garnacho', shortName: 'Garnacho', pos: 'RW', rating: 7.6, x: 34, y: 18, vx: 84, vy: 66, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
+      { num: 8, name: 'Bruno Fernandes', shortName: 'Fernandes', pos: 'AM', rating: 8.5, isCaptain: true, isScorer: true, x: 34, y: 50, vx: 50, vy: 66, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/141746.png' },
+      { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 34, y: 82, vx: 16, vy: 66, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
+      { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 42, y: 50, vx: 50, vy: 57, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
     ],
   },
   away: {
     formation: '4-1-4-1',
     teamRating: 7.0,
     starters: [
-      { num: 31, name: 'Ederson', shortName: 'Ederson', pos: 'GK', rating: 6.3, x: 94, y: 50, vx: 50, vy: 7, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png' },
-      { num: 24, name: 'Joško Gvardiol', shortName: 'Gvardiol', pos: 'LB', rating: 6.9, x: 83, y: 16, vx: 18, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 25, name: 'Manuel Akanji', shortName: 'Akanji', pos: 'CB', rating: 6.6, x: 84, y: 39, vx: 39, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/224568.png' },
-      { num: 3, name: 'Rúben Dias', shortName: 'Dias', pos: 'CB', rating: 6.8, x: 84, y: 61, vx: 61, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171314.png' },
-      { num: 2, name: 'Kyle Walker', shortName: 'Walker', pos: 'RB', rating: 6.7, isCaptain: true, x: 83, y: 84, vx: 82, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/58621.png' },
-      { num: 16, name: 'Rodri', shortName: 'Rodri', pos: 'DM', rating: 7.4, x: 74, y: 50, vx: 50, vy: 28, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 11, name: 'Jérémy Doku', shortName: 'Doku', pos: 'LM', rating: 7.1, x: 63, y: 18, vx: 18, vy: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png' },
-      { num: 17, name: 'Kevin De Bruyne', shortName: 'De Bruyne', pos: 'AM', rating: 7.8, x: 68, y: 38, vx: 39, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png' },
-      { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 68, y: 62, vx: 61, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
-      { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 63, y: 82, vx: 82, vy: 38, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
-      { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 57, y: 50, vx: 50, vy: 46, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
+      { num: 31, name: 'Ederson', shortName: 'Ederson', pos: 'GK', rating: 6.3, x: 94, y: 50, vx: 50, vy: 6, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png' },
+      { num: 24, name: 'Joško Gvardiol', shortName: 'Gvardiol', pos: 'LB', rating: 6.9, x: 84, y: 16, vx: 16, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
+      { num: 25, name: 'Manuel Akanji', shortName: 'Akanji', pos: 'CB', rating: 6.6, x: 85, y: 38, vx: 38, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/224568.png' },
+      { num: 3, name: 'Rúben Dias', shortName: 'Dias', pos: 'CB', rating: 6.8, x: 85, y: 62, vx: 62, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171314.png' },
+      { num: 2, name: 'Kyle Walker', shortName: 'Walker', pos: 'RB', rating: 6.7, isCaptain: true, x: 84, y: 84, vx: 84, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/58621.png' },
+      { num: 16, name: 'Rodri', shortName: 'Rodri', pos: 'DM', rating: 7.4, x: 75, y: 50, vx: 50, vy: 25, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
+      { num: 11, name: 'Jérémy Doku', shortName: 'Doku', pos: 'LM', rating: 7.1, x: 66, y: 18, vx: 16, vy: 34, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png' },
+      { num: 17, name: 'Kevin De Bruyne', shortName: 'De Bruyne', pos: 'AM', rating: 7.8, x: 66, y: 38, vx: 38, vy: 34, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png' },
+      { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 66, y: 62, vx: 62, vy: 34, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
+      { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 66, y: 82, vx: 84, vy: 34, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
+      { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 58, y: 50, vx: 50, vy: 43, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
     ],
   },
 };
@@ -392,25 +392,29 @@ function PitchPlayerNode({
           {p.rating >= 8.5 && <span className="ml-0.5 text-[8px]">★</span>}
         </div>
 
-        {/* Scorer Indicator */}
-        {p.isScorer && (
-          <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-slate-900 border border-white/40 flex items-center justify-center text-[9px] shadow-xs">
-            ⚽
+        {/* Captain Armband */}
+        {p.isCaptain && (
+          <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs border border-black/40">
+            C
           </div>
         )}
 
-        {/* Captain Armband */}
-        {p.isCaptain && !p.isScorer && (
-          <div className="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] flex items-center justify-center shadow-xs">
-            C
+        {/* Scorer Indicator */}
+        {p.isScorer && (
+          <div
+            className={`absolute -bottom-1 ${
+              p.isCaptain ? '-right-1' : '-left-1'
+            } w-4 h-4 rounded-full bg-slate-900 border border-white/40 flex items-center justify-center text-[9px] shadow-xs`}
+          >
+            ⚽
           </div>
         )}
       </div>
 
-      {/* Clean Player Number & Name (No bulky black box, pure drop-shadow text) */}
-      <div className="mt-1 flex items-center gap-1 text-center select-none">
+      {/* Clean Player Number & Name (Single-line inline ala FotMob) */}
+      <div className="mt-1 flex items-center justify-center gap-1 text-center select-none whitespace-nowrap">
         <span className="font-mono text-zinc-400 text-[9px] font-bold drop-shadow-sm">{p.num}</span>
-        <span className="text-white text-[10px] sm:text-[11px] font-semibold tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] max-w-[76px] truncate">
+        <span className="text-white text-[10px] sm:text-[11px] font-semibold tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] max-w-[82px] truncate">
           {p.shortName}
         </span>
       </div>
@@ -996,7 +1000,7 @@ export default function MatchCenterPage() {
                 </div>
 
                 {/* ── 2. DESKTOP VIEW: Full Horizontal Pitch (>= md) ── */}
-                <div className="hidden md:block w-full h-[460px] lg:h-[480px] rounded-2xl border border-slate-200/80 dark:border-[#27272A] bg-[#121215] relative overflow-hidden select-none shadow-inner">
+                <div className="hidden md:block w-full h-[500px] lg:h-[520px] rounded-2xl border border-slate-200/80 dark:border-[#27272A] bg-[#121215] relative overflow-hidden select-none shadow-inner">
                   {/* Subtle Mowing Stripes (Horizontal) */}
                   <div className="absolute inset-0 grid grid-cols-12 pointer-events-none opacity-30">
                     {Array.from({ length: 12 }).map((_, idx) => (
@@ -1045,6 +1049,48 @@ export default function MatchCenterPage() {
                   {LINEUPS.away.starters.map((p) => (
                     <PitchPlayerNode key={p.num} p={p} isHome={false} isVertical={false} />
                   ))}
+                </div>
+
+                {/* ── Coach Strip (FotMob Style) ── */}
+                <div className="mt-2.5 px-3 sm:px-4 py-2 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex items-center justify-between text-xs">
+                  {/* Home Coach (Rúben Amorim) */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0">
+                      <img
+                        src="https://resources.premierleague.com/premierleague25/photos/players/110x140/man1427.png"
+                        alt="Rúben Amorim"
+                        className="w-full h-full object-cover object-top"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[11px] sm:text-xs truncate">
+                      Rúben Amorim
+                    </span>
+                  </div>
+
+                  {/* Center Label */}
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 dark:text-zinc-500 font-bold px-2">
+                    Coach
+                  </span>
+
+                  {/* Away Coach (Pep Guardiola) */}
+                  <div className="flex items-center gap-2 min-w-0 text-right justify-end">
+                    <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[11px] sm:text-xs truncate">
+                      Pep Guardiola
+                    </span>
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0">
+                      <img
+                        src="https://resources.premierleague.com/premierleague25/photos/players/110x140/man279.png"
+                        alt="Pep Guardiola"
+                        className="w-full h-full object-cover object-top"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
               </div>
