@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { RadarChart } from '@/components/radar-chart';
 import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import { PlayerComparisonModal } from '@/components/scouting/player-comparison-modal';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
 import type { PlayerDTO } from '@tactiq/shared-types';
 import {
   SlidersHorizontal,
@@ -66,7 +67,7 @@ const BENCHMARK_PLAYERS: (PlayerDTO & {
     id: 'player-bellingham', teamId: 'team-rma',
     name: 'Jude Bellingham', position: 'MID', position2: 'AM / CM',
     nationality: 'ENG', age: 21, marketValue: 180000000,
-    photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/jude-bellingham/assets/BELLINGHAM_POSE_1500X2000.png',
+    photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/jude-bellingham/assets/BELLINGHAM_CARITA_1500X2000.png',
     team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
     attributes: { pace: 82, shooting: 87, passing: 89, dribbling: 90, defending: 80, physical: 85, vision: 91 },
     estValueFormatted: '€180M',
@@ -94,24 +95,24 @@ const INITIAL_RECOMMENDATIONS: ScoutingRecommendation[] = [
   },
   {
     player: {
-      id: 'rec-busio', teamId: 'team-ven',
-      name: 'Gianluca Busio', position: 'MID',
-      nationality: 'USA', age: 22, marketValue: 18000000,
-      photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Gianluca_Busio.jpg/500px-Gianluca_Busio.jpg',
-      team: { id: 'team-ven', name: 'Venezia', code: 'VEN', logoUrl: '', league: 'Serie A' },
-      attributes: { pace: 74, shooting: 72, passing: 88, dribbling: 84, defending: 72, physical: 75, vision: 86 },
+      id: 'rec-rice', teamId: 'team-ars',
+      name: 'Declan Rice', position: 'MID',
+      nationality: 'ENG', age: 25, marketValue: 120000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/204480.png',
+      team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 78, shooting: 75, passing: 87, dribbling: 82, defending: 88, physical: 86, vision: 85 },
     },
-    matchPercentage: 91.8,
-    highlightMetrics: [{ label: 'Press Resist', value: '92%' }, { label: 'Prog. Passes', value: '89%' }, { label: 'Ball Retention', value: '87%' }],
-    per90: { sca: 4.88, penaltyBoxPasses: 2.12, highTurnoverRegains: 1.92, pressPassPct: 87.2 },
-    tacticalRole: 'Midfield Connector',
+    matchPercentage: 92.6,
+    highlightMetrics: [{ label: 'Press Resist', value: '94%' }, { label: 'Ball Regains', value: '96%' }, { label: 'Box Entries', value: '88%' }],
+    per90: { sca: 4.88, penaltyBoxPasses: 2.12, highTurnoverRegains: 2.45, pressPassPct: 91.2 },
+    tacticalRole: 'Box-to-Box Engine',
   },
   {
     player: {
       id: 'rec-guler', teamId: 'team-rma',
       name: 'Arda Güler', position: 'MID',
       nationality: 'TUR', age: 19, marketValue: 45000000,
-      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/arda-guler/assets/ARDA_POSE_1500X2000.png',
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/arda-guler/assets/GULER_CARITA_1500X2000.png',
       team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
       attributes: { pace: 78, shooting: 81, passing: 88, dribbling: 89, defending: 52, physical: 62, vision: 91 },
     },
@@ -122,31 +123,31 @@ const INITIAL_RECOMMENDATIONS: ScoutingRecommendation[] = [
   },
   {
     player: {
-      id: 'rec-zakharyan', teamId: 'team-rso',
-      name: 'Arsen Zakharyan', position: 'MID',
-      nationality: 'RUS', age: 21, marketValue: 15000000,
-      photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Arsen_Zakharyan_2021_v_Zenit.jpg/500px-Arsen_Zakharyan_2021_v_Zenit.jpg',
-      team: { id: 'team-rso', name: 'Real Sociedad', code: 'RSO', logoUrl: '', league: 'La Liga' },
-      attributes: { pace: 77, shooting: 76, passing: 85, dribbling: 83, defending: 66, physical: 70, vision: 85 },
+      id: 'rec-camavinga', teamId: 'team-rma',
+      name: 'Eduardo Camavinga', position: 'MID',
+      nationality: 'FRA', age: 21, marketValue: 100000000,
+      photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/eduardo-camavinga/assets/CAMAVINGA_CARITA_1500X2000.png',
+      team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+      attributes: { pace: 82, shooting: 74, passing: 86, dribbling: 87, defending: 84, physical: 83, vision: 87 },
     },
-    matchPercentage: 87.1,
-    highlightMetrics: [{ label: 'Chance Creation', value: '89%' }, { label: 'Prog. Passes', value: '86%' }, { label: 'Tackles p90', value: '74%' }],
-    per90: { sca: 4.41, penaltyBoxPasses: 1.95, highTurnoverRegains: 1.62, pressPassPct: 80.4 },
-    tacticalRole: 'Wide Playmaker',
+    matchPercentage: 88.5,
+    highlightMetrics: [{ label: 'Tackle %', value: '92%' }, { label: 'Prog. Carries', value: '89%' }, { label: 'Duels Won', value: '90%' }],
+    per90: { sca: 4.41, penaltyBoxPasses: 1.95, highTurnoverRegains: 2.30, pressPassPct: 89.4 },
+    tacticalRole: 'Dynamic Ball Winner',
   },
   {
     player: {
-      id: 'rec-oriley', teamId: 'team-bha',
-      name: "Matt O'Riley", position: 'MID',
-      nationality: 'DEN', age: 23, marketValue: 30000000,
-      photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/00/2023.07.19_Yokohama_F._Marinos_-_Celtic_Glasgow_%286-4%29_-_53062949186_%28Matt_Oriley%29.jpg',
-      team: { id: 'team-bha', name: 'Brighton', code: 'BHA', logoUrl: '', league: 'Premier League' },
-      attributes: { pace: 72, shooting: 80, passing: 86, dribbling: 81, defending: 68, physical: 79, vision: 85 },
+      id: 'rec-foden', teamId: 'team-mci',
+      name: 'Phil Foden', position: 'MID',
+      nationality: 'ENG', age: 24, marketValue: 150000000,
+      photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png',
+      team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+      attributes: { pace: 86, shooting: 86, passing: 89, dribbling: 92, defending: 58, physical: 68, vision: 92 },
     },
-    matchPercentage: 85.6,
-    highlightMetrics: [{ label: 'Box Threat', value: '89%' }, { label: 'xA Potential', value: '84%' }, { label: 'Prog. Carries', value: '81%' }],
-    per90: { sca: 4.65, penaltyBoxPasses: 2.22, highTurnoverRegains: 1.55, pressPassPct: 82.5 },
-    tacticalRole: 'Box-to-Box Midfielder',
+    matchPercentage: 87.2,
+    highlightMetrics: [{ label: 'Box Threat', value: '96%' }, { label: 'xA Potential', value: '92%' }, { label: 'Half-Space Runs', value: '95%' }],
+    per90: { sca: 5.80, penaltyBoxPasses: 3.10, highTurnoverRegains: 1.30, pressPassPct: 84.8 },
+    tacticalRole: 'Roaming Playmaker',
   },
 ];
 
@@ -157,8 +158,8 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
       player: {
         id: 'rec-saka', teamId: 'team-ars',
         name: 'Bukayo Saka', position: 'FWD',
-        nationality: 'ENG', age: 22, marketValue: 140000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Bukayo_Saka_England_v_Ghana_23_June_2026-057_%28cropped%29.jpg/500px-Bukayo_Saka_England_v_Ghana_23_June_2026-057_%28cropped%29.jpg',
+        nationality: 'ENG', age: 23, marketValue: 140000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223340.png',
         team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
         attributes: { pace: 86, shooting: 84, passing: 83, dribbling: 89, defending: 65, physical: 78, vision: 87 },
       },
@@ -171,8 +172,8 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
       player: {
         id: 'rec-palmer', teamId: 'team-che',
         name: 'Cole Palmer', position: 'FWD',
-        nationality: 'ENG', age: 22, marketValue: 90000000,
-        photoUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Cole_Palmer_2025_FIFA_Club_World_Cup_Final.jpg',
+        nationality: 'ENG', age: 22, marketValue: 110000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/244851.png',
         team: { id: 'team-che', name: 'Chelsea', code: 'CHE', logoUrl: '', league: 'Premier League' },
         attributes: { pace: 80, shooting: 86, passing: 88, dribbling: 87, defending: 55, physical: 72, vision: 92 },
       },
@@ -183,44 +184,44 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
     },
     {
       player: {
-        id: 'rec-yamal', teamId: 'team-bar',
-        name: 'Lamine Yamal', position: 'FWD',
-        nationality: 'ESP', age: 17, marketValue: 150000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Lamine_Yamal_France_v_Spain_7.24.26-142.jpg/500px-Lamine_Yamal_France_v_Spain_7.24.26-142.jpg',
-        team: { id: 'team-bar', name: 'Barcelona', code: 'BAR', logoUrl: '', league: 'La Liga' },
-        attributes: { pace: 88, shooting: 80, passing: 87, dribbling: 92, defending: 48, physical: 64, vision: 91 },
+        id: 'rec-haaland', teamId: 'team-mci',
+        name: 'Erling Haaland', position: 'FWD',
+        nationality: 'NOR', age: 24, marketValue: 180000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png',
+        team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 89, shooting: 93, passing: 70, dribbling: 81, defending: 45, physical: 88, vision: 76 },
       },
       matchPercentage: 89.8,
-      highlightMetrics: [{ label: 'Dribble Success', value: '98%' }, { label: 'Cross Accuracy', value: '93%' }, { label: 'SCA p90', value: '92%' }],
-      per90: { sca: 6.10, penaltyBoxPasses: 3.25, highTurnoverRegains: 1.15, pressPassPct: 81.5 },
-      tacticalRole: 'Creative Winger',
+      highlightMetrics: [{ label: 'Box Finishing', value: '99%' }, { label: 'Aerial Power', value: '92%' }, { label: 'Off-ball Runs', value: '96%' }],
+      per90: { sca: 3.40, penaltyBoxPasses: 1.65, highTurnoverRegains: 0.95, pressPassPct: 76.5 },
+      tacticalRole: 'Target Forward',
     },
     {
       player: {
-        id: 'rec-olise', teamId: 'team-bay',
-        name: 'Michael Olise', position: 'FWD',
-        nationality: 'FRA', age: 22, marketValue: 65000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Michael_Olise_France_v_Senegal_16_June_2026-307_%28cropped%29.jpg/500px-Michael_Olise_France_v_Senegal_16_June_2026-307_%28cropped%29.jpg',
-        team: { id: 'team-bay', name: 'Bayern München', code: 'BAY', logoUrl: '', league: 'Bundesliga' },
-        attributes: { pace: 84, shooting: 82, passing: 86, dribbling: 88, defending: 58, physical: 73, vision: 89 },
+        id: 'rec-mbappe', teamId: 'team-rma',
+        name: 'Kylian Mbappé', position: 'FWD',
+        nationality: 'FRA', age: 25, marketValue: 180000000,
+        photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/mbappe/assets/MBAPPE_CARITA_1500X2000.png',
+        team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 97, shooting: 90, passing: 82, dribbling: 92, defending: 36, physical: 78, vision: 83 },
       },
       matchPercentage: 88.0,
-      highlightMetrics: [{ label: 'Dead-ball Threat', value: '95%' }, { label: 'Progressive Carries', value: '89%' }, { label: 'Chances Created', value: '88%' }],
+      highlightMetrics: [{ label: 'Sprint Speed', value: '99%' }, { label: 'Transition Threat', value: '97%' }, { label: 'Box Touches', value: '94%' }],
       per90: { sca: 5.30, penaltyBoxPasses: 2.70, highTurnoverRegains: 1.40, pressPassPct: 84.1 },
-      tacticalRole: 'Wide Playmaker',
+      tacticalRole: 'Inside Forward',
     },
     {
       player: {
-        id: 'rec-williams', teamId: 'team-ath',
-        name: 'Nico Williams', position: 'FWD',
-        nationality: 'ESP', age: 22, marketValue: 70000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Nico_Williams_Argentina_v_Spain_19_July_2026-196_%28cropped%29.jpg/500px-Nico_Williams_Argentina_v_Spain_19_July_2026-196_%28cropped%29.jpg',
-        team: { id: 'team-ath', name: 'Athletic Club', code: 'ATH', logoUrl: '', league: 'La Liga' },
-        attributes: { pace: 93, shooting: 79, passing: 81, dribbling: 89, defending: 45, physical: 74, vision: 82 },
+        id: 'rec-vinicius', teamId: 'team-rma',
+        name: 'Vinícius Júnior', position: 'FWD',
+        nationality: 'BRA', age: 24, marketValue: 180000000,
+        photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/vinicius-paixao-de-oliveira-junior-/assets/VINI_CARITA_1500X2000.png',
+        team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 95, shooting: 84, passing: 81, dribbling: 94, defending: 34, physical: 69, vision: 84 },
       },
       matchPercentage: 86.4,
-      highlightMetrics: [{ label: 'Sprint Speed', value: '99%' }, { label: 'Carry Into Box', value: '91%' }, { label: 'Transition Threat', value: '90%' }],
-      per90: { sca: 4.90, penaltyBoxPasses: 2.45, highTurnoverRegains: 1.20, pressPassPct: 78.6 },
+      highlightMetrics: [{ label: '1v1 Dribble', value: '99%' }, { label: 'Carry Into Box', value: '96%' }, { label: 'Direct Threat', value: '93%' }],
+      per90: { sca: 5.20, penaltyBoxPasses: 3.10, highTurnoverRegains: 1.25, pressPassPct: 80.2 },
       tacticalRole: 'Direct Winger',
     },
   ],
@@ -230,7 +231,7 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
         id: 'rec-saliba', teamId: 'team-ars',
         name: 'William Saliba', position: 'DEF',
         nationality: 'FRA', age: 23, marketValue: 80000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/William_Saliba_France_v_Paraguay_4_July_2026-183.jpg/500px-William_Saliba_France_v_Paraguay_4_July_2026-183.jpg',
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/462424.png',
         team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
         attributes: { pace: 83, shooting: 40, passing: 82, dribbling: 76, defending: 89, physical: 84, vision: 78 },
       },
@@ -241,59 +242,59 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
     },
     {
       player: {
-        id: 'rec-bastoni', teamId: 'team-int',
-        name: 'Alessandro Bastoni', position: 'DEF',
-        nationality: 'ITA', age: 25, marketValue: 70000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Norway_Italy_-_June_2025_A_36_%28cropped%29.jpg/500px-Norway_Italy_-_June_2025_A_36_%28cropped%29.jpg',
-        team: { id: 'team-int', name: 'Inter Milan', code: 'INT', logoUrl: '', league: 'Serie A' },
-        attributes: { pace: 78, shooting: 45, passing: 86, dribbling: 79, defending: 87, physical: 82, vision: 84 },
+        id: 'rec-vvd', teamId: 'team-liv',
+        name: 'Virgil van Dijk', position: 'DEF',
+        nationality: 'NED', age: 33, marketValue: 35000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/97032.png',
+        team: { id: 'team-liv', name: 'Liverpool', code: 'LIV', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 78, shooting: 60, passing: 84, dribbling: 72, defending: 91, physical: 89, vision: 80 },
       },
       matchPercentage: 92.4,
-      highlightMetrics: [{ label: 'Prog. Passes', value: '96%' }, { label: 'Wide Overlaps', value: '91%' }, { label: 'Aerial Duels', value: '88%' }],
-      per90: { sca: 2.10, penaltyBoxPasses: 1.15, highTurnoverRegains: 2.30, pressPassPct: 89.4 },
-      tacticalRole: 'Wide Centre-Back',
-    },
-    {
-      player: {
-        id: 'rec-lukeba', teamId: 'team-rbl',
-        name: 'Castello Lukeba', position: 'DEF',
-        nationality: 'FRA', age: 21, marketValue: 40000000,
-        photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=256&q=80',
-        team: { id: 'team-rbl', name: 'RB Leipzig', code: 'RBL', logoUrl: '', league: 'Bundesliga' },
-        attributes: { pace: 80, shooting: 38, passing: 79, dribbling: 74, defending: 84, physical: 81, vision: 75 },
-      },
-      matchPercentage: 89.0,
-      highlightMetrics: [{ label: 'Tackles Won', value: '91%' }, { label: 'Interceptions', value: '89%' }, { label: 'Line Breaking', value: '85%' }],
-      per90: { sca: 1.20, penaltyBoxPasses: 0.50, highTurnoverRegains: 2.45, pressPassPct: 88.0 },
+      highlightMetrics: [{ label: 'Aerial Duels', value: '98%' }, { label: 'Long Ball Accuracy', value: '94%' }, { label: 'Leadership', value: '99%' }],
+      per90: { sca: 1.80, penaltyBoxPasses: 0.85, highTurnoverRegains: 2.50, pressPassPct: 89.8 },
       tacticalRole: 'Covering Defender',
     },
     {
       player: {
-        id: 'rec-hincapie', teamId: 'team-b04',
-        name: 'Piero Hincapié', position: 'DEF',
-        nationality: 'ECU', age: 22, marketValue: 40000000,
-        photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80',
-        team: { id: 'team-b04', name: 'Bayer Leverkusen', code: 'B04', logoUrl: '', league: 'Bundesliga' },
-        attributes: { pace: 82, shooting: 42, passing: 78, dribbling: 75, defending: 83, physical: 83, vision: 76 },
+        id: 'rec-gvardiol', teamId: 'team-mci',
+        name: 'Joško Gvardiol', position: 'DEF',
+        nationality: 'CRO', age: 22, marketValue: 75000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png',
+        team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 82, shooting: 68, passing: 84, dribbling: 82, defending: 85, physical: 84, vision: 81 },
       },
-      matchPercentage: 87.5,
-      highlightMetrics: [{ label: 'Aggressive Press', value: '92%' }, { label: 'Ground Duels', value: '87%' }, { label: 'Flexibility', value: '90%' }],
-      per90: { sca: 1.35, penaltyBoxPasses: 0.70, highTurnoverRegains: 2.60, pressPassPct: 86.5 },
-      tacticalRole: 'Hybrid LCB/LB',
+      matchPercentage: 89.0,
+      highlightMetrics: [{ label: 'Prog. Carries', value: '95%' }, { label: 'Ground Duels', value: '90%' }, { label: 'Line Breaking', value: '88%' }],
+      per90: { sca: 2.20, penaltyBoxPasses: 1.20, highTurnoverRegains: 2.45, pressPassPct: 89.5 },
+      tacticalRole: 'Inverted Left-Back / LCB',
     },
     {
       player: {
-        id: 'rec-scalvini', teamId: 'team-ata',
-        name: 'Giorgio Scalvini', position: 'DEF',
-        nationality: 'ITA', age: 20, marketValue: 45000000,
-        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&q=80',
-        team: { id: 'team-ata', name: 'Atalanta', code: 'ATA', logoUrl: '', league: 'Serie A' },
-        attributes: { pace: 74, shooting: 52, passing: 77, dribbling: 72, defending: 85, physical: 82, vision: 79 },
+        id: 'rec-taa', teamId: 'team-liv',
+        name: 'Trent Alexander-Arnold', position: 'DEF',
+        nationality: 'ENG', age: 25, marketValue: 70000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/169187.png',
+        team: { id: 'team-liv', name: 'Liverpool', code: 'LIV', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 76, shooting: 75, passing: 92, dribbling: 80, defending: 74, physical: 72, vision: 94 },
+      },
+      matchPercentage: 87.5,
+      highlightMetrics: [{ label: 'Cross Completion', value: '97%' }, { label: 'Chances Created', value: '95%' }, { label: 'Long Passing', value: '96%' }],
+      per90: { sca: 4.10, penaltyBoxPasses: 2.60, highTurnoverRegains: 1.80, pressPassPct: 84.5 },
+      tacticalRole: 'Inverted Wing-Back',
+    },
+    {
+      player: {
+        id: 'rec-rudiger', teamId: 'team-rma',
+        name: 'Antonio Rüdiger', position: 'DEF',
+        nationality: 'GER', age: 31, marketValue: 25000000,
+        photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/antonio-rudiger/assets/RUDIGER_CARITA_1500X2000.png',
+        team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 84, shooting: 54, passing: 78, dribbling: 71, defending: 87, physical: 88, vision: 74 },
       },
       matchPercentage: 86.0,
-      highlightMetrics: [{ label: 'Aerial Dominance', value: '93%' }, { label: 'Anticipation', value: '89%' }, { label: 'Midfield Step-ins', value: '88%' }],
-      per90: { sca: 1.60, penaltyBoxPasses: 0.80, highTurnoverRegains: 2.70, pressPassPct: 85.8 },
-      tacticalRole: 'Stopper / Libero',
+      highlightMetrics: [{ label: 'Aerial Duels', value: '94%' }, { label: 'Sprint Speed', value: '93%' }, { label: 'Aggressive Interceptions', value: '91%' }],
+      per90: { sca: 1.30, penaltyBoxPasses: 0.40, highTurnoverRegains: 2.70, pressPassPct: 86.0 },
+      tacticalRole: 'Stopper / Aggressive CB',
     },
   ],
   GK: [
@@ -301,8 +302,8 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
       player: {
         id: 'rec-raya', teamId: 'team-ars',
         name: 'David Raya', position: 'GK',
-        nationality: 'ESP', age: 28, marketValue: 40000000,
-        photoUrl: 'https://resources.premierleague.com/premierleague/photos/players/250x250/p154561.png',
+        nationality: 'ESP', age: 29, marketValue: 45000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/154561.png',
         team: { id: 'team-ars', name: 'Arsenal', code: 'ARS', logoUrl: '', league: 'Premier League' },
         attributes: { pace: 60, shooting: 25, passing: 86, dribbling: 65, defending: 82, physical: 78, vision: 88 },
       },
@@ -313,59 +314,59 @@ const CLUSTER_RECOMMENDATIONS: Record<'GK' | 'DF' | 'MF' | 'FW', ScoutingRecomme
     },
     {
       player: {
-        id: 'rec-costa', teamId: 'team-por',
-        name: 'Diogo Costa', position: 'GK',
-        nationality: 'POR', age: 24, marketValue: 45000000,
-        photoUrl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Diogo_Costa_Croatia_v_Portugal_2_July_2026-188_%28cropped%29.jpg/500px-Diogo_Costa_Croatia_v_Portugal_2_July_2026-188_%28cropped%29.jpg',
-        team: { id: 'team-por', name: 'FC Porto', code: 'POR', logoUrl: '', league: 'Liga Portugal' },
-        attributes: { pace: 62, shooting: 22, passing: 84, dribbling: 64, defending: 85, physical: 80, vision: 85 },
+        id: 'rec-alisson', teamId: 'team-liv',
+        name: 'Alisson Becker', position: 'GK',
+        nationality: 'BRA', age: 31, marketValue: 30000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/116535.png',
+        team: { id: 'team-liv', name: 'Liverpool', code: 'LIV', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 62, shooting: 22, passing: 86, dribbling: 66, defending: 89, physical: 82, vision: 87 },
       },
-      matchPercentage: 92.1,
-      highlightMetrics: [{ label: 'Penalty Stops', value: '99%' }, { label: 'Reflex Saves', value: '93%' }, { label: 'Short Buildup', value: '91%' }],
-      per90: { sca: 0.55, penaltyBoxPasses: 0.15, highTurnoverRegains: 0.85, pressPassPct: 86.2 },
-      tacticalRole: 'Modern Shot-Stopper',
+      matchPercentage: 93.1,
+      highlightMetrics: [{ label: '1v1 Saves', value: '99%' }, { label: 'Reflex Stops', value: '95%' }, { label: 'Distribution', value: '92%' }],
+      per90: { sca: 0.58, penaltyBoxPasses: 0.18, highTurnoverRegains: 0.88, pressPassPct: 86.5 },
+      tacticalRole: 'Elite Shot-Stopper',
     },
     {
       player: {
-        id: 'rec-verbruggen', teamId: 'team-bha',
-        name: 'Bart Verbruggen', position: 'GK',
-        nationality: 'NED', age: 22, marketValue: 22000000,
-        photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=256&q=80',
-        team: { id: 'team-bha', name: 'Brighton', code: 'BHA', logoUrl: '', league: 'Premier League' },
-        attributes: { pace: 61, shooting: 20, passing: 85, dribbling: 67, defending: 81, physical: 77, vision: 86 },
+        id: 'rec-ederson', teamId: 'team-mci',
+        name: 'Ederson', position: 'GK',
+        nationality: 'BRA', age: 31, marketValue: 35000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png',
+        team: { id: 'team-mci', name: 'Man City', code: 'MCI', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 64, shooting: 30, passing: 93, dribbling: 72, defending: 84, physical: 80, vision: 93 },
       },
-      matchPercentage: 89.7,
-      highlightMetrics: [{ label: 'Press Composure', value: '96%' }, { label: 'Midfield Launches', value: '90%' }, { label: 'High Claims', value: '88%' }],
-      per90: { sca: 0.60, penaltyBoxPasses: 0.22, highTurnoverRegains: 0.80, pressPassPct: 87.5 },
-      tacticalRole: 'Press-Baiting Sweeper',
+      matchPercentage: 91.5,
+      highlightMetrics: [{ label: 'Pass Range', value: '99%' }, { label: 'Press Resistance', value: '98%' }, { label: 'Sweeping Outside Box', value: '94%' }],
+      per90: { sca: 0.72, penaltyBoxPasses: 0.35, highTurnoverRegains: 1.05, pressPassPct: 91.0 },
+      tacticalRole: 'Ball-Playing Sweeper',
     },
     {
       player: {
-        id: 'rec-digregorio', teamId: 'team-juv',
-        name: 'Michele Di Gregorio', position: 'GK',
-        nationality: 'ITA', age: 27, marketValue: 20000000,
-        photoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80',
-        team: { id: 'team-juv', name: 'Juventus', code: 'JUV', logoUrl: '', league: 'Serie A' },
-        attributes: { pace: 58, shooting: 20, passing: 81, dribbling: 60, defending: 86, physical: 81, vision: 80 },
+        id: 'rec-courtois', teamId: 'team-rma',
+        name: 'Thibaut Courtois', position: 'GK',
+        nationality: 'BEL', age: 32, marketValue: 28000000,
+        photoUrl: 'https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/thibaut-courtois/assets/COURTOIS_CARITA_1500X2000.png',
+        team: { id: 'team-rma', name: 'Real Madrid', code: 'RMA', logoUrl: '', league: 'La Liga' },
+        attributes: { pace: 56, shooting: 20, passing: 78, dribbling: 58, defending: 90, physical: 85, vision: 81 },
       },
-      matchPercentage: 88.2,
-      highlightMetrics: [{ label: 'Save Ratio', value: '94%' }, { label: 'Close-Range Reflexes', value: '92%' }, { label: 'Consistency', value: '90%' }],
-      per90: { sca: 0.40, penaltyBoxPasses: 0.10, highTurnoverRegains: 0.70, pressPassPct: 83.0 },
-      tacticalRole: 'Traditional Reflex Keeper',
+      matchPercentage: 89.2,
+      highlightMetrics: [{ label: 'Reach & Wingspan', value: '99%' }, { label: 'Close-Range Reflexes', value: '96%' }, { label: 'Aerial Control', value: '95%' }],
+      per90: { sca: 0.40, penaltyBoxPasses: 0.12, highTurnoverRegains: 0.75, pressPassPct: 84.0 },
+      tacticalRole: 'Dominant Shot-Stopper',
     },
     {
       player: {
-        id: 'rec-chevalier', teamId: 'team-lil',
-        name: 'Lucas Chevalier', position: 'GK',
-        nationality: 'FRA', age: 22, marketValue: 25000000,
-        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&q=80',
-        team: { id: 'team-lil', name: 'Lille OSC', code: 'LIL', logoUrl: '', league: 'Ligue 1' },
-        attributes: { pace: 63, shooting: 20, physical: 79, vision: 82, defending: 83, passing: 80, dribbling: 62 },
+        id: 'rec-martinez', teamId: 'team-avl',
+        name: 'Emiliano Martínez', position: 'GK',
+        nationality: 'ARG', age: 32, marketValue: 28000000,
+        photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/98980.png',
+        team: { id: 'team-avl', name: 'Aston Villa', code: 'AVL', logoUrl: '', league: 'Premier League' },
+        attributes: { pace: 58, shooting: 22, passing: 82, dribbling: 62, defending: 88, physical: 84, vision: 83 },
       },
-      matchPercentage: 86.8,
-      highlightMetrics: [{ label: '1v1 Suppression', value: '93%' }, { label: 'Cross Claiming', value: '89%' }, { label: 'Agility', value: '91%' }],
-      per90: { sca: 0.45, penaltyBoxPasses: 0.12, highTurnoverRegains: 0.75, pressPassPct: 82.5 },
-      tacticalRole: 'Athletic Shot-Stopper',
+      matchPercentage: 87.8,
+      highlightMetrics: [{ label: 'Penalty Stops', value: '99%' }, { label: 'High Claims', value: '94%' }, { label: 'Big Match Impact', value: '96%' }],
+      per90: { sca: 0.50, penaltyBoxPasses: 0.15, highTurnoverRegains: 0.80, pressPassPct: 85.0 },
+      tacticalRole: 'Commanding Shot-Stopper',
     },
   ],
 };
@@ -381,11 +382,6 @@ const getFlag = (nat?: string) => {
   );
 };
 
-const getInitials = (name: string) => {
-  const parts = name.split(' ');
-  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-};
 
 function MiniPitch({ position }: { position: string }) {
   const isAM = position.includes('AM');
@@ -641,15 +637,13 @@ export default function ScoutingPage() {
                       
                       {/* Left: Player Avatar + Details */}
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="relative shrink-0">
-                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs ${
-                            isSelected
-                              ? 'bg-[#CEFF00] text-black shadow-xs'
-                              : 'bg-[#1E1E24] text-zinc-300'
-                          }`}>
-                            {getInitials(rec.player.name)}
-                          </div>
-                          <span className="absolute -bottom-1 -right-1 text-[10px] leading-none">
+                        <div className="relative shrink-0 w-9 h-9 flex items-center justify-center">
+                          <PlayerAvatar
+                            src={rec.player.photoUrl}
+                            alt={rec.player.name}
+                            className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-xs"
+                          />
+                          <span className="absolute -bottom-0.5 -right-0.5 text-[10px] leading-none">
                             {getFlag(rec.player.nationality)}
                           </span>
                         </div>
@@ -731,11 +725,13 @@ export default function ScoutingPage() {
               
               {/* Anchor Profile (Left, 5 cols) */}
               <div className="md:col-span-5 flex items-center gap-3.5">
-                <div className="relative shrink-0">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center font-extrabold text-base sm:text-lg text-white shadow-xs">
-                    {getInitials(anchorPlayer.name)}
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 text-xs">
+                <div className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center">
+                  <PlayerAvatar
+                    src={anchorPlayer.photoUrl}
+                    alt={anchorPlayer.name}
+                    className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 text-xs">
                     {getFlag(anchorPlayer.nationality)}
                   </span>
                 </div>
@@ -778,11 +774,13 @@ export default function ScoutingPage() {
                   </div>
                 </div>
 
-                <div className="relative shrink-0 order-1 md:order-2">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 flex items-center justify-center font-extrabold text-base sm:text-lg text-white shadow-xs">
-                    {getInitials(comparisonTarget.player.name)}
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 text-xs">
+                <div className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 flex items-center justify-center order-1 md:order-2">
+                  <PlayerAvatar
+                    src={comparisonTarget.player.photoUrl}
+                    alt={comparisonTarget.player.name}
+                    className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-sm"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 text-xs">
                     {getFlag(comparisonTarget.player.nationality)}
                   </span>
                 </div>
