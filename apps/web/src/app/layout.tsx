@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Navbar } from '@/components/layout/navbar';
 import { TopProgressBar } from '@/components/ui/top-progress-bar';
+import { AuthProvider } from '@/context/auth-context';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,12 +35,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <TopProgressBar />
         </Suspense>
-        <div className="relative z-10">
-          <Navbar />
-          <div className="pb-20 md:pb-0">
-            {children}
+        <AuthProvider>
+          <div className="relative z-10">
+            <Navbar />
+            <div className="pb-20 md:pb-0">
+              {children}
+            </div>
           </div>
-        </div>
+        </AuthProvider>
       </body>
     </html>
   );

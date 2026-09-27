@@ -9,6 +9,7 @@ import {
   Filler,
   Tooltip,
   Legend,
+  type ChartDataset,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 import type { PlayerRadarMetrics } from '@tactiq/shared-types';
@@ -33,16 +34,16 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   const labels = ['Pace', 'Shooting', 'Passing', 'Dribbling', 'Defending', 'Physical', 'Vision'];
 
   const targetData = [
-    metrics.pace,
-    metrics.shooting,
-    metrics.passing,
-    metrics.dribbling,
-    metrics.defending,
-    metrics.physical,
-    metrics.vision,
+    metrics?.pace ?? 50,
+    metrics?.shooting ?? 50,
+    metrics?.passing ?? 50,
+    metrics?.dribbling ?? 50,
+    metrics?.defending ?? 50,
+    metrics?.physical ?? 50,
+    metrics?.vision ?? 50,
   ];
 
-  const datasets: any[] = [
+  const datasets: ChartDataset<'radar'>[] = [
     {
       label: playerName,
       data: targetData,
@@ -60,13 +61,13 @@ export const RadarChart: React.FC<RadarChartProps> = ({
 
   if (comparisonMetrics) {
     const compData = [
-      comparisonMetrics.pace,
-      comparisonMetrics.shooting,
-      comparisonMetrics.passing,
-      comparisonMetrics.dribbling,
-      comparisonMetrics.defending,
-      comparisonMetrics.physical,
-      comparisonMetrics.vision,
+      comparisonMetrics?.pace ?? 50,
+      comparisonMetrics?.shooting ?? 50,
+      comparisonMetrics?.passing ?? 50,
+      comparisonMetrics?.dribbling ?? 50,
+      comparisonMetrics?.defending ?? 50,
+      comparisonMetrics?.physical ?? 50,
+      comparisonMetrics?.vision ?? 50,
     ];
 
     datasets.push({

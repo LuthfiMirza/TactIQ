@@ -11,10 +11,13 @@ import {
   Search,
   Activity,
   X,
+  User,
 } from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
 
 export function Navbar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +138,22 @@ export function Navbar() {
                     <span>K</span>
                   </div>
                 </div>
+
+                {/* User / Analyst Profile Badge */}
+                {user && (
+                  <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-zinc-800">
+                    <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[11px] font-black text-white">
+                      {user.avatarInitials}
+                    </div>
+                    <div className="hidden xl:block text-left">
+                      <div className="text-[11px] font-bold text-zinc-200 leading-tight">{user.name}</div>
+                      <div className="text-[9px] text-zinc-500 font-mono flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] inline-block animate-pulse" />
+                        Analyst
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Mobile Search Button */}
                 <button

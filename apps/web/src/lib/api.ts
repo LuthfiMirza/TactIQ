@@ -13,31 +13,91 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
+export class ApiError extends Error {
+  public statusCode: number;
+  public endpoint: string;
+
+  constructor(message: string, statusCode: number, endpoint: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+    this.endpoint = endpoint;
+  }
+}
+
 class ApiClient {
   private baseUrl: string;
+  private timeoutMs: number;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, timeoutMs = 10000) {
     this.baseUrl = baseUrl;
+    this.timeoutMs = timeoutMs;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const headers = {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...((options.headers as Record<string, string>) || {}),
     };
 
     try {
-      const response = await fetch(url, { ...options, headers });
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: options.signal || controller.signal,
+      });
+
       if (!response.ok) {
-        throw new Error(`API Request to ${endpoint} failed with HTTP ${response.status}`);
+        let errMessage = `HTTP ${response.status}`;
+        try {
+          const errJson = await response.json();
+          if (errJson.message) errMessage = errJson.message;
+        } catch {
+          // Response is not JSON
+        }
+        throw new ApiError(errMessage, response.status, endpoint);
       }
+
       const json: ApiResponse<T> = await response.json();
       return json.data;
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        throw new ApiError(`Request timeout after ${this.timeoutMs}ms`, 408, endpoint);
+      }
       console.warn(`[ApiClient] Request to ${url} failed:`, (error as Error).message);
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
+  }
+
+  // Generic HTTP methods
+  public get<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'GET' });
+  }
+
+  public post<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  public put<T>(endpoint: string, body?: unknown, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  public delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 
   // Players

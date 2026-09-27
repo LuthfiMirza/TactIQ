@@ -8,6 +8,7 @@ import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import type { PlayerDTO, PlayerSimilarityResponse } from '@tactiq/shared-types';
 import { ArrowLeft, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
 
 const FALLBACK_PLAYER: PlayerDTO = {
   id: 'player-kdb',
@@ -80,10 +81,10 @@ export default function PlayerProfilePage() {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center space-x-5">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-tactiq-surface border-2 border-tactiq-border flex-shrink-0 shadow-lg">
-              <img
+              <PlayerAvatar
                 src={player.photoUrl}
                 alt={player.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full"
               />
             </div>
             <div>
@@ -218,10 +219,10 @@ export default function PlayerProfilePage() {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-tactiq-surface border border-tactiq-border flex-shrink-0">
-                      <img
+                      <PlayerAvatar
                         src={item.player.photoUrl}
                         alt={item.player.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full"
                       />
                     </div>
                     <div>
