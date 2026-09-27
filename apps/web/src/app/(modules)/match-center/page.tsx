@@ -988,35 +988,35 @@ export default function MatchCenterPage() {
                     })}
                   </div>
 
-                  {/* Breakdown Hasil 5 Laga Terakhir (Opsi 1: Dual Team Form Rows Minimalis) */}
-                  <div className="pt-3.5 border-t border-slate-100 dark:border-zinc-800/60 space-y-2.5">
+                  {/* Breakdown Hasil 5 Laga Terakhir (Dual Team Form Rows: Unboxed & Solid Colors) */}
+                  <div className="pt-3.5 border-t border-slate-100 dark:border-zinc-800/60 space-y-3">
                     {/* Baris Man United */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 shrink-0">
                         <ClubCrest code="MUN" size={16} className="w-4 h-4 shrink-0" />
                         <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Man United</span>
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+                      <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-0.5">
                         {RECENT_FORM_DATA.home.map((m, idx) => {
                           const badgeBg =
                             m.result === 'W'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                              ? 'bg-emerald-600 text-white'
                               : m.result === 'D'
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
-                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25';
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-rose-600 text-white';
                           return (
                             <div
                               key={`mun-form-${idx}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-700/40 text-[10px] font-mono shrink-0"
+                              className="flex items-center gap-1.5 text-[11px] font-mono shrink-0"
                             >
-                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center font-bold text-[9px] border ${badgeBg}`}>
+                              <span className={`w-4 h-4 rounded-[4px] flex items-center justify-center font-bold text-[10px] leading-none shadow-2xs ${badgeBg}`}>
                                 {m.result}
                               </span>
-                              <span className="text-slate-700 dark:text-zinc-300 font-semibold">{m.score}</span>
-                              <div className="flex items-center gap-0.5 text-slate-400 dark:text-zinc-500 text-[9.5px]">
-                                <span>{m.isHome ? 'vs' : '@'}</span>
-                                <ClubCrest code={m.opponentCode} size={11} className="w-3 h-3 shrink-0" />
-                                <span className="font-semibold text-slate-600 dark:text-zinc-400">{m.opponentCode}</span>
+                              <span className="text-slate-900 dark:text-white font-bold">{m.score}</span>
+                              <div className="flex items-center gap-1 text-slate-400 dark:text-zinc-500 text-[10px]">
+                                <span>vs</span>
+                                <ClubCrest code={m.opponentCode} size={14} className="w-3.5 h-3.5 shrink-0" />
+                                <span className="font-semibold text-slate-600 dark:text-zinc-300">{m.opponentCode}</span>
                               </div>
                             </div>
                           );
@@ -1033,27 +1033,27 @@ export default function MatchCenterPage() {
                         <ClubCrest code="MCI" size={17} className="w-4.5 h-4.5 shrink-0" />
                         <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Man City</span>
                       </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+                      <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-0.5">
                         {RECENT_FORM_DATA.away.map((m, idx) => {
                           const badgeBg =
                             m.result === 'W'
-                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
+                              ? 'bg-emerald-600 text-white'
                               : m.result === 'D'
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
-                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25';
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-rose-600 text-white';
                           return (
                             <div
                               key={`mci-form-${idx}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-700/40 text-[10px] font-mono shrink-0"
+                              className="flex items-center gap-1.5 text-[11px] font-mono shrink-0"
                             >
-                              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center font-bold text-[9px] border ${badgeBg}`}>
+                              <span className={`w-4 h-4 rounded-[4px] flex items-center justify-center font-bold text-[10px] leading-none shadow-2xs ${badgeBg}`}>
                                 {m.result}
                               </span>
-                              <span className="text-slate-700 dark:text-zinc-300 font-semibold">{m.score}</span>
-                              <div className="flex items-center gap-0.5 text-slate-400 dark:text-zinc-500 text-[9.5px]">
-                                <span>{m.isHome ? 'vs' : '@'}</span>
-                                <ClubCrest code={m.opponentCode} size={11} className="w-3 h-3 shrink-0" />
-                                <span className="font-semibold text-slate-600 dark:text-zinc-400">{m.opponentCode}</span>
+                              <span className="text-slate-900 dark:text-white font-bold">{m.score}</span>
+                              <div className="flex items-center gap-1 text-slate-400 dark:text-zinc-500 text-[10px]">
+                                <span>vs</span>
+                                <ClubCrest code={m.opponentCode} size={14} className="w-3.5 h-3.5 shrink-0" />
+                                <span className="font-semibold text-slate-600 dark:text-zinc-300">{m.opponentCode}</span>
                               </div>
                             </div>
                           );
@@ -1256,18 +1256,18 @@ export default function MatchCenterPage() {
                       </span>
                     </div>
 
-                    {/* Kapsul Titik Tengah (DRAWS) */}
-                    <div className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-slate-600 dark:text-zinc-400">
-                      <span className="font-bold text-xs sm:text-sm font-mono leading-none text-slate-800 dark:text-zinc-200">0</span>
-                      <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                    {/* Kapsul Titik Tengah (DRAWS) - Solid Neutral */}
+                    <div className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-slate-200 dark:bg-zinc-700 shadow-xs">
+                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none text-slate-900 dark:text-white">0</span>
+                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300">
                         Draws
                       </span>
                     </div>
 
-                    {/* Kapsul Away Wins */}
-                    <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#6CABDD]/15 dark:bg-[#6CABDD]/20 text-[#005B94] dark:text-[#6CABDD] border border-[#6CABDD]/30 shadow-xs">
+                    {/* Kapsul Away Wins - Solid Sky Blue */}
+                    <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full bg-[#6CABDD] text-slate-950 shadow-xs">
                       <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">3</span>
-                      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+                      <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider">
                         Wins
                       </span>
                     </div>
