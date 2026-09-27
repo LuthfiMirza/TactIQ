@@ -355,13 +355,9 @@ function PitchPlayerNode({
       style={{ left: `${posX}%`, top: `${posY}%` }}
     >
       <div className="relative">
-        {/* Circular Avatar / Team Jersey Badge Fallback */}
+        {/* Circular Avatar / Team Jersey Badge Fallback (Neutral, no colored rings) */}
         <div
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ${
-            isHome ? 'ring-red-500/40' : 'ring-sky-400/40'
-          } overflow-hidden shadow-md flex items-center justify-center select-none ${
-            isHome ? 'bg-[#1E1113]' : 'bg-[#0E1726]'
-          }`}
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-1 ring-white/20 overflow-hidden shadow-md flex items-center justify-center select-none bg-zinc-800"
         >
           {!imgError && p.photoUrl ? (
             <img
@@ -373,9 +369,7 @@ function PitchPlayerNode({
             />
           ) : (
             <div
-              className={`w-full h-full flex flex-col items-center justify-center font-mono font-black text-xs leading-none ${
-                isHome ? 'text-red-400 bg-red-950/70' : 'text-sky-300 bg-sky-950/70'
-              }`}
+              className="w-full h-full flex flex-col items-center justify-center font-mono font-black text-xs leading-none text-zinc-300 bg-zinc-800"
             >
               <span>{p.num}</span>
             </div>
@@ -533,76 +527,37 @@ export default function MatchCenterPage() {
           <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500 dark:text-zinc-400">
             GW08 Matches
           </span>
-          <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-            <span>Swipe</span>
-            <span className="text-tactiq-lime font-bold">➔</span>
+          <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
+            Swipe ➔
           </span>
         </div>
         <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 snap-x -mx-3 px-3 sm:mx-0 sm:px-0">
-          {MATCHDAY_FIXTURES.map((fix) => {
-            const isFinished = fix.statusType === 'FINISHED';
-            return (
-              <div
-                key={fix.id}
-                className="snap-start shrink-0 w-64 rounded-2xl border border-slate-200/90 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-colors flex flex-col justify-between gap-2.5"
-              >
-                {/* Header: Competition & Status Badge */}
-                <div className="flex items-center justify-between text-[10px] font-mono pb-1 border-b border-slate-100 dark:border-[#222227]">
-                  <span className="font-medium text-slate-500 dark:text-zinc-400 truncate">Premier League</span>
-                  <span
-                    className={`font-bold px-1.5 py-0.5 rounded text-[9px] ${
-                      isFinished
-                        ? 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'
-                        : 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                    }`}
-                  >
-                    {fix.timeOrStatus}
-                  </span>
+          {MATCHDAY_FIXTURES.map((fix) => (
+            <div
+              key={fix.id}
+              className="snap-start shrink-0 w-60 sm:w-64 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-colors"
+            >
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-zinc-400 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-[#27272A]">
+                <span className="font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200">
+                  {fix.timeOrStatus}
+                </span>
+                <span className="truncate max-w-[110px]">{fix.venue}</span>
+              </div>
+              <div className="flex items-center justify-between gap-1.5 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <ClubCrest code={fix.homeShort} size={18} />
+                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.homeTeam}</span>
                 </div>
-
-                {/* Main Matchup: Stacked Crests & Big Center Score */}
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 py-0.5">
-                  {/* Home Team */}
-                  <div className="flex flex-col items-center text-center gap-1 min-w-0">
-                    <ClubCrest code={fix.homeShort} size={28} className="drop-shadow-xs" />
-                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-full">
-                      {fix.homeTeam}
-                    </span>
-                  </div>
-
-                  {/* Score / VS Center */}
-                  <div className="flex flex-col items-center justify-center px-1">
-                    <span className="font-black text-lg font-mono text-slate-900 dark:text-white tracking-tight tabular-nums">
-                      {isFinished ? `${fix.homeScore} : ${fix.awayScore}` : 'vs'}
-                    </span>
-                    <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 font-semibold uppercase">
-                      {isFinished ? 'FT' : 'Kickoff'}
-                    </span>
-                  </div>
-
-                  {/* Away Team */}
-                  <div className="flex flex-col items-center text-center gap-1 min-w-0">
-                    <ClubCrest code={fix.awayShort} size={28} className="drop-shadow-xs" />
-                    <span className="text-[11px] font-bold text-slate-900 dark:text-white truncate max-w-full">
-                      {fix.awayTeam}
-                    </span>
-                  </div>
+                <div className="font-mono font-bold text-xs text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800/60 shrink-0">
+                  {fix.homeScore !== undefined ? `${fix.homeScore} - ${fix.awayScore}` : 'vs'}
                 </div>
-
-                {/* Footer: Tactical Strip (xG or Venue) */}
-                <div className="flex items-center justify-between text-[10px] font-mono pt-1 border-t border-slate-100 dark:border-[#222227] text-slate-500 dark:text-zinc-400">
-                  <span className="truncate max-w-[120px]">{fix.venue}</span>
-                  {fix.xgHome !== undefined ? (
-                    <span className="font-semibold text-slate-700 dark:text-zinc-300">
-                      xG {fix.xgHome} - {fix.xgAway}
-                    </span>
-                  ) : (
-                    <span className="text-tactiq-lime font-bold">Preview</span>
-                  )}
+                <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
+                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.awayTeam}</span>
+                  <ClubCrest code={fix.awayShort} size={18} />
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -619,13 +574,12 @@ export default function MatchCenterPage() {
 
             {/* Score & Clubs */}
             <div className="relative">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6 py-1">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-6">
                 
-                {/* Home: Manchester United (Stacked) */}
-                <div className="flex flex-col items-center sm:items-end justify-center text-center sm:text-right min-w-0 gap-1.5">
-                  <ClubCrest code="MUN" size={44} className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 drop-shadow-md" />
+                {/* Home: Manchester United */}
+                <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white leading-tight truncate">
+                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
                       <span className="hidden sm:inline">Man United</span>
                       <span className="sm:hidden">Man Utd</span>
                     </h2>
@@ -633,10 +587,11 @@ export default function MatchCenterPage() {
                       5th in PL
                     </span>
                   </div>
+                  <ClubCrest code="MUN" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                 </div>
 
                 {/* Monumental Center Score & Status */}
-                <div className="flex flex-col items-center justify-center px-1 sm:px-6 w-24 sm:w-36 shrink-0">
+                <div className="flex flex-col items-center justify-center px-1.5 sm:px-6 w-20 sm:w-32 shrink-0">
                   <div className="flex items-center justify-center gap-1.5 sm:gap-3">
                     <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
                       {periodInfo.homeScore}
@@ -646,22 +601,22 @@ export default function MatchCenterPage() {
                       {periodInfo.awayScore}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded-full bg-tactiq-coral/10 border border-tactiq-coral/20">
+                  <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
                     </span>
-                    <span className="text-[10px] sm:text-[11px] font-bold font-mono text-tactiq-coral whitespace-nowrap">
+                    <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
                       {periodInfo.statusText}
                     </span>
                   </div>
                 </div>
 
-                {/* Away: Manchester City (Stacked) */}
-                <div className="flex flex-col items-center sm:items-start justify-center text-center sm:text-left min-w-0 gap-1.5">
-                  <ClubCrest code="MCI" size={44} className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 drop-shadow-md" />
+                {/* Away: Manchester City */}
+                <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
+                  <ClubCrest code="MCI" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                   <div className="min-w-0">
-                    <h2 className="font-extrabold text-xs sm:text-base text-slate-900 dark:text-white leading-tight truncate">
+                    <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
                       Man City
                     </h2>
                     <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
@@ -670,40 +625,42 @@ export default function MatchCenterPage() {
                   </div>
                 </div>
 
+                {/* Scorers Row in the SAME Grid — 100% Mathematically Centered */}
+                {(periodInfo.scorersHome.filter(s => s && s !== '–').length > 0 ||
+                  periodInfo.scorersAway.filter(s => s && s !== '–').length > 0) && (
+                  <>
+                    <div className="col-span-3 border-t border-slate-100/80 dark:border-[#27272A]/70 my-2.5 sm:my-3" />
+
+                    {/* Home Scorers (Right-aligned, max width up to center column) */}
+                    <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
+                      {periodInfo.scorersHome
+                        .filter(s => s && s !== '–')
+                        .map((s, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {s}
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Center Ball Icon (Top-aligned with the first scorer line on the center column track) */}
+                    <div className="self-start flex justify-center items-center h-4 sm:h-4.5 w-20 sm:w-32 shrink-0 pt-0.5">
+                      <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+                    </div>
+
+                    {/* Away Scorers (Left-aligned, or empty to preserve symmetrical column track) */}
+                    <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
+                      {periodInfo.scorersAway
+                        .filter(s => s && s !== '–')
+                        .map((s, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {s}
+                          </div>
+                        ))}
+                    </div>
+                  </>
+                )}
+
               </div>
-
-              {/* Integrated Scorers Box (Clean Symmetrical Card) */}
-              {(periodInfo.scorersHome.filter(s => s && s !== '–').length > 0 ||
-                periodInfo.scorersAway.filter(s => s && s !== '–').length > 0) && (
-                <div className="mt-2.5 px-3 py-2 rounded-xl bg-slate-50/70 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  {/* Home Scorers */}
-                  <div className="space-y-0.5 text-right min-w-0">
-                    {periodInfo.scorersHome
-                      .filter(s => s && s !== '–')
-                      .map((s, idx) => (
-                        <div key={idx} className="font-medium text-slate-700 dark:text-zinc-300 truncate text-[11px]">
-                          {s}
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Center Ball Icon */}
-                  <div className="flex justify-center items-center px-1.5 shrink-0">
-                    <SoccerBallIcon size={13} className="text-slate-400 dark:text-zinc-500" />
-                  </div>
-
-                  {/* Away Scorers */}
-                  <div className="space-y-0.5 text-left min-w-0">
-                    {periodInfo.scorersAway
-                      .filter(s => s && s !== '–')
-                      .map((s, idx) => (
-                        <div key={idx} className="font-medium text-slate-700 dark:text-zinc-300 truncate text-[11px]">
-                          {s}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
 
               {/* xG Momentum Bar — Symmetrical Layout */}
               <div className="mt-3.5 px-3 py-2.5 rounded-xl bg-slate-50/80 dark:bg-[#16161A] border border-slate-100 dark:border-[#27272A] flex flex-col gap-2">
@@ -966,11 +923,7 @@ export default function MatchCenterPage() {
                     </span>
                   </div>
 
-                  {/* Orientation Indicator */}
-                  <div className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 flex items-center gap-1 shrink-0 px-1">
-                    <span className="md:hidden">Vertical Pitch</span>
-                    <span className="hidden md:inline">2D Tactical Board</span>
-                  </div>
+
 
                   {/* Away Team (Man City) */}
                   <div className="flex items-center justify-end gap-2 sm:gap-2.5 min-w-0 text-right">
@@ -1094,33 +1047,6 @@ export default function MatchCenterPage() {
                   ))}
                 </div>
 
-                {/* Tactical Legend Strip */}
-                <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-1 text-[10px] font-mono text-slate-500 dark:text-zinc-400">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
-                      <span>8.0+ Star</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0" />
-                      <span>7.0 - 7.9</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600 shrink-0" />
-                      <span>6.0 - 6.9</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <span>⚽</span>
-                      <span>Goal</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="px-1 rounded bg-amber-500 text-slate-950 font-bold text-[8px]">C</span>
-                      <span>Captain</span>
-                    </span>
-                  </div>
-                </div>
               </div>
             )}
 
