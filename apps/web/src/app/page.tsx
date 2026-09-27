@@ -10,6 +10,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
+import { MatchdayMarquee } from '@/components/matchday-marquee';
 
 // ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
@@ -234,9 +235,24 @@ export default function HomePage() {
   const liveFeaturedMatch = MATCHES.find((m) => m.id === 'm1');
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] dark:bg-[#09090B] pb-16 pt-4 transition-colors duration-150">
+    <div className="min-h-screen bg-[#09090B] pb-16 pt-3 sm:pt-4 transition-colors duration-150">
       <div className="max-w-[1360px] mx-auto px-3 sm:px-6">
         
+        {/* ── Top Matchday Broadcast Ticker (Option A) ── */}
+        <MatchdayMarquee
+          matches={MATCHES.map((m) => ({
+            id: m.id,
+            homeCode: m.homeCode,
+            awayCode: m.awayCode,
+            homeScore: m.homeScore,
+            awayScore: m.awayScore,
+            status: m.status,
+            minute: m.minute,
+            startTime: m.startTime,
+          }))}
+          className="mb-4 sm:mb-5"
+        />
+
         {/* ── Main 3-Column Layout ────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
@@ -246,8 +262,8 @@ export default function HomePage() {
           <aside className="hidden lg:flex flex-col gap-4 lg:col-span-3">
             
             {/* Quick Filter Card */}
-            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3 transition-colors">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 px-3 py-1.5 mb-1">
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3 transition-colors">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 px-3 py-1.5 mb-1">
                 Feeds & Filters
               </div>
               <div className="space-y-0.5">
@@ -255,54 +271,56 @@ export default function HomePage() {
                   onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                     selectedLeague === 'all' && !liveOnly
-                      ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
-                      : 'text-zinc-300 hover:bg-[#1A1A1E]'
+                      ? 'bg-zinc-800/60 text-white font-bold'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
                     <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-[#CEFF00]' : 'text-zinc-500'} />
                     All Matches
                   </span>
-                  <span className="text-[11px] text-zinc-400 font-mono font-medium">24</span>
+                  <span className={`text-[11px] font-mono ${selectedLeague === 'all' && !liveOnly ? 'text-[#CEFF00] font-bold' : 'text-zinc-400'}`}>
+                    24
+                  </span>
                 </button>
 
                 <button
                   onClick={() => setLiveOnly(!liveOnly)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                     liveOnly
-                      ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
-                      : 'text-zinc-300 hover:bg-[#1A1A1E]'
+                      ? 'bg-zinc-800/60 text-white font-bold'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-tactiq-coral" />
                     Live Matches
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#27272A] text-zinc-200">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200">
                     2 LIVE
                   </span>
                 </button>
 
                 <Link
                   href="/match-center"
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30 transition-colors"
                 >
                   <span className="flex items-center gap-2.5">
-                    <Activity size={14} className="text-slate-400 dark:text-zinc-500" />
+                    <Activity size={14} className="text-zinc-500" />
                     Match Center
                   </span>
-                  <span className="text-[10px] text-slate-400 dark:text-zinc-500">→</span>
+                  <span className="text-[10px] text-zinc-500">→</span>
                 </Link>
               </div>
             </div>
 
             {/* Popular Leagues Accordion */}
-            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3 transition-colors">
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3 transition-colors">
               <div className="flex items-center justify-between px-3 py-1.5 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                   Popular Leagues
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono">Pinned</span>
+                <span className="text-[10px] text-zinc-500 font-mono">Pinned</span>
               </div>
               <div className="space-y-0.5">
                 {LEAGUES.filter((l) => l.id !== 'all').map((league) => {
@@ -313,15 +331,15 @@ export default function HomePage() {
                       onClick={() => setSelectedLeague(league.id)}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                         isActive
-                          ? 'bg-[#1E1E24] text-[#CEFF00] font-bold border-l-2 border-[#CEFF00]'
-                          : 'text-zinc-300 hover:bg-[#1A1A1E]'
+                          ? 'bg-zinc-800/60 text-white font-bold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
                       }`}
                     >
                       <span className="flex items-center gap-2.5 min-w-0">
                         <LeagueLogo league={league.name} size={16} />
                         <span className="truncate">{league.name}</span>
                       </span>
-                      <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
+                      <span className={`text-[11px] font-mono ${isActive ? 'text-[#CEFF00] font-bold' : 'text-zinc-500'}`}>
                         {league.count}
                       </span>
                     </button>

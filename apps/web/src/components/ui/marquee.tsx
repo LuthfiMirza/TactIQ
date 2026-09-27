@@ -1,0 +1,44 @@
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+interface MarqueeProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode
+  pauseOnHover?: boolean
+  direction?: "left" | "right"
+  speed?: number
+  innerClassName?: string
+}
+
+export function Marquee({
+  children,
+  pauseOnHover = false,
+  direction = "left",
+  speed = 30,
+  className,
+  innerClassName,
+  ...props
+}: MarqueeProps) {
+  return (
+    <div 
+      className={cn(
+        "w-full overflow-hidden z-10",
+        className
+      )} 
+      {...props}
+    >
+      <div className={cn("relative flex w-full overflow-hidden", innerClassName)}>
+        <div 
+          className={cn(
+            "flex w-max animate-marquee",
+            pauseOnHover && "hover:[animation-play-state:paused] active:[animation-play-state:paused]",
+            direction === "right" && "animate-marquee-reverse"
+          )}
+          style={{ "--duration": `${speed}s` } as React.CSSProperties}
+        >
+          {children}
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}

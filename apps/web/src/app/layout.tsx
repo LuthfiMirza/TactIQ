@@ -1,5 +1,7 @@
+import React, { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Navbar } from '@/components/layout/navbar';
+import { TopProgressBar } from '@/components/ui/top-progress-bar';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -29,6 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Top Radial Stadium Pitch Glow */}
           <div className="absolute -top-[12%] sm:-top-[22%] left-1/2 -translate-x-1/2 w-[550px] sm:w-[950px] lg:w-[1300px] h-[340px] sm:h-[500px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#CEFF00]/[0.05] via-emerald-500/[0.02] to-transparent blur-2xl sm:blur-3xl" />
         </div>
+        <Suspense fallback={null}>
+          <TopProgressBar />
+        </Suspense>
         <div className="relative z-10">
           <Navbar />
           <div className="pb-20 md:pb-0">

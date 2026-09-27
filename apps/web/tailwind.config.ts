@@ -93,6 +93,18 @@ const config: Config = {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
+      animation: {
+        marquee: 'marquee var(--duration, 30s) linear infinite',
+        'marquee-reverse': 'marquee-reverse var(--duration, 30s) linear infinite',
+      },
+      keyframes: {
+        marquee: {
+          to: { transform: 'translateX(-50%)' },
+        },
+        'marquee-reverse': {
+          to: { transform: 'translateX(50%)' },
+        },
+      },
     },
   },
   plugins: [],
