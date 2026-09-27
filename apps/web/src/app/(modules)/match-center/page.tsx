@@ -1119,13 +1119,12 @@ export default function MatchCenterPage() {
             </div>
 
             <div className="space-y-1.5 font-mono text-xs">
-              <div className="flex justify-between py-1 text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 border-b border-slate-100 dark:border-[#222227]">
-                <span>Club</span>
-                <div className="flex gap-2.5 sm:gap-3">
-                  <span className="w-4 text-center">P</span>
-                  <span className="w-5 sm:w-6 text-center">GD</span>
-                  <span className="w-7 sm:w-8 text-right font-bold">PTS</span>
-                </div>
+              {/* Table Header: Locked CSS Grid matching rows */}
+              <div className="grid grid-cols-[1fr_28px_36px_34px] items-center px-2 py-1 text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 border-b border-slate-100 dark:border-[#222227]">
+                <span className="text-left">Club</span>
+                <span className="text-center">P</span>
+                <span className="text-center">GD</span>
+                <span className="text-center font-bold text-slate-700 dark:text-zinc-300">PTS</span>
               </div>
 
               {LEAGUE_STANDINGS.map((row) => {
@@ -1134,40 +1133,38 @@ export default function MatchCenterPage() {
                 return (
                   <div
                     key={row.rank}
-                    className={`flex justify-between items-center py-1.5 px-2 rounded-lg transition-colors ${
+                    className={`grid grid-cols-[1fr_28px_36px_34px] items-center py-1.5 px-2 rounded-lg transition-colors border ${
                       isArsenal
-                        ? 'bg-red-500/10 border border-red-500/20 text-slate-900 dark:text-white'
+                        ? 'bg-red-500/10 border-red-500/20 text-slate-900 dark:text-white'
                         : isCity
-                        ? 'bg-sky-500/10 border border-sky-500/20 text-slate-900 dark:text-white'
-                        : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                        ? 'bg-sky-500/10 border-sky-500/20 text-slate-900 dark:text-white'
+                        : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                      <span className={`w-3 sm:w-3.5 text-[11px] sm:text-xs font-bold ${isArsenal ? 'text-red-500' : isCity ? 'text-sky-400' : 'text-slate-400'}`}>
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-1">
+                      <span className={`w-3 sm:w-3.5 text-[11px] sm:text-xs font-bold shrink-0 ${isArsenal ? 'text-red-500' : isCity ? 'text-sky-400' : 'text-slate-400'}`}>
                         {row.rank}
                       </span>
                       <ClubCrest code={row.club} size={16} />
                       <span className="font-bold text-[11px] sm:text-xs truncate">{row.club}</span>
                       {isArsenal && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-300 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none">
+                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-300 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none shrink-0">
                           <TrendingUp size={10} className="text-emerald-400 shrink-0" />
                           1
                         </span>
                       )}
                       {isCity && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-400 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none">
+                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-400 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none shrink-0">
                           <TrendingDown size={10} className="text-rose-400 shrink-0" />
                           1
                         </span>
                       )}
                     </div>
-                    <div className="flex gap-2.5 sm:gap-3 items-center tabular-nums text-[11px] sm:text-xs">
-                      <span className="w-4 text-center text-slate-400">{row.played}</span>
-                      <span className="w-5 sm:w-6 text-center text-slate-400">{row.gd}</span>
-                      <span className="w-7 sm:w-8 text-right font-bold text-slate-900 dark:text-white">
-                        {row.pts}
-                      </span>
-                    </div>
+                    <span className="text-center tabular-nums text-[11px] sm:text-xs text-slate-400">{row.played}</span>
+                    <span className="text-center tabular-nums text-[11px] sm:text-xs text-slate-400">{row.gd}</span>
+                    <span className="text-center tabular-nums text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
+                      {row.pts}
+                    </span>
                   </div>
                 );
               })}
