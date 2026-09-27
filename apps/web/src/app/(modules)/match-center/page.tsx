@@ -988,80 +988,26 @@ export default function MatchCenterPage() {
                     })}
                   </div>
 
-                  {/* Breakdown Hasil 5 Laga Terakhir (Dual Team Form Rows: Unboxed & Solid Colors) */}
-                  <div className="pt-3.5 border-t border-slate-100 dark:border-zinc-800/60 space-y-3">
-                    {/* Baris Man United */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Ringkasan Performa Poin 5 Laga (Ultra-Minimalist: Summary Poin Saja) */}
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800/60 text-xs font-mono">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
                         <ClubCrest code="MUN" size={16} className="w-4 h-4 shrink-0" />
-                        <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Man United</span>
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">Man United</span>
                       </div>
-                      <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-0.5">
-                        {RECENT_FORM_DATA.home.map((m, idx) => {
-                          const badgeBg =
-                            m.result === 'W'
-                              ? 'bg-emerald-600 text-white'
-                              : m.result === 'D'
-                              ? 'bg-amber-500 text-white'
-                              : 'bg-rose-600 text-white';
-                          return (
-                            <div
-                              key={`mun-form-${idx}`}
-                              className="flex items-center gap-1.5 text-[11px] font-mono shrink-0"
-                            >
-                              <span className={`w-4 h-4 rounded-[4px] flex items-center justify-center font-bold text-[10px] leading-none shadow-2xs ${badgeBg}`}>
-                                {m.result}
-                              </span>
-                              <span className="text-slate-900 dark:text-white font-bold">{m.score}</span>
-                              <div className="flex items-center gap-1 text-slate-400 dark:text-zinc-500 text-[10px]">
-                                <span>vs</span>
-                                <ClubCrest code={m.opponentCode} size={14} className="w-3.5 h-3.5 shrink-0" />
-                                <span className="font-semibold text-slate-600 dark:text-zinc-300">{m.opponentCode}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white shrink-0 ml-1">
-                          10/15 <span className="text-[9.5px] text-zinc-400 font-normal">Pts</span>
-                        </span>
-                      </div>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
+                      </span>
                     </div>
 
-                    {/* Baris Man City */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <ClubCrest code="MCI" size={17} className="w-4.5 h-4.5 shrink-0" />
-                        <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200">Man City</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <ClubCrest code="MCI" size={18} className="w-4.5 h-4.5 shrink-0" />
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">Man City</span>
                       </div>
-                      <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-0.5">
-                        {RECENT_FORM_DATA.away.map((m, idx) => {
-                          const badgeBg =
-                            m.result === 'W'
-                              ? 'bg-emerald-600 text-white'
-                              : m.result === 'D'
-                              ? 'bg-amber-500 text-white'
-                              : 'bg-rose-600 text-white';
-                          return (
-                            <div
-                              key={`mci-form-${idx}`}
-                              className="flex items-center gap-1.5 text-[11px] font-mono shrink-0"
-                            >
-                              <span className={`w-4 h-4 rounded-[4px] flex items-center justify-center font-bold text-[10px] leading-none shadow-2xs ${badgeBg}`}>
-                                {m.result}
-                              </span>
-                              <span className="text-slate-900 dark:text-white font-bold">{m.score}</span>
-                              <div className="flex items-center gap-1 text-slate-400 dark:text-zinc-500 text-[10px]">
-                                <span>vs</span>
-                                <ClubCrest code={m.opponentCode} size={14} className="w-3.5 h-3.5 shrink-0" />
-                                <span className="font-semibold text-slate-600 dark:text-zinc-300">{m.opponentCode}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <span className="text-[11px] font-mono font-bold text-slate-900 dark:text-white shrink-0 ml-1">
-                          10/15 <span className="text-[9.5px] text-zinc-400 font-normal">Pts</span>
-                        </span>
-                      </div>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
+                      </span>
                     </div>
                   </div>
                 </div>
