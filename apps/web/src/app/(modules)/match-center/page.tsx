@@ -9,6 +9,10 @@ import {
   Info,
   X,
   User,
+  Bell,
+  Share2,
+  FlaskConical,
+  Check,
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 
@@ -508,10 +512,31 @@ export default function MatchCenterPage() {
   const [matchTab, setMatchTab] = useState<string>('stats');
   const [statsPeriod, setStatsPeriod] = useState<'ALL' | '1ST' | '2ND'>('ALL');
   const [showAiModal, setShowAiModal] = useState(false);
+  const [isNotified, setIsNotified] = useState(false);
+  const [copiedToast, setCopiedToast] = useState(false);
+  const [isDevDockMinimized, setIsDevDockMinimized] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleToggleNotification = () => {
+    setIsNotified((prev) => !prev);
+  };
+
+  const handleShare = async () => {
+    try {
+      if (typeof window !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+      }
+    } catch {
+      // fallback
+    }
+    setCopiedToast(true);
+    setTimeout(() => {
+      setCopiedToast(false);
+    }, 2200);
+  };
 
   const handleStatusChange = (status: MatchStatusType) => {
     setCurrentStatus(status);
@@ -623,22 +648,33 @@ export default function MatchCenterPage() {
           </button>
         </div>
 
-        {/* Toggle Mode Sandbox: UPCOMING / LIVE / FINISHED */}
-        <div className="grid grid-cols-3 w-full sm:w-auto border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] rounded-xl p-1 shadow-xs">
-          {(['UPCOMING', 'LIVE', 'FINISHED'] as const).map((st) => (
-            <button
-              key={st}
-              type="button"
-              onClick={() => handleStatusChange(st)}
-              className={`min-h-[34px] sm:min-h-[36px] px-2 sm:px-4 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
-                currentStatus === st
-                  ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
-              }`}
-            >
-              {st}
-            </button>
-          ))}
+        {/* Header Production Actions: Remind Me & Share */}
+        <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center">
+          {/* Match Alert Notification Button */}
+          <button
+            type="button"
+            onClick={handleToggleNotification}
+            title={isNotified ? 'Turn off match alerts' : 'Notify me about match events'}
+            className={`min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 ${
+              isNotified
+                ? 'bg-[#CEFF00] text-black border-[#CEFF00] shadow-xs shadow-[#CEFF00]/20'
+                : 'bg-white dark:bg-[#121215] border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-zinc-700'
+            }`}
+          >
+            <Bell size={14} className={isNotified ? 'fill-current' : ''} />
+            <span>{isNotified ? 'Alerts On' : 'Remind Me'}</span>
+          </button>
+
+          {/* Share Button */}
+          <button
+            type="button"
+            onClick={handleShare}
+            title="Share match link"
+            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-zinc-700 transition-all flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
+          >
+            {copiedToast ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
+            <span>{copiedToast ? 'Link Copied!' : 'Share'}</span>
+          </button>
         </div>
       </div>
 
@@ -1766,6 +1802,55 @@ export default function MatchCenterPage() {
           </div>
         </div>
       )}
+
+      {/* ── Discreet Prototype Scenario Controller (Floating Bottom Dock) ── */}
+      <div className="fixed bottom-4 right-4 z-40 select-none">
+        {isDevDockMinimized ? (
+          /* Minimized Trigger Button */
+          <button
+            type="button"
+            onClick={() => setIsDevDockMinimized(false)}
+            title="Open Scenario Switcher (Upcoming / Live / Finished)"
+            className="w-10 h-10 rounded-full bg-slate-900/90 dark:bg-zinc-800/90 text-white hover:bg-slate-950 dark:hover:bg-zinc-700 border border-slate-700 dark:border-zinc-600 shadow-xl backdrop-blur-md flex items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 group"
+          >
+            <FlaskConical size={18} className="text-[#CEFF00] group-hover:rotate-12 transition-transform" />
+          </button>
+        ) : (
+          /* Expanded Floating Dock */
+          <div className="flex items-center gap-1 p-1 bg-slate-950/90 dark:bg-[#121215]/95 border border-slate-800 dark:border-zinc-700/80 rounded-2xl shadow-2xl backdrop-blur-md text-xs">
+            <div className="flex items-center gap-1.5 pl-2.5 pr-1.5 text-zinc-400 font-mono text-[10px] font-semibold">
+              <FlaskConical size={13} className="text-[#CEFF00]" />
+              <span className="hidden sm:inline">Scenario:</span>
+            </div>
+
+            <div className="flex items-center gap-0.5 bg-black/40 rounded-xl p-0.5 border border-white/5">
+              {(['UPCOMING', 'LIVE', 'FINISHED'] as const).map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => handleStatusChange(st)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer ${
+                    currentStatus === st
+                      ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsDevDockMinimized(true)}
+              title="Minimize controller"
+              className="w-6 h-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-colors ml-0.5 cursor-pointer"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+      </div>
 
     </div>
   );
