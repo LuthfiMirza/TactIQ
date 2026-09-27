@@ -112,17 +112,17 @@ export function PlayerComparisonModal({
         </div>
 
         {/* ── Dual Picker Toolbar ──────────────────────────────────────── */}
-        <div className="px-4 sm:px-6 py-3 bg-[#16161B] border-b border-[#27272A] shrink-0">
-          <div className="flex flex-col sm:grid sm:grid-cols-11 items-center gap-2 sm:gap-3">
+        <div className="px-3 sm:px-6 py-2.5 sm:py-3 bg-[#16161B] border-b border-[#27272A] shrink-0">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1.5 sm:gap-3">
             
-            {/* Player A Selector (5 cols) */}
-            <div className="w-full sm:col-span-5 flex items-center gap-2.5 sm:gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
-              <div className="relative flex-1">
+            {/* Player A Selector */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
+              <div className="relative flex-1 min-w-0">
                 <select
                   value={playerAId}
                   onChange={(e) => setPlayerAId(e.target.value)}
-                  className="w-full h-10 appearance-none bg-[#1A1A20] border border-[#CEFF00]/40 focus:border-[#CEFF00] text-xs font-bold text-white pl-3.5 pr-10 rounded-xl outline-none cursor-pointer transition-colors"
+                  className="w-full h-9 sm:h-10 appearance-none bg-[#1A1A20] border border-[#CEFF00]/40 focus:border-[#CEFF00] text-[11px] sm:text-xs font-bold text-white pl-2 sm:pl-3.5 pr-6 sm:pr-9 rounded-lg sm:rounded-xl outline-none cursor-pointer truncate transition-colors"
                 >
                   {uniquePlayers.map((p) => (
                     <option key={`a-${p.id}`} value={p.id} className="bg-[#18181C] text-zinc-100">
@@ -130,29 +130,30 @@ export function PlayerComparisonModal({
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <ChevronDown size={12} className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
-            {/* Center Swap Button (1 col) */}
-            <div className="w-full sm:col-span-1 flex items-center justify-center py-0.5 sm:py-0">
+            {/* Center Swap Button */}
+            <div className="flex items-center justify-center shrink-0 px-0.5">
               <button
                 onClick={handleSwap}
                 title="Swap players"
+                aria-label="Swap players"
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1F1F26] border border-zinc-700/80 hover:border-zinc-500 text-zinc-300 hover:text-white flex items-center justify-center transition-all active:scale-90 shadow-xs"
               >
-                <ArrowLeftRight size={13} />
+                <ArrowLeftRight size={12} />
               </button>
             </div>
 
-            {/* Player B Selector (5 cols) */}
-            <div className="w-full sm:col-span-5 flex items-center gap-2.5 sm:gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.8)]" />
-              <div className="relative flex-1">
+            {/* Player B Selector */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.8)]" />
+              <div className="relative flex-1 min-w-0">
                 <select
                   value={playerBId}
                   onChange={(e) => setPlayerBId(e.target.value)}
-                  className="w-full h-10 appearance-none bg-[#1A1A20] border border-[#00D2FF]/40 focus:border-[#00D2FF] text-xs font-bold text-white pl-3.5 pr-10 rounded-xl outline-none cursor-pointer transition-colors"
+                  className="w-full h-9 sm:h-10 appearance-none bg-[#1A1A20] border border-[#00D2FF]/40 focus:border-[#00D2FF] text-[11px] sm:text-xs font-bold text-white pl-2 sm:pl-3.5 pr-6 sm:pr-9 rounded-lg sm:rounded-xl outline-none cursor-pointer truncate transition-colors"
                 >
                   {uniquePlayers.map((p) => (
                     <option key={`b-${p.id}`} value={p.id} className="bg-[#18181C] text-zinc-100">
@@ -160,7 +161,7 @@ export function PlayerComparisonModal({
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                <ChevronDown size={12} className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
@@ -168,15 +169,15 @@ export function PlayerComparisonModal({
         </div>
 
         {/* ── Scrollable Comparison Body ───────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 slim-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6 slim-scrollbar">
           
           {/* Row 1: Player Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             
             {/* Player A Card (Lime) */}
-            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3.5 sm:p-4 relative overflow-hidden flex items-center gap-3 sm:gap-3.5">
+            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3 sm:p-4 relative overflow-hidden flex items-center gap-2.5 sm:gap-3.5">
               {/* Seamless Cutout Portrait */}
-              <div className="relative w-13 h-13 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 aspect-square shrink-0 flex items-center justify-center">
                 <div className="absolute inset-0 bg-[#CEFF00]/5 rounded-full blur-sm pointer-events-none" />
                 <PlayerAvatar
                   src={playerA.photoUrl}
@@ -186,33 +187,33 @@ export function PlayerComparisonModal({
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.6)]" />
-                  <h3 className="text-sm font-extrabold text-white truncate">{playerA.name}</h3>
-                  <span className="px-1.5 py-0.5 rounded bg-[#CEFF00]/10 text-[#CEFF00] font-mono font-bold text-[10px]">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#CEFF00] shrink-0 shadow-[0_0_6px_rgba(206,255,0,0.6)]" />
+                  <h3 className="text-xs sm:text-sm font-extrabold text-white truncate">{playerA.name}</h3>
+                  <span className="px-1.5 py-0.5 rounded bg-[#CEFF00]/10 text-[#CEFF00] font-mono font-bold text-[9px] sm:text-[10px]">
                     {playerA.position}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-zinc-400">
-                  <ClubCrest code={playerA.team?.code || ''} size={14} />
+                <div className="flex items-center gap-1 sm:gap-1.5 mt-1 text-[11px] sm:text-xs text-zinc-400">
+                  <ClubCrest code={playerA.team?.code || ''} size={13} />
                   <span className="truncate">{playerA.team?.name}</span>
                   <span className="text-zinc-600">·</span>
                   <span>{playerA.nationality}</span>
                   <span className="text-zinc-600">·</span>
-                  <span>{playerA.age} yrs</span>
+                  <span>{playerA.age}y</span>
                 </div>
               </div>
 
               <div className="text-right shrink-0">
                 <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerA.marketValue)}</div>
-                <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
+                <div className="text-[9px] sm:text-[10px] text-zinc-500 font-mono">Market Val</div>
               </div>
             </div>
 
             {/* Player B Card (Cyan) */}
-            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3.5 sm:p-4 relative overflow-hidden flex items-center gap-3 sm:gap-3.5">
+            <div className="rounded-xl border border-[#27272A] bg-[#16161B] p-3 sm:p-4 relative overflow-hidden flex items-center gap-2.5 sm:gap-3.5">
               {/* Seamless Cutout Portrait */}
-              <div className="relative w-13 h-13 sm:w-14 sm:h-14 shrink-0 flex items-center justify-center">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 aspect-square shrink-0 flex items-center justify-center">
                 <div className="absolute inset-0 bg-[#00D2FF]/5 rounded-full blur-sm pointer-events-none" />
                 <PlayerAvatar
                   src={playerB.photoUrl}
@@ -222,48 +223,48 @@ export function PlayerComparisonModal({
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.6)]" />
-                  <h3 className="text-sm font-extrabold text-white truncate">{playerB.name}</h3>
-                  <span className="px-1.5 py-0.5 rounded bg-[#00D2FF]/10 text-[#00D2FF] font-mono font-bold text-[10px]">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00D2FF] shrink-0 shadow-[0_0_6px_rgba(0,210,255,0.6)]" />
+                  <h3 className="text-xs sm:text-sm font-extrabold text-white truncate">{playerB.name}</h3>
+                  <span className="px-1.5 py-0.5 rounded bg-[#00D2FF]/10 text-[#00D2FF] font-mono font-bold text-[9px] sm:text-[10px]">
                     {playerB.position}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-zinc-400">
-                  <ClubCrest code={playerB.team?.code || ''} size={14} />
+                <div className="flex items-center gap-1 sm:gap-1.5 mt-1 text-[11px] sm:text-xs text-zinc-400">
+                  <ClubCrest code={playerB.team?.code || ''} size={13} />
                   <span className="truncate">{playerB.team?.name}</span>
                   <span className="text-zinc-600">·</span>
                   <span>{playerB.nationality}</span>
                   <span className="text-zinc-600">·</span>
-                  <span>{playerB.age} yrs</span>
+                  <span>{playerB.age}y</span>
                 </div>
               </div>
 
               <div className="text-right shrink-0">
                 <div className="text-xs font-mono font-extrabold text-white">{formatValue(playerB.marketValue)}</div>
-                <div className="text-[10px] text-zinc-500 font-mono">Market Val</div>
+                <div className="text-[9px] sm:text-[10px] text-zinc-500 font-mono">Market Val</div>
               </div>
             </div>
 
           </div>
 
           {/* Row 2: Radar Overlay & Head-to-Head Attributes */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-center">
             
             {/* Left: Dual Spider Chart (6 cols) */}
             <div className="lg:col-span-6 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl border border-[#27272A] bg-[#15151A]/60 w-full overflow-hidden">
               <div className="flex items-center gap-4 mb-1 sm:mb-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#CEFF00]" />
-                  <span className="text-xs font-bold text-zinc-200">{playerA.name}</span>
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#CEFF00]" />
+                  <span className="text-[11px] sm:text-xs font-bold text-zinc-200">{playerA.name}</span>
                 </div>
                 <span className="text-zinc-600 text-xs font-bold">vs</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00D2FF]" />
-                  <span className="text-xs font-bold text-zinc-200">{playerB.name}</span>
+                  <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#00D2FF]" />
+                  <span className="text-[11px] sm:text-xs font-bold text-zinc-200">{playerB.name}</span>
                 </div>
               </div>
-              <div className="w-full max-w-[300px] sm:max-w-[340px] aspect-square flex items-center justify-center">
+              <div className="w-full max-w-[260px] sm:max-w-[340px] aspect-square flex items-center justify-center">
                 <RadarChart
                   metrics={playerA.attributes}
                   playerName={playerA.name}
