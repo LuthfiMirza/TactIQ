@@ -7,6 +7,11 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'TactIQ — Football Intelligence & Matchday Hub',
   description: 'Real-time tactical analytics, xG tracking, and scouting intelligence for the modern game.',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export const viewport: Viewport = {

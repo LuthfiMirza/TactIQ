@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -75,13 +76,15 @@ export function Navbar() {
             <>
               {/* Brand & Left Elements */}
               <div className="flex items-center gap-6">
-                <Link href="/" className="flex items-center gap-2 group">
-                  <div className="w-8 h-8 rounded-lg bg-[#CEFF00] flex items-center justify-center text-black font-black font-mono text-base shadow-xs shadow-[#CEFF00]/25 transition-transform group-hover:scale-105">
-                    TQ
-                  </div>
-                  <span className="font-extrabold text-xl tracking-tight text-white leading-none">
-                    Tact<span className="text-zinc-500">IQ</span>
-                  </span>
+                <Link href="/" className="flex items-center group py-0.5" aria-label="TactIQ Home">
+                  <Image
+                    src="/TactIQ.png"
+                    alt="TactIQ"
+                    width={130}
+                    height={64}
+                    className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+                    priority
+                  />
                 </Link>
 
                 {/* Desktop Primary Navigation Tabs: Segmented Dock Container */}
