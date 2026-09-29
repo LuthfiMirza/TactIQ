@@ -1,5 +1,6 @@
 import { io } from '../websocket/socket.server.js';
 import type { LiveScoreMatch } from './apiFootball.service.js';
+import { TheSportsDbService } from './theSportsDb.service.js';
 
 export interface SimulatedEventPayload {
   fixtureId: string;
@@ -76,6 +77,13 @@ export class LiveMatchEngineService {
 
     console.log(`⏱️ [LiveMatchEngine] Starting real-time match in-play ticker (interval: ${intervalMs}ms)...`);
     
+    // Initial sync with TheSportsDB public global stream
+    TheSportsDbService.getLiveScores().then((realMatches) => {
+      if (realMatches && realMatches.length > 0) {
+        this.syncWithRealWorldMatches(realMatches);
+      }
+    }).catch(() => {});
+
     this.tickerInterval = setInterval(() => {
       this.tick();
     }, intervalMs);
@@ -97,6 +105,63 @@ export class LiveMatchEngineService {
    */
   public static getLiveMatches(): LiveScoreMatch[] {
     return this.liveMatches;
+  }
+
+  /**
+   * Sync and merge genuine live matches from TheSportsDB
+   */
+  public static syncWithRealWorldMatches(realMatches: LiveScoreMatch[]): void {
+    let hasUpdated = false;
+
+    for (const real of realMatches) {
+      // Find if match exists by team name similarity
+      const existing = this.liveMatches.find(
+        (m) =>
+          m.fixtureId === real.fixtureId ||
+          (m.homeTeam.toLowerCase().includes(real.homeTeam.toLowerCase()) &&
+            m.awayTeam.toLowerCase().includes(real.awayTeam.toLowerCase()))
+      );
+
+      if (existing) {
+        // Detect real-time goal event from real world
+        if (real.homeScore > existing.homeScore) {
+          this.triggerEvent(existing, {
+            minute: real.minute,
+            team: existing.homeTeam,
+            player: `${existing.homeTeam} Striker`,
+            type: 'Goal',
+            detail: 'Live Goal from Global Live Feed',
+          });
+        }
+        if (real.awayScore > existing.awayScore) {
+          this.triggerEvent(existing, {
+            minute: real.minute,
+            team: existing.awayTeam,
+            player: `${existing.awayTeam} Striker`,
+            type: 'Goal',
+            detail: 'Live Goal from Global Live Feed',
+          });
+        }
+
+        existing.minute = real.minute;
+        existing.status = real.status;
+        existing.homeScore = real.homeScore;
+        existing.awayScore = real.awayScore;
+        if (real.homeLogo && !existing.homeLogo) existing.homeLogo = real.homeLogo;
+        if (real.awayLogo && !existing.awayLogo) existing.awayLogo = real.awayLogo;
+        hasUpdated = true;
+      } else {
+        // Add new active match to live feed
+        if (this.liveMatches.length < 15) {
+          this.liveMatches.push(real);
+          hasUpdated = true;
+        }
+      }
+    }
+
+    if (hasUpdated) {
+      this.broadcastUpdate();
+    }
   }
 
   /**
@@ -122,11 +187,20 @@ export class LiveMatchEngineService {
   }
 
   /**
-   * Ticker step: advances minutes, executes storylines, emits WebSocket events
+   * Ticker step: advances minutes, executes storylines, syncs global feed, emits WebSocket events
    */
   private static tick(): void {
     this.tickCount++;
     let hasChanges = false;
+
+    // Periodically poll TheSportsDB for real-world score changes (~every 30s)
+    if (this.tickCount % 3 === 0) {
+      TheSportsDbService.getLiveScores().then((realMatches) => {
+        if (realMatches && realMatches.length > 0) {
+          this.syncWithRealWorldMatches(realMatches);
+        }
+      }).catch(() => {});
+    }
 
     for (const match of this.liveMatches) {
       if (match.status === 'LIVE') {
