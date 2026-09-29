@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { RadarChart } from '@/components/radar-chart';
+import { api } from '@/lib/api';
 import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import { PlayerComparisonModal } from '@/components/scouting/player-comparison-modal';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
@@ -600,6 +601,30 @@ export default function ScoutingPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [anchorSearchQuery, setAnchorSearchQuery] = useState('');
+  const [searchedApiPlayers, setSearchedApiPlayers] = useState<PlayerDTO[]>([]);
+  const [isLoadingApiSearch, setIsLoadingApiSearch] = useState(false);
+
+  // Debounced search against 575 players in PostgreSQL
+  useEffect(() => {
+    if (!anchorSearchQuery || anchorSearchQuery.trim().length < 2) {
+      setSearchedApiPlayers([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsLoadingApiSearch(true);
+      try {
+        const results = await api.getPlayers({ search: anchorSearchQuery.trim(), limit: '15' });
+        if (Array.isArray(results)) {
+          setSearchedApiPlayers(results);
+        }
+      } catch (err) {
+        console.warn('[Scouting] API player search error:', err);
+      } finally {
+        setIsLoadingApiSearch(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [anchorSearchQuery]);
 
   const allScoutingPlayers = useMemo(() => {
     const list: PlayerDTO[] = [...BENCHMARK_PLAYERS];
@@ -613,6 +638,11 @@ export default function ScoutingPage() {
     if (!anchorSearchQuery.trim()) return null;
     const q = anchorSearchQuery.toLowerCase();
     const pool = new Map<string, PlayerDTO>();
+
+    // Live results from 575-player database
+    searchedApiPlayers.forEach((p) => pool.set(p.id, p));
+
+    // Local benchmark pool
     Object.values(BENCHMARK_PLAYERS_BY_CLUSTER).forEach((list) => list.forEach((p) => pool.set(p.id, p)));
     Object.values(CLUSTER_RECOMMENDATIONS).forEach((list) => list.forEach((r) => pool.set(r.player.id, r.player)));
 
@@ -624,14 +654,14 @@ export default function ScoutingPage() {
         p.position?.toLowerCase().includes(q) ||
         p.nationality?.toLowerCase().includes(q)
     );
-  }, [anchorSearchQuery]);
+  }, [anchorSearchQuery, searchedApiPlayers]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleClusterSelect = (cluster: 'GK' | 'DF' | 'MF' | 'FW') => {
+  const handleClusterSelect = async (cluster: 'GK' | 'DF' | 'MF' | 'FW') => {
     setSelectedCluster(cluster);
     const list = CLUSTER_RECOMMENDATIONS[cluster] || [];
     setRecommendations(list);
@@ -645,12 +675,65 @@ export default function ScoutingPage() {
     } else {
       showToast(`Showing ${cluster} shortlist`);
     }
+
+    // Attempt to load authentic players for this cluster from PostgreSQL
+    try {
+      const posParam = cluster === 'FW' ? 'FWD' : cluster === 'MF' ? 'MID' : cluster === 'DF' ? 'DEF' : 'GK';
+      const realPlayers = await api.getPlayers({ position: posParam, limit: '8' });
+      if (Array.isArray(realPlayers) && realPlayers.length > 0) {
+        const topPlayer = realPlayers[0];
+        handleSetAsAnchor(topPlayer);
+      }
+    } catch {
+      // Keep static benchmark
+    }
   };
 
-  const handleSetAsAnchor = (player: PlayerDTO, rec?: ScoutingRecommendation) => {
+  const handleSetAsAnchor = async (player: PlayerDTO, rec?: ScoutingRecommendation) => {
     const newAnchor = toBenchmarkPlayer(player, rec);
     setAnchorPlayer(newAnchor);
     showToast(`Anchor set to ${player.name}`);
+
+    // Call real ML similarity engine (Fuad's 7-axis cosine similarity against 575 players)
+    try {
+      const simRes = await api.getSimilarPlayers(player.id);
+      if (simRes && simRes.similarPlayers && simRes.similarPlayers.length > 0) {
+        const liveRecs: ScoutingRecommendation[] = simRes.similarPlayers.map((item) => {
+          const simScore = Math.round(item.similarityScore);
+          const p = item.player;
+          return {
+            player: p,
+            matchPercentage: simScore,
+            highlightMetrics: [
+              { label: 'Tactical Fit', value: `${simScore}%` },
+              { label: 'Pace & Movement', value: `${p.attributes?.pace || 75}` },
+              { label: 'Passing IQ', value: `${p.attributes?.passing || 75}` },
+            ],
+            per90: {
+              sca: Number((((p.attributes?.vision || 70) / 100) * 6).toFixed(2)),
+              penaltyBoxPasses: Number((((p.attributes?.passing || 70) / 100) * 3.5).toFixed(2)),
+              highTurnoverRegains: Number((((p.attributes?.defending || 70) / 100) * 2.8).toFixed(2)),
+              pressPassPct: Number((75 + ((p.attributes?.passing || 70) / 100) * 18).toFixed(1)),
+            },
+            tacticalRole:
+              p.position === 'FWD'
+                ? 'Advanced Forward'
+                : p.position === 'MID'
+                ? 'Playmaker / Engine'
+                : p.position === 'DEF'
+                ? 'Ball-Playing Defender'
+                : 'Sweeper Keeper',
+          };
+        });
+        setRecommendations(liveRecs);
+        if (liveRecs.length > 0) {
+          setComparisonTarget(liveRecs[0]);
+        }
+        showToast(`ML Similarity: Found ${liveRecs.length} real candidates for ${player.name}`);
+      }
+    } catch (err) {
+      console.warn('[Scouting] ML similarity call fallback:', err);
+    }
   };
 
   const handleSelectCandidate = (rec: ScoutingRecommendation) => {
