@@ -454,9 +454,11 @@ async function main() {
 
       return {
         id: ent.id,
-        teamSide: ent.teamSide,
-        xNorm: parseFloat(currentX.toFixed(4)),
-        yNorm: parseFloat(currentY.toFixed(4)),
+        team: ent.teamSide as 'home' | 'away' | 'ball',
+        x: parseFloat(currentX.toFixed(4)),
+        y: parseFloat(currentY.toFixed(4)),
+        speedKmh: ent.teamSide === 'ball' ? 28.5 : 18.2,
+        jerseyNumber: ent.id <= 20 ? ent.id : undefined,
       };
     });
 

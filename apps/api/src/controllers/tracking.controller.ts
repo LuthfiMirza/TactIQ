@@ -82,9 +82,29 @@ export class TrackingController {
         return;
       }
 
+      const formattedCoordinates = session.coordinates.map((coord) => {
+        const rawPlayers = Array.isArray(coord.playersData) ? (coord.playersData as any[]) : [];
+        const normalizedEntities = rawPlayers.map((ent) => ({
+          id: ent.id,
+          team: ent.team || (ent.teamSide as 'home' | 'away' | 'ball') || 'home',
+          x: ent.x !== undefined ? ent.x : (ent.xNorm ?? 0.5),
+          y: ent.y !== undefined ? ent.y : (ent.yNorm ?? 0.5),
+          speedKmh: ent.speedKmh ?? (ent.team === 'ball' || ent.teamSide === 'ball' ? 28.5 : 18.2),
+          jerseyNumber: ent.jerseyNumber ?? (ent.id <= 20 ? ent.id : undefined),
+        }));
+
+        return {
+          ...coord,
+          playersData: normalizedEntities,
+        };
+      });
+
       res.json({
         success: true,
-        data: session,
+        data: {
+          ...session,
+          coordinates: formattedCoordinates,
+        },
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

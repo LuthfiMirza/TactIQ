@@ -13,8 +13,10 @@ export class PlayerController {
     try {
       const position = req.query.position as Position | undefined;
       const league = req.query.league as string | undefined;
-      const minPassing = req.query.minPassing ? parseInt(req.query.minPassing as string, 10) : undefined;
-      const minPace = req.query.minPace ? parseInt(req.query.minPace as string, 10) : undefined;
+      const parsedPassing = req.query.minPassing !== undefined ? Number(req.query.minPassing) : undefined;
+      const parsedPace = req.query.minPace !== undefined ? Number(req.query.minPace) : undefined;
+      const minPassing = parsedPassing !== undefined && !Number.isNaN(parsedPassing) ? Math.floor(parsedPassing) : undefined;
+      const minPace = parsedPace !== undefined && !Number.isNaN(parsedPace) ? Math.floor(parsedPace) : undefined;
       const search = req.query.search as string | undefined;
 
       // Construct Prisma filter query
