@@ -18,6 +18,7 @@
     "prisma:seed": "npm run prisma:seed --workspace=apps/api"
   },
   "devDependencies": {
+    "@esbuild/darwin-x64": "^0.28.2",
     "concurrently": "^9.1.2"
   },
   "keywords": [
