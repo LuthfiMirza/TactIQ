@@ -12,6 +12,7 @@ coverage/
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Production
 .env
@@ -80,3 +81,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Agents
+.agents/

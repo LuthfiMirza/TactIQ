@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-1":"#0f1011","surface-variant":"#343536","inverse-on-surface":"#303031","hairline-strong":"#34343a","on-primary-fixed":"#000965","on-tertiary-fixed-variant":"#673d00","tertiary-fixed":"#ffddbb","surface-bright":"#39393a","surface-2":"#141516","on-tertiary-fixed":"#2b1700","outline-variant":"#454652","primary-container":"#5e6ad2","surface":"#121314","error":"#ffb4ab","secondary":"#bdc2ff","primary-fixed":"#dfe0ff","surface-container":"#1f2021","brand-secure":"#7a7fad","semantic-overlay":"#000000","on-primary":"#121f8b","on-error":"#690005","on-secondary-container":"#abb3ff","surface-tint":"#bdc2ff","surface-3":"#18191a","on-background":"#e3e2e3","ink":"#f7f8f8","tertiary-fixed-dim":"#ffb867","surface-container-high":"#292a2b","on-tertiary-container":"#fffaf8","background":"#121314","on-primary-fixed-variant":"#2e3aa2","surface-container-highest":"#343536","surface-container-low":"#1b1c1d","on-secondary-fixed-variant":"#2c39a6","surface-4":"#191a1b","on-surface-variant":"#c6c5d5","canvas":"#010102","on-primary-container":"#fdfaff","hairline":"#23252a","secondary-fixed":"#dfe0ff","ink-tertiary":"#62666d","ink-muted":"#d0d6e0","on-tertiary":"#482900","inverse-primary":"#4854bb","ink-subtle":"#8a8f98","tertiary-container":"#a56500","secondary-container":"#2f3ca9","hairline-tertiary":"#3e3e44","semantic-success":"#27a644","on-secondary":"#0e1d90","inverse-surface":"#e3e2e3","on-error-container":"#ffdad6","on-surface":"#e3e2e3","surface-dim":"#121314","surface-container-lowest":"#0d0e0f","secondary-fixed-dim":"#bdc2ff","on-secondary-fixed":"#000964","outline":"#908f9e","primary":"#bdc2ff","tertiary":"#ffb867","error-container":"#93000a","primary-fixed-dim":"#bdc2ff"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"margin-desktop":"2rem",gutter:"1rem","gutter-desktop":"1.5rem","space-lg":"1rem","space-xs":"0.25rem",margin:"1rem","space-xl":"1.5rem","space-sm":"0.5rem","space-md":"0.75rem"},fontFamily:{"display-lg":["Inter"],"body-lg":["Inter"],button:["Inter"],caption:["Inter"],body:["Inter"],eyebrow:["Inter"],"display-xl":["Inter"],"card-title":["Inter"],"headline-mobile":["Inter"],headline:["Inter"],"body-sm":["Inter"],subhead:["Inter"],"display-md":["Inter"]},fontSize:{"display-lg":["56px",{lineHeight:"1.10",letterSpacing:"-1.8px",fontWeight:"600"}],"body-lg":["18px",{lineHeight:"1.50",letterSpacing:"-0.1px",fontWeight:"400"}],button:["14px",{lineHeight:"1.20",letterSpacing:"0px",fontWeight:"500"}],caption:["12px",{lineHeight:"1.40",letterSpacing:"0px",fontWeight:"400"}],body:["16px",{lineHeight:"1.50",letterSpacing:"-0.05px",fontWeight:"400"}],eyebrow:["13px",{lineHeight:"1.30",letterSpacing:"0.4px",fontWeight:"500"}],"display-xl":["80px",{lineHeight:"1.05",letterSpacing:"-3.0px",fontWeight:"600"}],"card-title":["22px",{lineHeight:"1.25",letterSpacing:"-0.4px",fontWeight:"500"}],"headline-mobile":["24px",{lineHeight:"1.25",letterSpacing:"-0.5px",fontWeight:"600"}],headline:["28px",{lineHeight:"1.20",letterSpacing:"-0.6px",fontWeight:"600"}],"body-sm":["14px",{lineHeight:"1.50",letterSpacing:"0px",fontWeight:"400"}],subhead:["20px",{lineHeight:"1.40",letterSpacing:"-0.2px",fontWeight:"400"}],"display-md":["40px",{lineHeight:"1.15",letterSpacing:"-1.0px",fontWeight:"600"}]}}}}</script></head><body class="bg-canvas font-body text-body text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-canvas border-b border-hairline"><div class="h-14 w-full px-margin-desktop flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-space-sm"><div class="w-7 h-7 rounded bg-surface-1 border border-hairline flex items-center justify-center p-1"><svg class="w-full h-full" fill="none" viewbox="0 0 24 24"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" stroke="#5e6ad2" stroke-linejoin="round" stroke-width="2"></polygon><circle cx="12" cy="12" fill="#5e6ad2" r="3"></circle><line stroke="#23252a" stroke-width="1.5" x1="12" x2="12" y1="2" y2="9"></line><line stroke="#23252a" stroke-width="1.5" x1="12" x2="12" y1="15" y2="22"></line></svg></div><span class="font-headline text-headline text-ink tracking-tight font-semibold">Tactiq</span></div><div class="hidden lg:flex items-center gap-space-xs ml-space-sm px-2 py-0.5 rounded-full border border-hairline bg-surface-1"><span class="w-1.5 h-1.5 rounded-full bg-semantic-success animate-pulse"></span><span class="font-caption text-caption text-ink-subtle uppercase tracking-wider font-medium">Live Engine</span></div></div><div class="flex-1 max-w-xl hidden md:block"><div class="relative flex items-center w-full"><span class="material-symbols-outlined absolute left-3 text-ink-subtle text-[18px] pointer-events-none">search</span><input class="w-full h-8 pl-9 pr-14 bg-surface-1 border border-hairline rounded font-body-sm text-body-sm text-ink placeholder:text-ink-tertiary focus:outline-none focus:border-primary-container transition-colors" placeholder="Search players, teams, matches, or tactical concepts... ⌘K" readonly="" type="text"/><div class="absolute right-2 flex items-center pointer-events-none"><kbd class="px-1.5 py-0.5 text-[10px] font-caption bg-surface-2 border border-hairline-strong rounded text-ink-subtle leading-none">⌘K</kbd></div></div></div><div class="flex items-center gap-space-md shrink-0"><nav class="flex items-center gap-1.5" data-active-classes="bg-surface-2 text-ink border border-hairline-strong"><a aria-current="page" class="px-3 py-1.5 rounded font-button transition-colors bg-surface-2 text-ink border border-hairline-strong" data-path="match-center" href="#">Match Center</a><a class="px-3 py-1.5 rounded font-button text-button text-on-surface-variant hover:text-on-surface hover:bg-surface-2 transition-colors" data-path="scouting" href="#">Scouting</a><a class="px-3 py-1.5 rounded font-button text-button text-on-surface-variant hover:text-on-surface hover:bg-surface-2 transition-colors" data-path="video-tracker" href="#">Video Tracker</a></nav><div class="h-4 w-px bg-hairline hidden sm:block"></div><div class="flex items-center gap-2"><button aria-label="Settings" class="w-8 h-8 rounded border border-hairline bg-surface-1 flex items-center justify-center text-ink-subtle hover:text-on-surface hover:border-hairline-strong transition-colors"><span class="material-symbols-outlined text-[18px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-14 bg-canvas min-h-screen"><div class="flex flex-col w-full">
+<!-- Content Canvas Area -->
+<div class="w-full px-margin-desktop py-space-xl flex flex-col gap-y-space-xl max-w-[1560px] mx-auto">
+<!-- 1. MATCH DAY CONTROLS STRIP -->
+<section class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md py-space-xs">
+<!-- Date Switcher -->
+<div class="flex items-center gap-space-xs">
+<div class="flex items-center bg-surface-1 rounded-lg p-1 shadow-sm">
+<button aria-label="Previous Day" class="w-7 h-7 flex items-center justify-center text-ink-subtle hover:text-ink hover:bg-surface-2 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<div class="flex items-center gap-2 px-space-sm font-button text-button text-ink">
+<span class="material-symbols-outlined text-[16px] text-primary-container">calendar_today</span>
+<span>Today, Saturday Oct 19</span>
+</div>
+<button aria-label="Next Day" class="w-7 h-7 flex items-center justify-center text-ink-subtle hover:text-ink hover:bg-surface-2 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<div class="px-2 py-1 bg-surface-1 rounded font-caption text-caption text-ink-tertiary hidden md:inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-bright"></span>
+<span>GW 8 of 38</span>
+</div>
+</div>
+<!-- Filter Tabs (Pill System) -->
+<div class="flex items-center gap-1 overflow-x-auto bg-surface-1 p-1 rounded-lg">
+<button class="px-3 py-1 rounded font-button text-button text-ink-subtle hover:text-ink transition-colors">
+          All Matches
+        </button>
+<button class="px-3 py-1 rounded font-button text-button bg-surface-2 text-ink shadow-sm flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-semantic-success animate-pulse"></span>
+<span>Live (3)</span>
+</button>
+<button class="px-3 py-1 rounded font-button text-button text-ink-subtle hover:text-ink transition-colors">
+          Finished
+        </button>
+<button class="px-3 py-1 rounded font-button text-button text-ink-subtle hover:text-ink transition-colors">
+          Upcoming
+        </button>
+<button class="px-3 py-1 rounded font-button text-button text-ink-subtle hover:text-primary-container flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[14px]">neurology</span>
+<span>AI Predictions</span>
+</button>
+</div>
+</section>
+<!-- 2. FEATURED LIVE MATCH SHOWCASE -->
+<section class="bg-surface-1 rounded-xl p-6 sm:p-8 flex flex-col gap-6 relative overflow-hidden shadow-xl">
+<!-- Glow ambient backdrop element -->
+<div class="absolute -right-24 -top-24 w-96 h-96 bg-primary-container/10 blur-[100px] pointer-events-none rounded-full"></div>
+<!-- Top Metadata & Timing Status -->
+<div class="flex flex-wrap items-center justify-between gap-3 relative z-10">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-semantic-success animate-ping"></span>
+<span class="font-eyebrow text-eyebrow uppercase text-ink-subtle tracking-wider">
+            Premier League • Matchday 8 — Emirates Stadium, London
+          </span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-2">
+<span class="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>
+<span class="font-caption text-caption text-ink font-medium">68' Live</span>
+</div>
+<span class="font-caption text-caption text-ink-tertiary uppercase tracking-wider hidden sm:inline">VAR Checked • Tempo: High</span>
+</div>
+</div>
+<!-- Main Scoreboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 items-center gap-6 relative z-10">
+<!-- Team Left: Arsenal -->
+<div class="lg:col-span-4 flex items-center gap-4">
+<div class="w-14 h-14 rounded-lg bg-surface-2 flex items-center justify-center p-2.5 shrink-0 shadow-inner">
+<svg class="w-full h-full" fill="none" viewbox="0 0 32 32">
+<path d="M16 3L4 7v10c0 7.5 5.5 13.5 12 14.5 6.5-1 12-7 12-14.5V7L16 3z" fill="#ffb4ab" fill-opacity="0.12"></path>
+<path d="M16 6L7 9.5v8c0 5.5 4 10 9 11 5-1 9-5.5 9-11v-8L16 6z" stroke="#ffb4ab" stroke-width="1.5"></path>
+<path d="M11 16h10M16 11v10" stroke="#ffb4ab" stroke-linecap="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline text-headline text-ink">Arsenal</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-caption bg-surface-2 text-ink-subtle uppercase">Home</span>
+</div>
+<span class="font-caption text-caption text-ink-muted mt-0.5">Saka 34', Martinelli 58'</span>
+</div>
+</div>
+<!-- Center Score & Status Indicator -->
+<div class="lg:col-span-4 flex flex-col items-center justify-center text-center py-2">
+<div class="flex items-center justify-center gap-4">
+<span class="font-display-lg text-display-lg text-ink font-semibold tracking-tighter tabular-nums">2</span>
+<span class="font-headline text-headline text-ink-tertiary font-light">:</span>
+<span class="font-display-lg text-display-lg text-ink font-semibold tracking-tighter tabular-nums">1</span>
+</div>
+<div class="mt-1 flex items-center gap-1.5">
+<span class="font-eyebrow text-eyebrow uppercase text-primary tracking-widest font-semibold">Arsenal in Control</span>
+<span class="material-symbols-outlined text-[14px] text-primary">trending_up</span>
+</div>
+</div>
+<!-- Team Right: Manchester City -->
+<div class="lg:col-span-4 flex items-center justify-start lg:justify-end gap-4">
+<div class="flex flex-col text-left lg:text-right order-2 lg:order-1">
+<div class="flex items-center lg:justify-end gap-2">
+<span class="px-1.5 py-0.5 rounded text-[10px] font-caption bg-surface-2 text-ink-subtle uppercase">Away</span>
+<span class="font-headline text-headline text-ink">Manchester City</span>
+</div>
+<span class="font-caption text-caption text-ink-muted mt-0.5">Haaland 42' (P)</span>
+</div>
+<div class="w-14 h-14 rounded-lg bg-surface-2 flex items-center justify-center p-2.5 shrink-0 shadow-inner order-1 lg:order-2">
+<svg class="w-full h-full" fill="none" viewbox="0 0 32 32">
+<circle cx="16" cy="16" fill="#bdc2ff" fill-opacity="0.1" r="13" stroke="#bdc2ff" stroke-width="1.5"></circle>
+<path d="M12 12l8 8M20 12l-8 8" stroke="#bdc2ff" stroke-linecap="round" stroke-width="1.5"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Tactiq Live AI Win Probability Bar -->
+<div class="bg-surface-2 rounded-lg p-4 flex flex-col gap-2 relative z-10">
+<div class="flex items-center justify-between text-caption font-caption">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-primary-container">insights</span>
+<span class="font-medium text-ink">Tactiq Live Win Probability</span>
+<span class="text-ink-tertiary">• Updated 12s ago</span>
+</div>
+<div class="flex items-center gap-4 text-ink-subtle">
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-primary-container"></span>Arsenal <strong class="text-ink">58%</strong></span>
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-surface-variant"></span>Draw <strong class="text-ink">24%</strong></span>
+<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-ink-tertiary"></span>Man City <strong class="text-ink">18%</strong></span>
+</div>
+</div>
+<!-- Segmented Probability Strip -->
+<div class="w-full h-2 rounded-full bg-surface-3 flex overflow-hidden gap-0.5 p-0.5">
+<div class="h-full bg-primary-container rounded-l-full transition-all duration-700" style="width: 58%"></div>
+<div class="h-full bg-surface-variant transition-all duration-700" style="width: 24%"></div>
+<div class="h-full bg-ink-tertiary rounded-r-full transition-all duration-700" style="width: 18%"></div>
+</div>
+</div>
+<!-- Core Telemetry Metrics Row (3-Columns) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 relative z-10">
+<!-- Expected Goals (xG) -->
+<div class="bg-surface-2/60 rounded-lg p-3.5 flex flex-col gap-2">
+<div class="flex items-center justify-between text-caption font-caption text-ink-subtle">
+<span class="font-medium text-ink">Expected Goals (xG)</span>
+<span>Delta: +0.72</span>
+</div>
+<div class="flex items-baseline justify-between font-headline text-headline text-ink">
+<span class="text-primary font-semibold tabular-nums">1.84</span>
+<div class="h-1.5 w-24 bg-surface-3 rounded-full flex overflow-hidden">
+<div class="h-full bg-primary" style="width: 62%"></div>
+<div class="h-full bg-ink-tertiary" style="width: 38%"></div>
+</div>
+<span class="text-ink-muted font-normal tabular-nums">1.12</span>
+</div>
+<div class="flex justify-between text-[11px] font-caption text-ink-tertiary">
+<span>Arsenal non-pen: 1.84</span>
+<span>City non-pen: 0.33</span>
+</div>
+</div>
+<!-- Ball Possession -->
+<div class="bg-surface-2/60 rounded-lg p-3.5 flex flex-col gap-2">
+<div class="flex items-center justify-between text-caption font-caption text-ink-subtle">
+<span class="font-medium text-ink">Ball Possession</span>
+<span>Territory: Arsenal 56%</span>
+</div>
+<div class="flex items-baseline justify-between font-headline text-headline text-ink">
+<span class="text-ink font-semibold tabular-nums">53%</span>
+<div class="h-1.5 w-24 bg-surface-3 rounded-full flex overflow-hidden">
+<div class="h-full bg-ink" style="width: 53%"></div>
+<div class="h-full bg-ink-subtle" style="width: 47%"></div>
+</div>
+<span class="text-ink-muted font-normal tabular-nums">47%</span>
+</div>
+<div class="flex justify-between text-[11px] font-caption text-ink-tertiary">
+<span>Passes: 412 (88%)</span>
+<span>Passes: 388 (85%)</span>
+</div>
+</div>
+<!-- Big Chances Created -->
+<div class="bg-surface-2/60 rounded-lg p-3.5 flex flex-col gap-2">
+<div class="flex items-center justify-between text-caption font-caption text-ink-subtle">
+<span class="font-medium text-ink">Big Chances Created</span>
+<span>Conversion: 66%</span>
+</div>
+<div class="flex items-baseline justify-between font-headline text-headline text-ink">
+<span class="text-primary font-semibold tabular-nums">3</span>
+<div class="flex items-center gap-1">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-surface-bright"></span>
+<span class="mx-1 text-ink-tertiary font-caption">vs</span>
+<span class="w-2.5 h-2.5 rounded-full bg-ink-tertiary"></span>
+</div>
+<span class="text-ink-muted font-normal tabular-nums">1</span>
+</div>
+<div class="flex justify-between text-[11px] font-caption text-ink-tertiary">
+<span>Box Touches: 26</span>
+<span>Box Touches: 14</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. LOWER WORKSPACE: 2-COLUMN SPLIT (65% : 35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop items-start">
+<!-- LEFT COLUMN (65% -> 8 of 12 columns) -->
+<div class="lg:col-span-8 flex flex-col gap-y-space-xl">
+<!-- Head-to-Head (H2H) Dashboard -->
+<div class="bg-surface-1 rounded-xl p-6 flex flex-col gap-4 shadow-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">history_edu</span>
+<h3 class="font-card-title text-card-title text-ink font-medium">Head-to-Head (H2H) Record</h3>
+</div>
+<p class="font-caption text-caption text-ink-subtle mt-0.5">
+                Last 5 Competitive Encounters across all domestic and European competitions
+              </p>
+</div>
+<div class="flex items-center gap-2 self-start sm:self-auto px-3 py-1 bg-surface-2 rounded-full">
+<span class="font-caption text-caption text-ink font-medium">2 Arsenal</span>
+<span class="text-ink-tertiary">•</span>
+<span class="font-caption text-caption text-ink-subtle">1 Draw</span>
+<span class="text-ink-tertiary">•</span>
+<span class="font-caption text-caption text-ink font-medium">2 Man City</span>
+</div>
+</div>
+<!-- Encounters List -->
+<div class="flex flex-col gap-1.5">
+<!-- Row 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-2/40 hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded text-[11px] font-caption bg-surface-3 text-ink-subtle tabular-nums">31 Mar 2024</span>
+<span class="font-body-sm text-body-sm text-ink font-medium">Man City 0 — 0 Arsenal</span>
+<span class="font-caption text-caption text-ink-tertiary hidden sm:inline">Etihad Stadium • Premier League</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-caption bg-surface-3 text-ink-subtle">Draw</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-2/40 hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded text-[11px] font-caption bg-surface-3 text-ink-subtle tabular-nums">08 Oct 2023</span>
+<span class="font-body-sm text-body-sm text-ink font-medium">Arsenal 1 — 0 Man City</span>
+<span class="font-caption text-caption text-ink-tertiary hidden sm:inline">Emirates • Premier League • Martinelli 86'</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-caption bg-primary-container/20 text-secondary font-medium">Arsenal Win</span>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-2/40 hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded text-[11px] font-caption bg-surface-3 text-ink-subtle tabular-nums">06 Aug 2023</span>
+<span class="font-body-sm text-body-sm text-ink font-medium">Arsenal 1(4) — 1(1) Man City</span>
+<span class="font-caption text-caption text-ink-tertiary hidden sm:inline">Wembley • Community Shield</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-caption bg-primary-container/20 text-secondary font-medium">Arsenal Pens</span>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-2/40 hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded text-[11px] font-caption bg-surface-3 text-ink-subtle tabular-nums">26 Apr 2023</span>
+<span class="font-body-sm text-body-sm text-ink font-medium">Man City 4 — 1 Arsenal</span>
+<span class="font-caption text-caption text-ink-tertiary hidden sm:inline">Etihad Stadium • Premier League</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-caption bg-surface-variant text-ink-subtle">Man City Win</span>
+</div>
+</div>
+<!-- Row 5 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-2/40 hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded text-[11px] font-caption bg-surface-3 text-ink-subtle tabular-nums">15 Feb 2023</span>
+<span class="font-body-sm text-body-sm text-ink font-medium">Arsenal 1 — 3 Man City</span>
+<span class="font-caption text-caption text-ink-tertiary hidden sm:inline">Emirates • Premier League</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full text-[10px] font-caption bg-surface-variant text-ink-subtle">Man City Win</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Matchday 8 Fixtures & Live Radar -->
+<div class="bg-surface-1 rounded-xl p-6 flex flex-col gap-4 shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">radar</span>
+<h3 class="font-card-title text-card-title text-ink font-medium">Matchday 8 Fixtures & Live Radar</h3>
+</div>
+<button class="font-caption text-caption text-primary hover:underline flex items-center gap-1">
+              Full Schedule
+              <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<!-- Fixture 1: Finished -->
+<div class="bg-surface-2 rounded-lg p-4 flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-3 text-ink-subtle text-[11px] font-caption">FT • Result</span>
+<span class="text-[11px] font-caption text-ink-tertiary">Anfield</span>
+</div>
+<div class="flex items-center justify-between font-body text-body text-ink font-medium">
+<div class="flex flex-col">
+<span>Liverpool</span>
+<span class="text-ink-subtle font-normal">Chelsea</span>
+</div>
+<div class="flex flex-col items-end tabular-nums font-semibold">
+<span class="text-primary">3</span>
+<span class="text-ink-subtle">1</span>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between text-[11px] font-caption text-ink-tertiary bg-surface-1/50 rounded px-2.5 py-1">
+<span>Final xG: 2.40 vs 0.92</span>
+<span class="text-semantic-success flex items-center gap-0.5">Tactiq Model Accurate</span>
+</div>
+</div>
+<!-- Fixture 2: Today Evening AI Pick -->
+<div class="bg-surface-2 rounded-lg p-4 flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-3 text-ink text-[11px] font-caption flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                  20:00 Today
+                </span>
+<span class="text-[11px] font-caption text-primary font-medium">AI Model Pick</span>
+</div>
+<div class="flex items-center justify-between font-body text-body text-ink font-medium">
+<div class="flex flex-col">
+<span>Aston Villa</span>
+<span>Tottenham Hotspur</span>
+</div>
+<div class="flex flex-col items-end tabular-nums text-ink-muted">
+<span>—</span>
+<span>—</span>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between text-[11px] font-caption text-ink-muted bg-surface-1/50 rounded px-2.5 py-1">
+<span>Projected: Villa 2 — 1 Spurs</span>
+<span class="text-primary">Win Prob 48%</span>
+</div>
+</div>
+<!-- Fixture 3: Finished -->
+<div class="bg-surface-2 rounded-lg p-4 flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-3 text-ink-subtle text-[11px] font-caption">FT • Result</span>
+<span class="text-[11px] font-caption text-ink-tertiary">St. James' Park</span>
+</div>
+<div class="flex items-center justify-between font-body text-body text-ink font-medium">
+<div class="flex flex-col">
+<span>Newcastle United</span>
+<span class="text-ink-subtle font-normal">Brighton</span>
+</div>
+<div class="flex flex-col items-end tabular-nums font-semibold">
+<span>0</span>
+<span>0</span>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between text-[11px] font-caption text-ink-tertiary bg-surface-1/50 rounded px-2.5 py-1">
+<span>Final xG: 0.88 vs 0.74</span>
+<span>Low Variance Draw</span>
+</div>
+</div>
+<!-- Fixture 4: Tomorrow -->
+<div class="bg-surface-2 rounded-lg p-4 flex flex-col justify-between gap-3">
+<div class="flex items-center justify-between">
+<span class="px-2 py-0.5 rounded bg-surface-3 text-ink-subtle text-[11px] font-caption">16:30 Tomorrow</span>
+<span class="text-[11px] font-caption text-ink-tertiary">Vitality Stadium</span>
+</div>
+<div class="flex items-center justify-between font-body text-body text-ink font-medium">
+<div class="flex flex-col">
+<span>AFC Bournemouth</span>
+<span>Arsenal</span>
+</div>
+<div class="flex flex-col items-end tabular-nums text-ink-muted">
+<span>—</span>
+<span>—</span>
+</div>
+</div>
+<div class="pt-2 flex items-center justify-between text-[11px] font-caption text-ink-tertiary bg-surface-1/50 rounded px-2.5 py-1">
+<span>Simulation Readiness: 94%</span>
+<span class="text-ink-subtle">Preview Live</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (35% -> 4 of 12 columns) -->
+<div class="lg:col-span-4 flex flex-col gap-y-space-xl">
+<!-- Standings Table (Dense Linear Grid) -->
+<div class="bg-surface-1 rounded-xl p-5 flex flex-col gap-4 shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">format_list_numbered</span>
+<h3 class="font-subhead text-subhead text-ink font-medium">Live Standings</h3>
+</div>
+<span class="text-[11px] font-caption text-ink-tertiary uppercase tracking-wider">PL Table</span>
+</div>
+<!-- Dense Table -->
+<div class="w-full flex flex-col">
+<!-- Table Header -->
+<div class="flex items-center justify-between py-1.5 px-2 text-[11px] font-caption text-ink-tertiary uppercase tracking-wider border-b border-hairline">
+<div class="flex items-center gap-3">
+<span class="w-4 text-center">#</span>
+<span>Club</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-5 text-center">P</span>
+<span class="w-7 text-center">GD</span>
+<span class="w-7 text-center font-bold text-ink">PTS</span>
+<span class="w-14 text-right">Form</span>
+</div>
+</div>
+<!-- Row 1: Arsenal -->
+<div class="flex items-center justify-between py-2 px-2 text-body-sm font-body-sm rounded hover:bg-surface-2 transition-colors bg-surface-2/30">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-4 text-center font-medium text-primary">1</span>
+<span class="font-medium text-ink truncate">Arsenal</span>
+</div>
+<div class="flex items-center gap-3 text-caption font-caption tabular-nums">
+<span class="w-5 text-center text-ink-subtle">8</span>
+<span class="w-7 text-center text-ink-muted">+32</span>
+<span class="w-7 text-center font-bold text-ink">58</span>
+<div class="w-14 flex items-center justify-end gap-1">
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+</div>
+</div>
+</div>
+<!-- Row 2: Man City -->
+<div class="flex items-center justify-between py-2 px-2 text-body-sm font-body-sm rounded hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-4 text-center text-ink-subtle">2</span>
+<span class="font-medium text-ink truncate">Man City</span>
+</div>
+<div class="flex items-center gap-3 text-caption font-caption tabular-nums">
+<span class="w-5 text-center text-ink-subtle">8</span>
+<span class="w-7 text-center text-ink-muted">+29</span>
+<span class="w-7 text-center font-bold text-ink">56</span>
+<div class="w-14 flex items-center justify-end gap-1">
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-ink-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</div>
+</div>
+</div>
+<!-- Row 3: Liverpool -->
+<div class="flex items-center justify-between py-2 px-2 text-body-sm font-body-sm rounded hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-4 text-center text-ink-subtle">3</span>
+<span class="font-medium text-ink truncate">Liverpool</span>
+</div>
+<div class="flex items-center gap-3 text-caption font-caption tabular-nums">
+<span class="w-5 text-center text-ink-subtle">8</span>
+<span class="w-7 text-center text-ink-muted">+24</span>
+<span class="w-7 text-center font-bold text-ink">54</span>
+<div class="w-14 flex items-center justify-end gap-1">
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-ink-tertiary"></span>
+</div>
+</div>
+</div>
+<!-- Row 4: Aston Villa -->
+<div class="flex items-center justify-between py-2 px-2 text-body-sm font-body-sm rounded hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-4 text-center text-ink-subtle">4</span>
+<span class="font-medium text-ink truncate">Aston Villa</span>
+</div>
+<div class="flex items-center gap-3 text-caption font-caption tabular-nums">
+<span class="w-5 text-center text-ink-subtle">7</span>
+<span class="w-7 text-center text-ink-muted">+12</span>
+<span class="w-7 text-center font-bold text-ink">49</span>
+<div class="w-14 flex items-center justify-end gap-1">
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</div>
+</div>
+</div>
+<!-- Row 5: Tottenham -->
+<div class="flex items-center justify-between py-2 px-2 text-body-sm font-body-sm rounded hover:bg-surface-2 transition-colors">
+<div class="flex items-center gap-3 min-w-0">
+<span class="w-4 text-center text-ink-subtle">5</span>
+<span class="font-medium text-ink truncate">Tottenham</span>
+</div>
+<div class="flex items-center gap-3 text-caption font-caption tabular-nums">
+<span class="w-5 text-center text-ink-subtle">7</span>
+<span class="w-7 text-center text-ink-muted">+9</span>
+<span class="w-7 text-center font-bold text-ink">47</span>
+<div class="w-14 flex items-center justify-end gap-1">
+<span class="w-2 h-2 rounded-full bg-ink-tertiary"></span>
+<span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-2 hover:bg-surface-3 rounded-lg font-button text-button text-ink-subtle hover:text-ink transition-colors flex items-center justify-center gap-1.5 mt-1">
+<span>Full Standings & Qualification Zones</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Tactiq AI Match Simulation Box -->
+<div class="bg-surface-2 rounded-lg p-5 flex flex-col gap-4 shadow-md relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary-container">memory</span>
+<h4 class="font-subhead text-subhead text-ink font-medium">Tactiq AI Match Simulation</h4>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-caption bg-surface-3 text-primary-fixed uppercase tracking-wider font-semibold">10k runs</span>
+</div>
+<div class="text-caption font-caption text-ink-subtle leading-relaxed">
+            Monte Carlo run computed on live optical tracking. Current game model projects strong home defensive consolidation.
+          </div>
+<!-- Insight Cards Inside Simulation -->
+<div class="flex flex-col gap-2.5">
+<div class="bg-surface-1 rounded-lg p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[16px] text-semantic-success mt-0.5">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-ink font-medium">Under 3.5 Goals Projection</span>
+<span class="font-caption text-caption text-ink-subtle mt-0.5">78% probability based on high block retention</span>
+</div>
+</div>
+<div class="bg-surface-1 rounded-lg p-3 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary mt-0.5">warning</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-ink font-medium">Tactical Vulnerability Detected</span>
+<span class="font-caption text-caption text-ink-subtle mt-0.5">Arsenal left-half space exposed to City overloads</span>
+</div>
+</div>
+</div>
+<!-- Primary CTA Button -->
+<button class="w-full mt-2 py-2.5 px-4 bg-primary-container hover:bg-primary-container/90 text-on-primary-container font-button text-button rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Open In-Depth AI Predictive Engine</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-canvas border-t border-hairline"><div class="w-full px-margin-desktop py-space-xl flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-col sm:flex-row items-center gap-space-md text-center sm:text-left"><span class="font-caption text-caption text-ink-subtle">© 2025 Tactiq Intelligence Platform. All rights reserved.</span><span class="hidden sm:inline text-hairline-strong">•</span><span class="font-caption text-caption text-ink-tertiary">Real-time tactical feeds powered by Opta & StatsBomb data feeds.</span></div><div class="flex items-center gap-space-lg"><a class="font-caption text-caption text-ink-subtle hover:text-ink transition-colors flex items-center gap-1.5" href="#"><span class="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>API Status</a><a class="font-caption text-caption text-ink-subtle hover:text-ink transition-colors" href="#">Docs</a><a class="font-caption text-caption text-ink-subtle hover:text-ink transition-colors" href="#">Privacy</a><a class="font-caption text-caption text-ink-subtle hover:text-ink transition-colors" href="#">Terms</a></div></div></footer></body></html>

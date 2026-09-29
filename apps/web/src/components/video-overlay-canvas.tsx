@@ -39,7 +39,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   const [currentFrame, setCurrentFrame] = useState<TrackingFramePayload | null>(null);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isSimulatingLocal, setIsSimulatingLocal] = useState<boolean>(false);
-  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(true);
+  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(false);
   const [activeMoment, setActiveMoment] = useState<MatchEventMoment | null>(null);
   const [entityStats, setEntityStats] = useState<{ homeCount: number; awayCount: number; ballSpeed: number }>({
     homeCount: 0,
@@ -62,22 +62,22 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   // Draw Tactical Football Pitch Lines
   const drawPitch = (ctx: CanvasRenderingContext2D, width: number, height: number, isTransparent: boolean) => {
     if (!isTransparent) {
-      // Pitch background with dark grass texture
-      ctx.fillStyle = '#0B1410';
+      // Pitch background with rich stadium grass texture
+      ctx.fillStyle = '#0F2C1F';
       ctx.fillRect(0, 0, width, height);
 
       const stripeCount = 10;
       const stripeWidth = width / stripeCount;
       for (let i = 0; i < stripeCount; i++) {
         if (i % 2 === 0) {
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.025)';
+          ctx.fillStyle = 'rgba(0, 223, 89, 0.04)';
           ctx.fillRect(i * stripeWidth, 0, stripeWidth, height);
         }
       }
     }
 
-    // Pitch Line Styles
-    ctx.strokeStyle = isTransparent ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.22)';
+    // Pitch Line Styles (crisp white markings with high legibility)
+    ctx.strokeStyle = isTransparent ? 'rgba(255, 255, 255, 0.50)' : 'rgba(255, 255, 255, 0.60)';
     ctx.lineWidth = 1.5;
 
     const padX = width * 0.04;
@@ -164,9 +164,9 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         }
         ctx.strokeStyle =
           entity.team === 'home'
-            ? 'rgba(56, 189, 248, 0.4)'
+            ? 'rgba(239, 1, 7, 0.4)'
             : entity.team === 'away'
-            ? 'rgba(244, 63, 94, 0.4)'
+            ? 'rgba(108, 171, 221, 0.4)'
             : 'rgba(250, 204, 21, 0.6)';
         ctx.lineWidth = entity.team === 'ball' ? 2.5 : 1.5;
         ctx.stroke();
@@ -187,17 +187,15 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         ctx.restore();
       } else {
         const isHome = entity.team === 'home';
-        const primaryColor = isHome ? '#38BDF8' : '#F43F5E';
-        const glowColor = isHome ? 'rgba(56, 189, 248, 0.5)' : 'rgba(244, 63, 94, 0.5)';
+        const primaryColor = isHome ? '#0284C7' : '#EF4444';
 
-        // Computer Vision Bounding Halo / Spotlight
+        // Flat Tactical Pitch Ring (Crisp Solid, No Blur/Glow)
         ctx.save();
-        ctx.shadowColor = primaryColor;
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = glowColor;
+        ctx.strokeStyle = primaryColor;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.ellipse(px, py + 4, 12, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.ellipse(px, py + 4, 13, 6, 0, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
 
         // Player Circle Dot
@@ -211,19 +209,22 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         ctx.stroke();
 
         // Jersey / ID label inside entity
-        ctx.fillStyle = '#0B0E14';
+        ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 9px JetBrains Mono, monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const label = entity.jerseyNumber ? String(entity.jerseyNumber) : String(entity.id);
         ctx.fillText(label, px, py);
 
-        // Speed badge
+        // Speed badge (Solid flat tag)
         if (entity.speedKmh && entity.speedKmh > 18) {
-          ctx.fillStyle = glowColor;
+          ctx.fillStyle = '#121820';
+          ctx.strokeStyle = '#253142';
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.roundRect(px - 14, py + 12, 28, 12, 3);
           ctx.fill();
+          ctx.stroke();
 
           ctx.fillStyle = '#FFFFFF';
           ctx.font = '8px Inter, sans-serif';
@@ -235,49 +236,8 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
     setEntityStats({ homeCount: homeC, awayCount: awayC, ballSpeed: bSpeed });
   }, []);
 
-  // Socket.io Connection & Streaming listener
-  useEffect(() => {
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    const socket = getSocket();
-
-    const handleConnect = () => {
-      setIsLiveConnected(true);
-      joinTrackingSession(sessionId);
-    };
-
-    const handleDisconnect = () => {
-      setIsLiveConnected(false);
-    };
-
-    const handleFrame = (payload: TrackingFramePayload) => {
-      if (payload.sessionId === sessionId) {
-        setCurrentFrame(payload);
-        renderFrame(payload, showVideoBackground);
-        if (onFrameUpdate) onFrameUpdate(payload);
-      }
-    };
-
-    if (socket.connected) {
-      handleConnect();
-    }
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('frame_update', handleFrame);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('frame_update', handleFrame);
-      leaveTrackingSession(sessionId);
-    };
-  }, [sessionId, handleResize, renderFrame, showVideoBackground, onFrameUpdate]);
-
   // Client-side simulation fallback generator
-  const generateSimulatedFrame = (fIdx: number): TrackingFramePayload => {
+  const generateSimulatedFrame = useCallback((fIdx: number): TrackingFramePayload => {
     const base = [
       { id: 1, team: 'home' as const, x: 0.12, y: 0.50, num: 1 },
       { id: 2, team: 'home' as const, x: 0.28, y: 0.25, num: 2 },
@@ -319,7 +279,65 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       frameNumber: fIdx,
       entities,
     };
-  };
+  }, [sessionId]);
+
+  // Socket.io Connection & Streaming listener
+  useEffect(() => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    // Initial mount: generate and render initial frame immediately
+    const initFrame = generateSimulatedFrame(0);
+    setCurrentFrame(initFrame);
+    renderFrame(initFrame, showVideoBackground);
+    if (onFrameUpdate) onFrameUpdate(initFrame);
+
+    // Auto-start continuous simulated stream so tactical board is alive immediately
+    setIsSimulatingLocal(true);
+    localTimerRef.current = setInterval(() => {
+      localFrameCounterRef.current += 1;
+      const frame = generateSimulatedFrame(localFrameCounterRef.current);
+      setCurrentFrame(frame);
+      renderFrame(frame, showVideoBackground);
+      if (onFrameUpdate) onFrameUpdate(frame);
+    }, 100);
+
+    const socket = getSocket();
+
+    const handleConnect = () => {
+      setIsLiveConnected(true);
+      joinTrackingSession(sessionId);
+    };
+
+    const handleDisconnect = () => {
+      setIsLiveConnected(false);
+    };
+
+    const handleFrame = (payload: TrackingFramePayload) => {
+      if (payload.sessionId === sessionId) {
+        setCurrentFrame(payload);
+        renderFrame(payload, showVideoBackground);
+        if (onFrameUpdate) onFrameUpdate(payload);
+      }
+    };
+
+    if (socket.connected) {
+      handleConnect();
+    }
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('frame_update', handleFrame);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (localTimerRef.current) clearInterval(localTimerRef.current);
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('frame_update', handleFrame);
+      leaveTrackingSession(sessionId);
+    };
+  }, [sessionId, handleResize, renderFrame, showVideoBackground, onFrameUpdate, generateSimulatedFrame]);
 
   const toggleSimulation = () => {
     if (isSimulatingLocal) {
@@ -355,58 +373,64 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   };
 
   return (
-    <div className={`relative flex flex-col w-full bg-tactiq-card border border-tactiq-border rounded-2xl overflow-hidden shadow-2xl ${className}`}>
-      {/* Top Stream Status Header */}
-      <div className="flex flex-wrap items-center justify-between px-4 py-3 bg-tactiq-card/90 border-b border-tactiq-border backdrop-blur-md gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2">
-            <span className={`inline-block w-2.5 h-2.5 rounded-full ${isLiveConnected || isSimulatingLocal ? 'bg-tactiq-emerald animate-ping' : 'bg-tactiq-muted'}`} />
-            <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-              {isLiveConnected ? 'Live Socket.io Stream' : isSimulatingLocal ? 'Local Simulation (10 FPS)' : 'Stream Ready'}
-            </span>
+    <div className={`relative flex flex-col w-full bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-xs transition-colors ${className}`}>
+      {/* Top Stream Status Header with Club Matchup */}
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200/80 dark:border-[#27272A] gap-2">
+        {/* Matchup & Status */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 text-[10px] font-mono shadow-xs shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            <span className="font-semibold hidden sm:inline">LIVE CV STREAM</span>
+            <span className="font-semibold sm:hidden">LIVE</span>
           </div>
-          <span className="text-xs text-tactiq-muted font-mono hidden sm:inline">Room: session_{sessionId}</span>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white font-mono shrink-0">
+            <span className="px-1.5 py-0.5 rounded bg-[#DA291C] text-white text-[9px] sm:text-[10px]">MUN</span>
+            <span className="tabular-nums">7 — 0</span>
+            <span className="px-1.5 py-0.5 rounded bg-[#6CABDD] text-white text-[9px] sm:text-[10px]">MCI</span>
+          </div>
         </div>
 
-        {/* View Mode Toggle: Pitch vs Video Stream (TSK-21) */}
-        <div className="flex items-center space-x-2">
+        {/* View Mode Toggle: Pitch vs Video Stream */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => {
               const nextState = !showVideoBackground;
               setShowVideoBackground(nextState);
               if (currentFrame) renderFrame(currentFrame, nextState);
             }}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[32px] ${
               showVideoBackground
-                ? 'bg-tactiq-cyan/20 text-tactiq-cyan border border-tactiq-cyan/40'
-                : 'bg-tactiq-surface text-slate-300 border border-tactiq-border hover:text-white'
+                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
             }`}
           >
             {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
-            <span>{showVideoBackground ? 'YouTube Video Feed' : 'Tactical Pitch Mode'}</span>
+            <span className="hidden sm:inline">{showVideoBackground ? 'High-Cam Broadcast' : '2D Pitch Plane'}</span>
+            <span className="sm:hidden">{showVideoBackground ? 'High-Cam' : '2D Plane'}</span>
           </button>
-        </div>
 
-        {/* Entity Telemetry Counters */}
-        <div className="flex items-center space-x-4 text-xs font-mono">
-          <div className="flex items-center space-x-1.5 text-tactiq-home">
-            <span className="w-2 h-2 rounded-full bg-tactiq-home" />
-            <span>Home: {entityStats.homeCount}</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-tactiq-away">
-            <span className="w-2 h-2 rounded-full bg-tactiq-away" />
-            <span>Away: {entityStats.awayCount}</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-tactiq-ball">
-            <span className="w-2 h-2 rounded-full bg-tactiq-ball" />
-            <span>Ball: {entityStats.ballSpeed} km/h</span>
+          {/* Entity Telemetry Counters */}
+          <div className="hidden md:flex items-center gap-3 text-xs font-mono">
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
+              <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
+              <span>MUN: {entityStats.homeCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
+              <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />
+              <span>MCI: {entityStats.awayCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              <span>Ball: {entityStats.ballSpeed} km/h</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 16:9 Aspect Ratio Container with YouTube Embed + Transparent Canvas Overlay (TSK-21, TSK-22) */}
-      <div ref={containerRef} className="relative w-full aspect-video bg-tactiq-bg flex items-center justify-center overflow-hidden">
-        {/* Underlying YouTube Embed Video Player (TSK-21) */}
+      {/* 16:9 Aspect Ratio Container with Clean Pitch Display */}
+      <div ref={containerRef} className="relative w-full aspect-video bg-[#0F2C1F] flex items-center justify-center overflow-hidden rounded-b-none">
+        {/* Underlying YouTube Embed Video Player (if enabled) */}
         {showVideoBackground && (
           <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
             <iframe
@@ -422,67 +446,74 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* Absolutely positioned HTML5 Overlay Canvas */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 z-10 w-full h-full cursor-crosshair pointer-events-none"
+          className="absolute inset-0 z-10 w-full h-full pointer-events-none"
         />
 
-        {/* HUD Watermark & Timestamp */}
-        <div className="absolute bottom-3 left-4 z-20 flex items-center space-x-3 pointer-events-none">
-          <div className="px-2.5 py-1 bg-black/70 border border-white/10 rounded-md backdrop-blur-md">
-            <span className="text-[11px] font-mono text-tactiq-cyan">
-              Frame: {currentFrame?.frameNumber ?? 0} | T: {((currentFrame?.timestampMs ?? 0) / 1000).toFixed(1)}s
-            </span>
-          </div>
+        {/* Clean Live Status Pill in Viewport */}
+        <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/75 border border-white/10 text-[11px] font-mono text-white backdrop-blur-xs shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span>2D Radar</span>
+            <span className="text-slate-400">·</span>
+            <span className="text-slate-300">Live</span>
+          </span>
+        </div>
 
+        {/* Frame & Active Moment Pill */}
+        <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
+          <div className="px-2.5 py-1 bg-black/75 border border-white/10 rounded-md text-[11px] font-mono text-slate-300 backdrop-blur-xs">
+            Frame {currentFrame?.frameNumber ?? 0}
+          </div>
           {activeMoment && (
-            <div className="px-2.5 py-1 bg-tactiq-card/90 border border-tactiq-emerald/50 rounded-md backdrop-blur-md text-[11px] text-tactiq-emerald font-semibold flex items-center gap-1.5">
-              <Award size={12} />
-              <span>{activeMoment.minute}' {activeMoment.label}</span>
+            <div className="px-2.5 py-1 bg-black/80 border border-white/10 rounded-md text-[11px] text-white font-mono font-medium flex items-center gap-1 backdrop-blur-xs">
+              <Award size={12} className="text-amber-400" />
+              <span>{activeMoment.minute}&apos; {activeMoment.label}</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Event Timeline Bar (TSK-21 / F-3.4 Event Timeline Navigation) */}
-      <div className="px-4 py-2 bg-tactiq-surface/90 border-t border-tactiq-border/80 flex items-center justify-between text-xs">
-        <span className="text-[11px] font-bold text-tactiq-muted uppercase tracking-wider hidden sm:inline">
-          Match Event Timeline:
+      {/* Match Event Timeline Bar */}
+      <div className="px-3 sm:px-4 py-2 bg-slate-50 dark:bg-[#18181C] border-t border-slate-200/80 dark:border-[#27272A] flex items-center justify-between text-xs gap-2 sm:gap-3 transition-colors">
+        <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase font-mono tracking-wider shrink-0 hidden sm:inline">
+          Moments:
         </span>
-        <div className="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full pr-1 no-scrollbar">
           {MATCH_TIMELINE_EVENTS.map((moment) => (
             <button
               key={moment.minute}
               onClick={() => seekToMoment(moment)}
-              className={`flex items-center space-x-1 px-2.5 py-1 rounded-md text-[11px] font-mono transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all shrink-0 ${
                 activeMoment?.minute === moment.minute
-                  ? 'bg-tactiq-emerald text-tactiq-bg font-bold shadow-glow-emerald/30'
-                  : 'bg-tactiq-card border border-tactiq-border text-slate-300 hover:border-tactiq-emerald/50'
+                  ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                  : 'bg-[#121215] border border-[#27272A] text-zinc-300 hover:border-zinc-700 hover:text-white shadow-xs'
               }`}
             >
-              <span>{moment.minute}'</span>
-              <span className="font-sans font-semibold">{moment.label}</span>
+              <span className="font-bold">{moment.minute}&apos;</span>
+              <span className="font-sans font-medium">{moment.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Bottom Controls Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-tactiq-surface/80 border-t border-tactiq-border text-xs">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[#121215] border-t border-[#27272A] text-xs transition-colors gap-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={toggleSimulation}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-medium transition-all ${
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-semibold text-xs transition-all shadow-xs ${
               isSimulatingLocal
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                : 'bg-tactiq-emerald/20 text-tactiq-emerald border border-tactiq-emerald/30 hover:bg-tactiq-emerald/30'
+                ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                : 'bg-[#CEFF00] hover:bg-[#b8e600] text-black font-black shadow-xs shadow-[#CEFF00]/20'
             }`}
           >
             {isSimulatingLocal ? <Pause size={14} /> : <Play size={14} />}
-            <span>{isSimulatingLocal ? 'Pause Simulated Stream' : 'Run Simulated Tracking'}</span>
+            <span>{isSimulatingLocal ? 'Pause Radar' : 'Run Simulated Tracking'}</span>
           </button>
 
           <button
             onClick={resetSimulation}
-            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-tactiq-card border border-tactiq-border text-slate-300 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] transition-colors text-xs font-mono shadow-xs"
             title="Reset simulation loop"
           >
             <RotateCcw size={13} />
@@ -490,9 +521,9 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           </button>
         </div>
 
-        <div className="flex items-center space-x-2 text-tactiq-muted hidden md:flex">
-          <Activity size={14} className="text-tactiq-emerald" />
-          <span>Real-time YOLOv8 Computer Vision Pipeline</span>
+        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-mono text-[11px] hidden sm:flex">
+          <Activity size={14} className="text-slate-500 dark:text-zinc-400" />
+          <span>TactIQ Live Tracking Engine</span>
         </div>
       </div>
     </div>

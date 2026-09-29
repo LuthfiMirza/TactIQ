@@ -1,198 +1,805 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { StatCard } from '@/components/ui/StatCard';
 import {
-  Users,
-  Shield,
-  Crosshair,
-  TrendingUp,
+  Trophy,
   Activity,
-  Cpu,
-  Layers,
+  ChevronLeft,
+  ChevronRight,
   ArrowRight,
-  Database,
-  Radio,
 } from 'lucide-react';
+import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
+import { MatchdayMarquee } from '@/components/matchday-marquee';
+
+// ─── TYPES & DATA ────────────────────────────────────────────────────────────
+
+interface Match {
+  id: string;
+  league: string;
+  leagueCountry: string;
+  round: string;
+  home: string;
+  homeCode: string;
+  homeColor: string;
+  away: string;
+  awayCode: string;
+  awayColor: string;
+  homeScore?: number;
+  awayScore?: number;
+  xgHome?: number;
+  xgAway?: number;
+  status: 'LIVE' | 'FT' | 'HT' | 'UPCOMING';
+  minute?: string;
+  startTime?: string;
+  scorers?: {
+    home: string[];
+    away: string[];
+  };
+  highlightPlayer?: {
+    name: string;
+    rating: number;
+    team: string;
+  };
+}
+
+const LEAGUES = [
+  { id: 'all', name: 'All Matches', count: 24 },
+  { id: 'epl', name: 'Premier League', count: 8, popular: true },
+  { id: 'ucl', name: 'Champions League', count: 6, popular: true },
+  { id: 'laliga', name: 'La Liga', count: 5, popular: true },
+  { id: 'seriea', name: 'Serie A', count: 4, popular: true },
+  { id: 'bundesliga', name: 'Bundesliga', count: 4, popular: true },
+  { id: 'ligue1', name: 'Ligue 1', count: 3, popular: false },
+  { id: 'eredivisie', name: 'Eredivisie', count: 2, popular: false },
+];
+
+const MATCHES: Match[] = [
+  // Premier League
+  {
+    id: 'm1',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Man United',
+    homeCode: 'MUN',
+    homeColor: '#DA291C',
+    away: 'Man City',
+    awayCode: 'MCI',
+    awayColor: '#6CABDD',
+    homeScore: 7,
+    awayScore: 0,
+    xgHome: 4.62,
+    xgAway: 0.38,
+    status: 'LIVE',
+    minute: "88'",
+    scorers: {
+      home: ["Fernandes 14' (P), 78'", "Rashford 28', 53'", "Højlund 41'", "Garnacho 65'", "Mainoo 88'"],
+      away: [],
+    },
+    highlightPlayer: {
+      name: 'B. Fernandes',
+      rating: 9.9,
+      team: 'Man United',
+    },
+  },
+  {
+    id: 'm2',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Liverpool',
+    homeCode: 'LIV',
+    homeColor: '#C8102E',
+    away: 'Chelsea',
+    awayCode: 'CHE',
+    awayColor: '#034694',
+    homeScore: 3,
+    awayScore: 1,
+    xgHome: 2.88,
+    xgAway: 0.94,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["M. Salah 29' (P)", "C. Jones 51'", "D. Szoboszlai 88'"],
+      away: ["N. Jackson 48'"],
+    },
+    highlightPlayer: {
+      name: 'M. Salah',
+      rating: 8.3,
+      team: 'Liverpool',
+    },
+  },
+  {
+    id: 'm3',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Gameweek 8',
+    home: 'Aston Villa',
+    homeCode: 'AVL',
+    homeColor: '#670E36',
+    away: 'Tottenham',
+    awayCode: 'TOT',
+    awayColor: '#132257',
+    status: 'UPCOMING',
+    startTime: '21:00',
+    xgHome: 1.62,
+    xgAway: 1.55,
+  },
+
+  // Champions League
+  {
+    id: 'm4',
+    league: 'Champions League',
+    leagueCountry: 'Europe',
+    round: 'League Phase',
+    home: 'Bayern München',
+    homeCode: 'BAY',
+    homeColor: '#DC052D',
+    away: 'Paris Saint-Germain',
+    awayCode: 'PSG',
+    awayColor: '#004170',
+    homeScore: 3,
+    awayScore: 2,
+    xgHome: 2.15,
+    xgAway: 1.84,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["H. Kane 14', 77'", "J. Musiala 44'"],
+      away: ["O. Dembélé 32'", "B. Barcola 81'"],
+    },
+    highlightPlayer: {
+      name: 'H. Kane',
+      rating: 8.8,
+      team: 'Bayern',
+    },
+  },
+  {
+    id: 'm5',
+    league: 'Champions League',
+    leagueCountry: 'Europe',
+    round: 'League Phase',
+    home: 'Real Madrid',
+    homeCode: 'RMA',
+    homeColor: '#FEBE10',
+    away: 'Borussia Dortmund',
+    awayCode: 'BVB',
+    awayColor: '#FDE100',
+    status: 'UPCOMING',
+    startTime: '23:45',
+    xgHome: 2.45,
+    xgAway: 1.1,
+  },
+
+  // La Liga
+  {
+    id: 'm6',
+    league: 'La Liga',
+    leagueCountry: 'Spain',
+    round: 'El Clásico',
+    home: 'FC Barcelona',
+    homeCode: 'BAR',
+    homeColor: '#A50044',
+    away: 'Real Madrid',
+    awayCode: 'RMA',
+    awayColor: '#FEBE10',
+    homeScore: 0,
+    awayScore: 0,
+    xgHome: 0.42,
+    xgAway: 0.61,
+    status: 'HT',
+    minute: 'HT',
+    highlightPlayer: {
+      name: 'L. Yamal',
+      rating: 7.2,
+      team: 'Barcelona',
+    },
+  },
+];
+
+const STANDINGS = [
+  { rank: 1, club: 'Arsenal', code: 'ARS', color: '#EF0107', p: 8, gd: '+18', pts: 58 },
+  { rank: 2, club: 'Man City', code: 'MCI', color: '#6CABDD', p: 8, gd: '+16', pts: 56 },
+  { rank: 3, club: 'Liverpool', code: 'LIV', color: '#C8102E', p: 8, gd: '+14', pts: 54 },
+  { rank: 4, club: 'Aston Villa', code: 'AVL', color: '#670E36', p: 8, gd: '+8', pts: 49 },
+  { rank: 5, club: 'Chelsea', code: 'CHE', color: '#034694', p: 8, gd: '+7', pts: 46 },
+];
+
+const TOP_SCORERS = [
+  { name: 'Erling Haaland', club: 'Man City', goals: 14, rating: 8.4 },
+  { name: 'Mohamed Salah', club: 'Liverpool', goals: 11, rating: 8.2 },
+  { name: 'Bukayo Saka', club: 'Arsenal', goals: 9, rating: 8.6 },
+  { name: 'Cole Palmer', club: 'Chelsea', goals: 8, rating: 8.0 },
+];
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState<boolean>(false);
+  const [selectedLeague, setSelectedLeague] = useState<string>('all');
+  const [liveOnly, setLiveOnly] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Filter matches
+  const filteredMatches = MATCHES.filter((m) => {
+    if (selectedLeague !== 'all') {
+      if (selectedLeague === 'epl' && m.league !== 'Premier League') return false;
+      if (selectedLeague === 'ucl' && m.league !== 'Champions League') return false;
+      if (selectedLeague === 'laliga' && m.league !== 'La Liga') return false;
+    }
+    if (liveOnly && m.status !== 'LIVE' && m.status !== 'HT') return false;
+    return true;
+  });
+
+  // Group matches by league
+  const groupedLeagues = Array.from(new Set(filteredMatches.map((m) => m.league)));
+  const liveFeaturedMatch = MATCHES.find((m) => m.id === 'm1');
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#09090B] animate-pulse" />;
+  }
+
   return (
-    <div className="space-y-10">
-      {/* Hero Welcome Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-tactiq-card via-tactiq-card to-tactiq-surface border border-tactiq-border p-8 sm:p-12 shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-tactiq-emerald/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 -mb-10 w-72 h-72 bg-tactiq-cyan/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-tactiq-emerald/10 border border-tactiq-emerald/20 text-tactiq-emerald text-xs font-semibold">
-            <Activity size={14} className="animate-spin" />
-            <span>TactIQ Core Platform Online</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white leading-tight">
-            Data-Driven Football Intelligence & Real-Time Tactical Tracking
-          </h1>
-
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Unifying high-dimensional player radar analytics, statistical match outcome forecasting, and computer-vision entity coordinate tracking across high-performance microservices.
-          </p>
-
-          <div className="pt-2 flex flex-wrap gap-4">
-            <Link
-              href="/scouting"
-              className="inline-flex items-center space-x-2 px-5 py-3 rounded-xl bg-tactiq-emerald text-tactiq-bg font-bold text-sm hover:bg-tactiq-emerald/90 transition-all shadow-glow-emerald"
-            >
-              <span>Explore Scouting Hub</span>
-              <ArrowRight size={16} />
-            </Link>
-
-            <Link
-              href="/tactical-tracker"
-              className="inline-flex items-center space-x-2 px-5 py-3 rounded-xl bg-tactiq-surface border border-tactiq-border text-white font-semibold text-sm hover:border-tactiq-cyan hover:text-tactiq-cyan transition-all"
-            >
-              <Crosshair size={16} />
-              <span>Launch Tactical Visualizer</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* KPI Stat Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Indexed Players"
-          value="20+"
-          change="+100% Elite"
-          isPositive={true}
-          icon={Users}
-          subtext="7-Axis Radar Metrics & Bio"
+    <div className="min-h-screen bg-[#09090B] pb-16 pt-3 sm:pt-4 transition-colors duration-150">
+      <div className="max-w-[1360px] mx-auto px-3 sm:px-6">
+        
+        {/* ── Top Matchday Broadcast Ticker ── */}
+        <MatchdayMarquee
+          matches={MATCHES.map((m) => ({
+            id: m.id,
+            homeCode: m.homeCode,
+            awayCode: m.awayCode,
+            homeScore: m.homeScore,
+            awayScore: m.awayScore,
+            status: m.status,
+            minute: m.minute,
+            startTime: m.startTime,
+          }))}
+          className="mb-4 sm:mb-5"
         />
-        <StatCard
-          title="Active Clubs"
-          value="4"
-          change="Tier 1"
-          isPositive={true}
-          icon={Shield}
-          subtext="Premier League & European Elite"
-        />
-        <StatCard
-          title="Match Forecasting"
-          value="98.2%"
-          change="Form Calibrated"
-          isPositive={true}
-          icon={TrendingUp}
-          subtext="Multi-factor Poisson/Elo Model"
-        />
-        <StatCard
-          title="Tracking Stream"
-          value="10 FPS"
-          change="Ultra-low Latency"
-          isPositive={true}
-          icon={Radio}
-          subtext="Redis Pub/Sub & Socket.io Hub"
-        />
-      </section>
 
-      {/* 3 Core Architectural Modules */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Core Operational Modules</h2>
-            <p className="text-xs text-tactiq-muted">Integrated microservices built across our 3 engineering leads.</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Module 1: Scouting */}
-          <Link
-            href="/scouting"
-            className="group relative flex flex-col justify-between p-6 rounded-2xl bg-tactiq-card border border-tactiq-border hover:border-tactiq-emerald/50 transition-all duration-300 hover:shadow-glow-emerald/20"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-tactiq-emerald/10 border border-tactiq-emerald/20 flex items-center justify-center text-tactiq-emerald group-hover:scale-110 transition-transform">
-                <Users size={20} />
+        {/* ── Main 3-Column Layout ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 1: Left Navigation & Pinned Leagues (3 cols / Non-Sticky)
+             ════════════════════════════════════════════════════════════════ */}
+          <aside className="hidden lg:flex flex-col gap-4 lg:col-span-3">
+            
+            {/* Quick Filter Card */}
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3 transition-colors">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 px-3 py-1.5 mb-1">
+                Feeds & Filters
               </div>
-              <h3 className="text-lg font-bold text-white group-hover:text-tactiq-emerald transition-colors">
-                Scouting & Player Similarity
-              </h3>
-              <p className="text-xs text-tactiq-muted leading-relaxed">
-                Filter across positions, leagues, and passing thresholds. Discover similar player profiles using high-dimensional cosine similarity vectors computed in FastAPI.
-              </p>
-            </div>
-            <div className="mt-6 flex items-center justify-between text-xs font-semibold text-tactiq-emerald">
-              <span>Launch Scouting Table</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
+              <div className="space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    selectedLeague === 'all' && !liveOnly
+                      ? 'bg-zinc-800/60 text-white font-bold'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Trophy size={14} className={selectedLeague === 'all' && !liveOnly ? 'text-[#CEFF00]' : 'text-zinc-500'} />
+                    All Matches
+                  </span>
+                  <span className={`text-[11px] font-mono ${selectedLeague === 'all' && !liveOnly ? 'text-[#CEFF00] font-bold' : 'text-zinc-400'}`}>
+                    24
+                  </span>
+                </button>
 
-          {/* Module 2: Match Center */}
-          <Link
-            href="/match-center"
-            className="group relative flex flex-col justify-between p-6 rounded-2xl bg-tactiq-card border border-tactiq-border hover:border-tactiq-cyan/50 transition-all duration-300 hover:shadow-glow-cyan/20"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-tactiq-cyan/10 border border-tactiq-cyan/20 flex items-center justify-center text-tactiq-cyan group-hover:scale-110 transition-transform">
-                <Shield size={20} />
+                <button
+                  type="button"
+                  onClick={() => setLiveOnly(!liveOnly)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    liveOnly
+                      ? 'bg-zinc-800/60 text-white font-bold'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-tactiq-coral" />
+                    Live Matches
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200">
+                    2 LIVE
+                  </span>
+                </button>
+
+                <Link
+                  href="/match-center"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30 transition-colors"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Activity size={14} className="text-zinc-500" />
+                    Match Center
+                  </span>
+                  <span className="text-[10px] text-zinc-500">→</span>
+                </Link>
               </div>
-              <h3 className="text-lg font-bold text-white group-hover:text-tactiq-cyan transition-colors">
-                Match Center & Head-to-Head
-              </h3>
-              <p className="text-xs text-tactiq-muted leading-relaxed">
-                Analyze upcoming clashes, historical H2H records, and trigger AI win probability forecasting with automated scoreline expectation.
-              </p>
             </div>
-            <div className="mt-6 flex items-center justify-between text-xs font-semibold text-tactiq-cyan">
-              <span>View Fixture Breakdown</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
 
-          {/* Module 3: Tactical Tracker */}
-          <Link
-            href="/tactical-tracker"
-            className="group relative flex flex-col justify-between p-6 rounded-2xl bg-tactiq-card border border-tactiq-border hover:border-rose-500/50 transition-all duration-300"
-          >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
-                <Crosshair size={20} />
+            {/* Popular Leagues Accordion */}
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3 transition-colors">
+              <div className="flex items-center justify-between px-3 py-1.5 mb-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                  Popular Leagues
+                </span>
+                <span className="text-[10px] text-zinc-500 font-mono">Pinned</span>
               </div>
-              <h3 className="text-lg font-bold text-white group-hover:text-rose-400 transition-colors">
-                Tactical Vision Tracker
-              </h3>
-              <p className="text-xs text-tactiq-muted leading-relaxed">
-                Live HTML5 2D pitch overlay canvas synchronized with Socket.io and Redis. Real-time player coordinates, speed metrics, and tactical heat trails.
-              </p>
+              <div className="space-y-0.5">
+                {LEAGUES.filter((l) => l.id !== 'all').map((league) => {
+                  const isActive = selectedLeague === league.id;
+                  return (
+                    <button
+                      key={league.id}
+                      type="button"
+                      onClick={() => setSelectedLeague(league.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-zinc-800/60 text-white font-bold'
+                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <LeagueLogo league={league.name} size={16} />
+                        <span className="truncate">{league.name}</span>
+                      </span>
+                      <span className={`text-[11px] font-mono ${isActive ? 'text-[#CEFF00] font-bold' : 'text-zinc-500'}`}>
+                        {league.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="mt-6 flex items-center justify-between text-xs font-semibold text-rose-400">
-              <span>Open Tactical Stream</span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        </div>
-      </section>
 
-      {/* Engineering Lead Ownership Mapping */}
-      <section className="p-6 bg-tactiq-card/60 border border-tactiq-border rounded-2xl">
-        <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-          <Layers size={16} className="text-tactiq-emerald" />
-          <span>TactIQ Distributed Architecture & Team Ownership</span>
-        </h3>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="p-4 rounded-xl bg-tactiq-surface/50 border border-tactiq-border">
-            <div className="font-bold text-slate-200">1. apps/api (Luthfi)</div>
-            <p className="text-tactiq-muted mt-1">Node.js, Express, Prisma ORM, PostgreSQL, Redis Pub/Sub, and Socket.io WebSocket Hub.</p>
-          </div>
-          <div className="p-4 rounded-xl bg-tactiq-surface/50 border border-tactiq-border">
-            <div className="font-bold text-slate-200">2. services/ml (Fuad)</div>
-            <p className="text-tactiq-muted mt-1">Python 3.11, FastAPI, Scikit-learn Cosine Similarity, Match Outcome Modeling, CV Worker.</p>
-          </div>
-          <div className="p-4 rounded-xl bg-tactiq-surface/50 border border-tactiq-border">
-            <div className="font-bold text-slate-200">3. apps/web (Ferrel)</div>
-            <p className="text-tactiq-muted mt-1">Next.js App Router, Tailwind CSS Sports Theme, Chart.js Radar Charts, HTML5 Canvas 2D Overlay.</p>
-          </div>
+          </aside>
+
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 2: Center Main Matchday Stream (6 cols)
+             ════════════════════════════════════════════════════════════════ */}
+          <main className="lg:col-span-6 flex flex-col gap-4">
+            
+            {/* Mobile / Tablet Horizontal Filter Chips */}
+            <div className="lg:hidden flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1">
+              <button
+                type="button"
+                onClick={() => { setSelectedLeague('all'); setLiveOnly(false); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                  selectedLeague === 'all' && !liveOnly
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                }`}
+              >
+                All (24)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setLiveOnly(!liveOnly)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                  liveOnly
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                <span>Live (2)</span>
+              </button>
+
+              {LEAGUES.filter((l) => l.id !== 'all').map((league) => {
+                const isActive = selectedLeague === league.id && !liveOnly;
+                return (
+                  <button
+                    key={league.id}
+                    type="button"
+                    onClick={() => { setSelectedLeague(league.id); setLiveOnly(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
+                      isActive
+                        ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                        : 'bg-white dark:bg-[#121215] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-[#27272A]'
+                    }`}
+                  >
+                    <LeagueLogo league={league.name} size={14} />
+                    <span>{league.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 1. Date Picker Bar */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-1.5 flex items-center justify-between transition-colors">
+              <button
+                type="button"
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate('yesterday')}
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    selectedDate === 'yesterday'
+                      ? 'bg-[#CEFF00] text-black font-extrabold'
+                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Yesterday
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate('today')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    selectedDate === 'today'
+                      ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                      : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Today
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate('tomorrow')}
+                  className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    selectedDate === 'tomorrow'
+                      ? 'bg-[#CEFF00] text-black font-extrabold'
+                      : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#1A1A1E]'
+                  }`}
+                >
+                  Tomorrow
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1A1A1E] flex items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 cursor-pointer"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* 2. Featured Match Hero Card */}
+            {liveFeaturedMatch && (
+              <div className="relative bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors p-3.5 sm:p-5 flex flex-col gap-2.5 sm:gap-3.5">
+                {/* Ambient Team Glow */}
+                <div className="absolute -top-16 -left-16 w-48 h-48 bg-red-500/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-16 -right-16 w-48 h-48 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
+                
+                {/* Match Header */}
+                <div className="relative flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <LeagueLogo league={liveFeaturedMatch.league} size={14} />
+                    <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
+                      {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
+                    </span>
+                  </div>
+                  <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
+                </div>
+
+                {/* Scoreboard Block */}
+                <div className="relative">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 sm:gap-x-4">
+                    
+                    {/* Home Team */}
+                    <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight block">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.home}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
+                          5th in PL
+                        </span>
+                      </div>
+                      <ClubCrest code={liveFeaturedMatch.homeCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                    </div>
+
+                    {/* Center Column: Score & Minute */}
+                    <div className="flex flex-col items-center justify-center px-1.5 sm:px-4 w-20 sm:w-32 shrink-0">
+                      <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2 font-mono">
+                        <span>{liveFeaturedMatch.homeScore}</span>
+                        <span className="text-slate-300 dark:text-slate-600 font-normal text-lg sm:text-2xl">-</span>
+                        <span>{liveFeaturedMatch.awayScore}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
+                        </span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
+                          {liveFeaturedMatch.minute}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Away Team */}
+                    <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
+                      <ClubCrest code={liveFeaturedMatch.awayCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-lg truncate leading-tight block">
+                          <span className="hidden sm:inline">{liveFeaturedMatch.away}</span>
+                          <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
+                          2nd in PL
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Pencetak Gol (Merapat Bersih ke Ikon Bola di Tengah) */}
+                  {((liveFeaturedMatch.scorers?.home && liveFeaturedMatch.scorers.home.length > 0) ||
+                    (liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0)) && (
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-2.5 mt-3 sm:mt-3.5">
+                      
+                      {/* Home Scorers (Rata Kanan merapat ke bola) */}
+                      <div className="space-y-0.5 sm:space-y-1 text-right min-w-0">
+                        {liveFeaturedMatch.scorers?.home?.map((scorer, idx) => (
+                          <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                            {scorer}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Center Ball Icon */}
+                      <div className="pt-0.5 shrink-0 flex items-center justify-center px-1">
+                        <SoccerBallIcon size={12} className="text-slate-400 dark:text-zinc-500" />
+                      </div>
+
+                      {/* Away Scorers (Rata Kiri merapat ke bola) */}
+                      <div className="space-y-0.5 sm:space-y-1 text-left min-w-0">
+                        {liveFeaturedMatch.scorers?.away && liveFeaturedMatch.scorers.away.length > 0 ? (
+                          liveFeaturedMatch.scorers.away.map((scorer, idx) => (
+                            <div key={idx} className="font-medium text-slate-800 dark:text-zinc-200 truncate text-[11px] sm:text-xs">
+                              {scorer}
+                            </div>
+                          ))
+                        ) : null}
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* xG Momentum Bar: UNBOXED / MINIMALIS (Tanpa Kotak Dalam) */}
+                  <div className="mt-3.5 pt-1.5 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2 text-[11px] font-mono">
+                        <span className="font-bold text-tactiq-coral">xG {liveFeaturedMatch.xgHome}</span>
+                        <span className="text-slate-300 dark:text-zinc-600">—</span>
+                        <span className="font-bold text-tactiq-cyan">xG {liveFeaturedMatch.xgAway}</span>
+                      </div>
+                      <Link
+                        href="/match-center"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-100 hover:text-[#CEFF00] transition-colors"
+                      >
+                        <span>Match Center</span>
+                        <ArrowRight size={11} />
+                      </Link>
+                    </div>
+
+                    {/* Dual Color xG Bar */}
+                    <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-800 gap-0.5">
+                      <div className="h-full bg-tactiq-coral rounded-full transition-all duration-300" style={{ width: '58%' }} />
+                      <div className="h-full bg-tactiq-cyan rounded-full transition-all duration-300" style={{ width: '42%' }} />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 3. Grouped Matches By Competition */}
+            <div className="space-y-4">
+              {groupedLeagues.map((leagueName) => {
+                const matchesInLeague = filteredMatches.filter((m) => m.league === leagueName);
+                if (matchesInLeague.length === 0) return null;
+
+                return (
+                  <div key={leagueName} className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs overflow-hidden transition-colors">
+                    
+                    {/* League Subheader */}
+                    <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-[#16161A] border-b border-slate-200/80 dark:border-[#27272A] flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{leagueName}</span>
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">· {matchesInLeague[0].leagueCountry}</span>
+                      </div>
+                      <Link
+                        href="/match-center"
+                        className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors"
+                      >
+                        <span>Standings</span>
+                        <ChevronRight size={12} />
+                      </Link>
+                    </div>
+
+                    {/* Match List Rows */}
+                    <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
+                      {matchesInLeague.map((match) => (
+                        <Link
+                          key={match.id}
+                          href="/match-center"
+                          className="block p-3.5 hover:bg-slate-50/80 dark:hover:bg-[#1A1A1E] transition-colors group"
+                        >
+                          <div className="grid grid-cols-[54px_1fr] items-center gap-3">
+                            
+                            {/* Status Column */}
+                            <div className="text-center font-mono">
+                              {match.status === 'LIVE' ? (
+                                <span className="font-bold text-xs sm:text-[13px] text-rose-600 dark:text-rose-400 tracking-tight">
+                                  {match.minute}
+                                </span>
+                              ) : match.status === 'HT' ? (
+                                <span className="font-bold text-xs text-amber-600 dark:text-amber-400 tracking-tight">
+                                  HT
+                                </span>
+                              ) : match.status === 'FT' ? (
+                                <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+                                  FT
+                                </span>
+                              ) : (
+                                <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                                  {match.startTime}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Teams & Scorers */}
+                            <div className="space-y-1.5 min-w-0 pr-1">
+                              {/* Home Row */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <ClubCrest code={match.homeCode} size={18} />
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                    {match.home}
+                                  </span>
+                                </div>
+                                {match.homeScore !== undefined && (
+                                  <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                                    {match.homeScore}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Away Row */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <ClubCrest code={match.awayCode} size={18} />
+                                  <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                    {match.away}
+                                  </span>
+                                </div>
+                                {match.awayScore !== undefined && (
+                                  <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                                    {match.awayScore}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+          </main>
+
+          {/* ════════════════════════════════════════════════════════════════
+              COLUMN 3: Right Contextual Rail (3 cols / Non-Sticky)
+             ════════════════════════════════════════════════════════════════ */}
+          <aside className="flex flex-col gap-4 lg:col-span-3">
+            
+            {/* 1. Mini League Standings */}
+            <div className="bg-white dark:bg-[#121215] rounded-xl border border-slate-200 dark:border-[#27272A] shadow-xs p-3.5 transition-colors">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-[#27272A]">
+                <div className="flex items-center gap-2">
+                  <LeagueLogo league="Premier League" size={16} />
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Premier League Table</span>
+                </div>
+                <Link href="/match-center" className="text-[11px] font-semibold text-slate-900 dark:text-zinc-100 hover:underline">
+                  Full
+                </Link>
+              </div>
+
+              {/* Table Headers */}
+              <div className="grid grid-cols-[20px_1fr_28px_32px_28px] text-[10px] font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wider pb-1 px-1">
+                <span>#</span>
+                <span>Club</span>
+                <span className="text-center">P</span>
+                <span className="text-center">GD</span>
+                <span className="text-right">PTS</span>
+              </div>
+
+              {/* Standings Rows */}
+              <div className="divide-y divide-slate-100 dark:divide-[#27272A] text-xs">
+                {STANDINGS.map((row) => (
+                  <div
+                    key={row.rank}
+                    className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-[#1A1A1E] transition-colors"
+                  >
+                    <span className={`font-mono text-[11px] ${row.rank === 1 ? 'font-black text-[#CEFF00]' : 'font-bold text-zinc-400'}`}>
+                      {row.rank}
+                    </span>
+                    <div className="flex items-center gap-2 min-w-0 pr-1">
+                      <ClubCrest code={row.club} size={15} />
+                      <span className="font-semibold text-zinc-200 truncate">
+                        {row.club}
+                      </span>
+                    </div>
+                    <span className="font-mono text-zinc-400 text-center">{row.p}</span>
+                    <span className="font-mono text-zinc-400 text-center">{row.gd}</span>
+                    <span className="font-mono font-bold text-white text-right">{row.pts}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Top Performers */}
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-3.5 transition-colors">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#27272A]">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <SoccerBallIcon size={14} className="text-zinc-300" />
+                  Top Scorers
+                </span>
+                <span className="text-[10px] text-zinc-400 font-mono">GW 8</span>
+              </div>
+
+              <div className="space-y-2.5">
+                {TOP_SCORERS.map((player, idx) => (
+                  <div
+                    key={player.name}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[#1A1A1E] transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`font-mono text-xs w-3 text-center ${idx === 0 ? 'text-[#CEFF00] font-black' : 'font-bold text-zinc-500'}`}>
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-white block truncate">
+                          {player.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <ClubCrest code={player.club} size={13} />
+                          <span className="text-[10px] text-zinc-400 block truncate">
+                            {player.club}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={`font-mono font-bold text-xs ${idx === 0 ? 'text-[#CEFF00]' : 'text-white'}`}>
+                        {player.goals}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono">
+                        G
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </aside>
+
         </div>
-      </section>
+
+      </div>
     </div>
   );
 }

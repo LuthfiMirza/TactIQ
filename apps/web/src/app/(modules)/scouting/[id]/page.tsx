@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { RadarChart } from '@/components/radar-chart';
+import { ClubCrest, LeagueLogo } from '@/components/ui/club-crest';
 import type { PlayerDTO, PlayerSimilarityResponse } from '@tactiq/shared-types';
-import { ArrowLeft, Sparkles, Shield, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, User, Globe, TrendingUp, Layers, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
 
 const FALLBACK_PLAYER: PlayerDTO = {
   id: 'player-kdb',
@@ -33,21 +36,19 @@ export default function PlayerProfilePage() {
     async function loadPlayerData() {
       setIsLoading(true);
       try {
-        const [playerRes, similarRes] = await Promise.all([
-          fetch(`http://localhost:4000/api/v1/players/${playerId}`),
-          fetch(`http://localhost:4000/api/v1/players/${playerId}/similar`),
+        const [playerData, similarData] = await Promise.allSettled([
+          api.getPlayerById(playerId),
+          api.getSimilarPlayers(playerId),
         ]);
 
-        if (playerRes.ok) {
-          const pJson = await playerRes.json();
-          setPlayer(pJson.data);
+        if (playerData.status === 'fulfilled') {
+          setPlayer(playerData.value);
         }
 
-        if (similarRes.ok) {
-          const sJson = await similarRes.json();
-          setSimilarityData(sJson.data);
-          if (sJson.data.similarPlayers?.length > 0) {
-            setComparisonPlayer(sJson.data.similarPlayers[0].player);
+        if (similarData.status === 'fulfilled') {
+          setSimilarityData(similarData.value);
+          if (similarData.value.similarPlayers?.length > 0) {
+            setComparisonPlayer(similarData.value.similarPlayers[0].player);
           }
         }
       } catch (err) {
@@ -75,35 +76,33 @@ export default function PlayerProfilePage() {
         </Link>
       </div>
 
-      {/* Main Dossier Header */}
-      <div className="relative p-6 sm:p-8 bg-gradient-to-br from-tactiq-card via-tactiq-card to-tactiq-surface border border-tactiq-border rounded-3xl overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-tactiq-emerald/10 rounded-full blur-3xl pointer-events-none" />
-
+      {/* Main Dossier Header (Flat Solid Matte) */}
+      <div className="relative p-6 sm:p-8 bg-tactiq-card border border-tactiq-border rounded-xl">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center space-x-5">
             <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-tactiq-surface border-2 border-tactiq-border flex-shrink-0 shadow-lg">
-              <img
+              <PlayerAvatar
                 src={player.photoUrl}
                 alt={player.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full"
               />
             </div>
             <div>
               <div className="flex items-center space-x-2.5">
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{player.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-tactiq-emerald/10 border border-tactiq-emerald/30 text-tactiq-emerald font-bold text-xs">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-200 font-bold text-xs">
                   {player.position}
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-tactiq-muted font-medium">
-                <span className="flex items-center gap-1 text-slate-300">
-                  <Shield size={13} className="text-tactiq-cyan" />
-                  {player.team?.name || 'Club'}
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <ClubCrest code={player.team?.code || player.team?.name || ''} size={16} />
+                  <span>{player.team?.name || 'Club'}</span>
                 </span>
                 <span>•</span>
-                <span className="flex items-center gap-1">
-                  <Globe size={13} className="text-tactiq-emerald" />
-                  {player.nationality}
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <LeagueLogo league={player.team?.league || 'Premier League'} size={16} />
+                  <span>{player.team?.league || 'Premier League'}</span>
                 </span>
                 <span>•</span>
                 <span>Age: {player.age} yo</span>
@@ -197,7 +196,6 @@ export default function PlayerProfilePage() {
           <div className="flex items-center justify-between border-b border-tactiq-border pb-3">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles size={16} className="text-tactiq-cyan" />
                 <span>Statistically Similar Counterparts (ML Cosine Model)</span>
               </h2>
               <p className="text-xs text-tactiq-muted mt-0.5">
@@ -215,22 +213,23 @@ export default function PlayerProfilePage() {
                   onClick={() => setComparisonPlayer(item.player)}
                   className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                     isComparing
-                      ? 'bg-tactiq-surface border-tactiq-cyan shadow-glow-cyan/20'
-                      : 'bg-tactiq-surface/30 border-tactiq-border hover:border-tactiq-border/80'
+                      ? 'bg-tactiq-surface border-tactiq-sky'
+                      : 'bg-tactiq-card border-tactiq-border hover:border-tactiq-borderHover'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-lg overflow-hidden bg-tactiq-surface border border-tactiq-border flex-shrink-0">
-                      <img
+                      <PlayerAvatar
                         src={item.player.photoUrl}
                         alt={item.player.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full"
                       />
                     </div>
                     <div>
                       <div className="font-bold text-xs text-white">{item.player.name}</div>
-                      <div className="text-[11px] text-tactiq-muted">
-                        {item.player.team?.name || 'Club'} • {item.player.position}
+                      <div className="text-[11px] text-tactiq-muted flex items-center gap-1.5 mt-0.5">
+                        <ClubCrest code={item.player.team?.code || item.player.team?.name || ''} size={14} />
+                        <span>{item.player.team?.name || 'Club'} · {item.player.position}</span>
                       </div>
                     </div>
                   </div>

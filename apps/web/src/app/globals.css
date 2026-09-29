@@ -3,38 +3,183 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B0E14;
-  --foreground: #F8FAFC;
+  --base: #F0F2F5;
+  --surface: #FFFFFF;
+  --border: #E2E8F0;
+  --primary: #0F172A;
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+  --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-syne: 'Syne', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dark {
+  --base: #09090B;
+  --surface: #121215;
+  --border: #27272A;
+  --primary: #F8FAFC;
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: #0B0E14;
+  background-color: var(--base);
+  color: #0F172A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body {
+  background-color: var(--base);
   color: #F8FAFC;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
-/* Custom Tactical Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Scrollbar — clean styling */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #F0F2F5; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+.dark ::-webkit-scrollbar-track { background: #09090B; }
+.dark ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 8px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #3F3F46; }
+
+/* Scrollbar utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-::-webkit-scrollbar-track {
-  background: #0B0E14;
+.slim-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.slim-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+.slim-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #253046;
-  border-radius: 9999px;
+/* Selection — brand green tint */
+::selection {
+  background: rgba(0, 168, 63, 0.18);
+  color: #008734;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+/* TactIQ Signature Rating Badges */
+.tq-rating-high {
+  background-color: #00A83F;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(19, 25, 35, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(37, 48, 70, 0.8);
+.tq-rating-good {
+  background-color: #10B981;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.tq-rating-avg {
+  background-color: #F59E0B;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sleek Form indicators */
+.tq-form-w {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  background-color: #10B981;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 9.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.25);
+  transition: transform 0.15s ease;
+}
+.tq-form-w:hover {
+  transform: scale(1.08);
+}
+
+.tq-form-d {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  background-color: #64748B;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 9.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(100, 116, 139, 0.25);
+  transition: transform 0.15s ease;
+}
+.tq-form-d:hover {
+  transform: scale(1.08);
+}
+
+.tq-form-l {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  background-color: #EF4444;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 9.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.25);
+  transition: transform 0.15s ease;
+}
+.tq-form-l:hover {
+  transform: scale(1.08);
+}
+

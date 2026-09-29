@@ -1,37 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { VideoOverlayCanvas } from '@/components/video-overlay-canvas';
 import { TacticalMinimap } from '@/components/tactical-minimap';
-import type { TrackingFramePayload } from '@tactiq/shared-types';
-import { Crosshair, Play, Radio, Activity, Cpu, Film, Sparkles, AlertCircle } from 'lucide-react';
+import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
+import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
+import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
+import { api } from '@/lib/api';
+
+// keyed by `{team}_{jerseyNumber}` to avoid cross-team collisions
+const ROSTER_MAP: Record<string, { name: string; pos: string; dist: string }> = {
+  // Man United (home) — matches simulation nums: 1,2,3,4,16,9
+  'home_1': { name: 'André Onana', pos: 'GK', dist: '4.1 km' },
+  'home_2': { name: 'Victor Lindelöf', pos: 'CB', dist: '7.5 km' },
+  'home_3': { name: 'Harry Maguire', pos: 'CB', dist: '7.8 km' },
+  'home_4': { name: 'Matthijs de Ligt', pos: 'CB', dist: '7.6 km' },
+  'home_16': { name: 'Casemiro', pos: 'DM', dist: '10.3 km' },
+  'home_9': { name: 'Rasmus Højlund', pos: 'CF', dist: '8.8 km' },
+  // Man City (away) — matches simulation nums: 22,2,6,4,8,7
+  'away_22': { name: 'Ederson Moraes', pos: 'GK', dist: '3.9 km' },
+  'away_2': { name: 'Kyle Walker', pos: 'RB', dist: '8.9 km' },
+  'away_6': { name: 'Nathan Aké', pos: 'CB', dist: '7.7 km' },
+  'away_4': { name: 'Manuel Akanji', pos: 'CB', dist: '7.9 km' },
+  'away_8': { name: 'Mateo Kovačić', pos: 'CM', dist: '10.1 km' },
+  'away_7': { name: 'Kevin De Bruyne', pos: 'AM', dist: '8.8 km' },
+};
 
 export default function TacticalTrackerPage() {
-  const [activeSessionId, setActiveSessionId] = useState<string>('demo-session-tactical-001');
+  const [activeSessionId] = useState<string>('demo-session-tactical-001');
   const [latestFrame, setLatestFrame] = useState<TrackingFramePayload | null>(null);
   const [isStartingPipeline, setIsStartingPipeline] = useState<boolean>(false);
   const [pipelineMessage, setPipelineMessage] = useState<string | null>(null);
+  const [selectedEntityId, setSelectedEntityId] = useState<number | null>(null);
+  const [filterTeam, setFilterTeam] = useState<'all' | 'home' | 'away' | 'ball'>('all');
+
+  const handleFrameUpdate = useCallback((frame: TrackingFramePayload) => {
+    setLatestFrame(frame);
+  }, []);
 
   // Trigger ML background pipeline
   const handleStartPipeline = async () => {
     setIsStartingPipeline(true);
     setPipelineMessage(null);
     try {
-      const res = await fetch('http://localhost:4000/api/v1/tracking/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: activeSessionId,
-          youtube_url: 'https://www.youtube.com/watch?v=sample_tactical_cam',
-        }),
+      const data = await api.startTracking({
+        session_id: activeSessionId,
+        youtube_url: 'https://www.youtube.com/watch?v=sample_tactical_cam',
       });
-
-      if (res.ok) {
-        const json = await res.json();
-        setPipelineMessage(json.data.message || 'Tracking pipeline triggered via Redis stream!');
-      } else {
-        throw new Error('Failed to start pipeline');
-      }
+      setPipelineMessage(data.message || 'Tracking pipeline triggered via Redis stream!');
     } catch {
       setPipelineMessage('Triggered locally. Click "Run Simulated Tracking" on the canvas controls to stream 10 FPS.');
     } finally {
@@ -39,134 +55,271 @@ export default function TacticalTrackerPage() {
     }
   };
 
-  return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <span>Tactical Computer Vision Tracker</span>
-            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/30">
-              YOLOv8 + 2D Overlay
-            </span>
-          </h1>
-          <p className="text-xs sm:text-sm text-tactiq-muted mt-1">
-            Real-time multi-agent tracking over HTML5 Canvas, driven by Redis Pub/Sub streams and Socket.io rooms.
-          </p>
-        </div>
+  // Filtered entities
+  const rawEntities = latestFrame?.entities || [];
+  const filteredEntities = rawEntities.filter((ent) => {
+    if (filterTeam === 'all') return true;
+    if (filterTeam === 'home') return ent.team === 'home';
+    if (filterTeam === 'away') return ent.team === 'away';
+    if (filterTeam === 'ball') return ent.team === 'ball';
+    return true;
+  });
 
-        {/* Kick off ML Pipeline Button */}
-        <button
-          onClick={handleStartPipeline}
-          disabled={isStartingPipeline}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-tactiq-emerald to-tactiq-cyan text-tactiq-bg font-bold text-xs hover:opacity-90 transition-all shadow-glow-emerald disabled:opacity-50"
-        >
-          <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
-          <span>{isStartingPipeline ? 'Starting Worker...' : 'Start CV Redis Stream'}</span>
-        </button>
+  return (
+    <div className="w-full flex flex-col gap-5 sm:gap-6 pb-24 sm:pb-16">
+      
+      {/* ── Top Match Pass Header (Matchday Banner) ── */}
+      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 lg:p-6 shadow-xs overflow-hidden transition-colors">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
+          {/* Match & Room Badge */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+            {/* Flat Scorecard (No nested rounded card background) */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                <ClubCrest code="MUN" size={36} className="drop-shadow-xs" />
+              </div>
+              <div className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] px-1 text-center">
+                <span className="font-mono font-black text-xl sm:text-2xl text-white tracking-tight tabular-nums">7 — 0</span>
+                <span className="text-[10px] font-mono text-tactiq-coral font-bold whitespace-nowrap">88&apos; LIVE</span>
+              </div>
+              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                <ClubCrest code="MCI" size={40} className="drop-shadow-xs" />
+              </div>
+            </div>
+
+            <div className="sm:border-l sm:border-[#27272A] sm:pl-5">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 font-bold">
+                  2D Optical Radar
+                </span>
+              </div>
+              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-white tracking-tight mt-0.5">
+                Tactical Tracker · Live Radar
+              </h1>
+              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
+                <LeagueLogo league="Premier League" size={13} />
+                <span>Old Trafford · Premier League GW08</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2 pt-1 md:pt-0">
+            <button
+              onClick={handleStartPipeline}
+              disabled={isStartingPipeline}
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-xl shadow-xs shadow-[#CEFF00]/20 transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
+            >
+              <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
+              <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {pipelineMessage && (
-        <div className="p-3 bg-tactiq-surface/80 border border-tactiq-emerald/40 rounded-xl text-xs text-tactiq-emerald flex items-center space-x-2">
-          <Activity size={14} />
+        <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] rounded-xl text-xs font-mono text-slate-800 dark:text-zinc-200 flex items-center gap-2 shadow-xs">
+          <Activity size={14} className="text-slate-900 dark:text-zinc-100 shrink-0" />
           <span>{pipelineMessage}</span>
         </div>
       )}
 
-      {/* Main Grid: Live Canvas Player vs Telemetry Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Responsive 16:9 Canvas Video Container */}
-        <div className="lg:col-span-8 space-y-4">
+      {/* ── Main Workspace ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left 8 cols: Video Viewport */}
+        <div className="lg:col-span-8 flex flex-col gap-5">
           <VideoOverlayCanvas
             sessionId={activeSessionId}
-            onFrameUpdate={(frame) => setLatestFrame(frame)}
+            onFrameUpdate={handleFrameUpdate}
           />
-
-          <div className="p-4 bg-tactiq-card border border-tactiq-border rounded-xl flex items-center justify-between text-xs">
-            <div className="flex items-center space-x-2 text-tactiq-muted">
-              <Film size={14} className="text-tactiq-cyan" />
-              <span>Match: Manchester City vs Arsenal (Tactical Cam View)</span>
-            </div>
-            <div className="font-mono text-tactiq-emerald font-bold">
-              Active Room: session_{activeSessionId}
-            </div>
-          </div>
         </div>
 
-        {/* Right Column: Live 2D Minimap & Detection Telemetry */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* 2D Planar Pitch Minimap */}
-          <TacticalMinimap entities={latestFrame?.entities} />
+        {/* Right 4 cols: Planar Minimap & Interactive Entity Registry */}
+        <div className="lg:col-span-4 flex flex-col gap-5">
+          
+          {/* 2D Minimap Frame */}
+          <TacticalMinimap
+            entities={latestFrame?.entities}
+            selectedEntityId={selectedEntityId}
+            onSelectEntity={(id) => setSelectedEntityId(id)}
+          />
 
-          <div className="p-5 bg-tactiq-card border border-tactiq-border rounded-2xl shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-tactiq-border/60 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-                <Cpu size={14} className="text-tactiq-cyan" />
-                Live Entity Telemetry
-              </span>
-              <span className="text-[10px] font-mono text-tactiq-emerald bg-tactiq-emerald/10 px-2 py-0.5 rounded-full border border-tactiq-emerald/20">
-                {latestFrame?.entities?.length ?? 13} Entities
+          {/* Entity Registry Table (Player Telemetry Cards) */}
+          <div className="rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-4 shadow-xs flex flex-col gap-3.5 transition-colors">
+            
+            {/* Header & Active Count */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-2.5">
+              <div className="flex items-center gap-2">
+                <Cpu size={15} className="text-slate-500 dark:text-zinc-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                  Tracked Entity Stream
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2.5 py-0.5 rounded">
+                {rawEntities.length || 23} Entities Active
               </span>
             </div>
 
-            {/* Entities List */}
-            <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-              {latestFrame?.entities && latestFrame.entities.length > 0 ? (
-                latestFrame.entities.map((entity) => (
-                  <div
-                    key={entity.id}
-                    className="p-2.5 rounded-xl bg-tactiq-surface/50 border border-tactiq-border/80 flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <span
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          entity.team === 'home'
-                            ? 'bg-tactiq-home'
-                            : entity.team === 'away'
-                            ? 'bg-tactiq-away'
-                            : 'bg-tactiq-ball'
-                        }`}
-                      />
-                      <span className="font-mono font-bold text-white">
-                        {entity.team === 'ball' ? 'Match Ball' : `Player #${entity.jerseyNumber || entity.id}`}
-                      </span>
-                    </div>
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#18181C] border border-[#27272A] text-[11px] font-mono">
+              <button
+                onClick={() => setFilterTeam('all')}
+                className={`flex-1 py-1 rounded-lg transition-colors font-semibold ${
+                  filterTeam === 'all'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                All ({rawEntities.length || 23})
+              </button>
+              <button
+                onClick={() => setFilterTeam('home')}
+                className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
+                  filterTeam === 'home'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <ClubCrest code="MUN" size={13} />
+                <span>MUN (11)</span>
+              </button>
+              <button
+                onClick={() => setFilterTeam('away')}
+                className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
+                  filterTeam === 'away'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <ClubCrest code="MCI" size={13} />
+                <span>MCI (11)</span>
+              </button>
+              <button
+                onClick={() => setFilterTeam('ball')}
+                className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
+                  filterTeam === 'ball'
+                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                <span>Ball</span>
+              </button>
+            </div>
 
-                    <div className="flex items-center space-x-3 font-mono text-[11px]">
-                      <span className="text-tactiq-muted">
-                        X: {entity.x.toFixed(2)} Y: {entity.y.toFixed(2)}
-                      </span>
-                      <span className="font-bold text-tactiq-emerald">
-                        {entity.speedKmh ? `${entity.speedKmh} km/h` : '18.4 km/h'}
-                      </span>
+            {/* Entity List */}
+            <div className="space-y-2 max-h-[380px] overflow-y-auto font-mono text-xs pr-1 slim-scrollbar">
+              {filteredEntities.length > 0 ? (
+                filteredEntities.map((entity: TrackingEntity) => {
+                  const isBall = entity.team === 'ball';
+                  const isHome = entity.team === 'home';
+                  const jNumber = entity.jerseyNumber || entity.id;
+                  const rosterKey = `${entity.team}_${jNumber}`;
+                  const rosterInfo = ROSTER_MAP[rosterKey] || {
+                    name: isHome ? `Man United #${jNumber}` : `Man City #${jNumber}`,
+                    pos: isHome ? 'MID' : 'FWD',
+                    dist: '8.4 km',
+                  };
+                  const speed = entity.speedKmh || (isBall ? 22.4 : 18.2);
+                  const speedPercent = Math.min(100, Math.round((speed / 34) * 100));
+                  const isSelected = selectedEntityId === entity.id;
+
+                  return (
+                    <div
+                      key={entity.id}
+                      onClick={() => setSelectedEntityId(isSelected ? null : entity.id)}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-slate-300 dark:border-zinc-500 bg-slate-100 dark:bg-[#1E1E24] shadow-xs'
+                          : 'border-slate-200 dark:border-[#27272A] bg-slate-50/50 dark:bg-[#18181C]/60 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                      }`}
+                    >
+                      {/* Top Row: Identity & Speed */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-xs shrink-0 ${
+                              isBall
+                                ? 'bg-gradient-to-br from-amber-400 to-amber-600'
+                                : isHome
+                                ? 'bg-gradient-to-br from-[#DA291C] to-[#9B1B1B]'
+                                : 'bg-gradient-to-br from-[#6CABDD] to-[#458BB8]'
+                            }`}
+                          >
+                            {isBall ? <SoccerBallIcon size={14} className="text-white" /> : jNumber}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white text-xs block truncate">
+                              {isBall ? 'Nike Flight Match Ball' : rosterInfo.name}
+                            </span>
+                            <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">
+                              {isBall ? 'Pitch Center' : `${isHome ? 'Man United' : 'Man City'} · ${rosterInfo.pos}`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white block tabular-nums">
+                            {speed.toFixed(1)} <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-normal">km/h</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500 dark:text-zinc-400 block">
+                            {isBall ? 'In Flight' : rosterInfo.dist}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Speed Meter Bar */}
+                      <div className="mt-2 flex items-center gap-2">
+                        <Gauge size={11} className="text-slate-400 shrink-0" />
+                        <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${
+                              isBall
+                                ? 'bg-amber-500'
+                                : speed > 26
+                                ? 'bg-amber-500'
+                                : isHome
+                                ? 'bg-[#DA291C]'
+                                : 'bg-[#6CABDD]'
+                            }`}
+                            style={{ width: `${speedPercent}%` }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-slate-500 dark:text-zinc-400 shrink-0 tabular-nums">
+                          {speedPercent}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <div className="p-8 text-center text-tactiq-muted text-xs space-y-2">
-                  <AlertCircle size={20} className="mx-auto text-tactiq-cyan opacity-80" />
-                  <p>Awaiting tracking frames...</p>
-                  <p className="text-[11px] text-slate-400">
-                    Click "Run Simulated Tracking" on the canvas controls to test live coordinate streaming.
+                <div className="py-12 text-center text-slate-500 dark:text-zinc-400 font-mono text-xs space-y-2">
+                  <AlertCircle size={20} className="mx-auto text-slate-400 dark:text-zinc-500" />
+                  <p className="font-bold text-slate-900 dark:text-white">No entities match filter</p>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">
+                    Select another filter tab or trigger the simulation stream.
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Tactical Heat Indicators */}
-            <div className="pt-3 border-t border-tactiq-border/60 text-[11px] text-tactiq-muted space-y-1">
-              <div className="flex justify-between">
-                <span>Tactical Pitch Bounds:</span>
-                <span className="font-mono text-slate-300">105m × 68m FIFA Standard</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Coordinate Normalization:</span>
-                <span className="font-mono text-tactiq-cyan">[0.00, 1.00] 2D Projection</span>
-              </div>
+            {/* Technical Calibration Specs Footer */}
+            <div className="pt-2.5 border-t border-slate-100 dark:border-[#27272A] text-[10px] font-mono text-slate-500 dark:text-zinc-400 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Crosshair size={11} className="text-slate-700 dark:text-zinc-300" />
+                <span>Click player to lock target</span>
+              </span>
+              <span className="text-slate-900 dark:text-white font-semibold">Coordinate: [X, Y, Z]</span>
             </div>
+
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }
