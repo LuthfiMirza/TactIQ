@@ -138,6 +138,31 @@ class ApiClient {
     return this.request<any[]>('/api/v1/matches/live/scores');
   }
 
+  public async getMatchLineup(fixtureId: string, params?: { home?: string; away?: string }): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.home) q.set('home', params.home);
+    if (params?.away) q.set('away', params.away);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.request<any>(`/api/v1/matches/${fixtureId}/lineup${qs}`);
+  }
+
+  public async getMatchStatistics(fixtureId: string, params?: { home?: string; away?: string }): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.home) q.set('home', params.home);
+    if (params?.away) q.set('away', params.away);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.request<any>(`/api/v1/matches/${fixtureId}/statistics${qs}`);
+  }
+
+  public async getMatchH2H(fixtureId: string, params?: { h2h?: string; home?: string; away?: string }): Promise<any> {
+    const q = new URLSearchParams();
+    if (params?.h2h) q.set('h2h', params.h2h);
+    if (params?.home) q.set('home', params.home);
+    if (params?.away) q.set('away', params.away);
+    const qs = q.toString() ? `?${q.toString()}` : '';
+    return this.request<any>(`/api/v1/matches/${fixtureId}/h2h${qs}`);
+  }
+
   public async triggerETLSync(): Promise<any> {
     return this.request<any>('/api/v1/sync', { method: 'POST' });
   }

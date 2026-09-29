@@ -399,6 +399,183 @@ const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
   },
 };
 
+function buildTeamLineupFromApi(
+  rawTeam: any,
+  isHome: boolean,
+  events: any[] = []
+): TeamLineup {
+  if (!rawTeam || !Array.isArray(rawTeam.startXI) || rawTeam.startXI.length === 0) {
+    return isHome ? LINEUPS.home : LINEUPS.away;
+  }
+
+  const formation = rawTeam.formation || (isHome ? '4-3-3' : '4-2-3-1');
+  const players = rawTeam.startXI;
+
+  const rows: Record<number, any[]> = {};
+  players.forEach((p: any) => {
+    let r = 1;
+    if (p.grid) {
+      r = parseInt(p.grid.split(':')[0], 10) || 1;
+    } else {
+      r = p.pos === 'G' ? 1 : p.pos === 'D' ? 2 : p.pos === 'M' ? 3 : 4;
+    }
+    if (!rows[r]) rows[r] = [];
+    rows[r].push(p);
+  });
+
+  const rowKeys = Object.keys(rows).map(Number).sort((a, b) => a - b);
+  const maxRow = Math.max(...rowKeys, 4);
+
+  const starters: LineupPlayer[] = players.map((p: any, idx: number) => {
+    let r = p.grid
+      ? parseInt(p.grid.split(':')[0], 10) || 1
+      : p.pos === 'G'
+      ? 1
+      : p.pos === 'D'
+      ? 2
+      : p.pos === 'M'
+      ? 3
+      : 4;
+    const rowPlayers = rows[r] || [p];
+    const colIdx = rowPlayers.indexOf(p);
+    const numCols = rowPlayers.length;
+
+    let y = 50;
+    if (numCols > 1) {
+      const step = 68 / (numCols - 1);
+      y = Math.round(16 + colIdx * step);
+    }
+
+    let x = 50;
+    let vx = y;
+    let vy = 50;
+
+    if (isHome) {
+      if (r === 1) {
+        x = 6;
+        y = 50;
+        vx = 50;
+        vy = 93;
+      } else {
+        const rowPct = (r - 1) / Math.max(1, maxRow - 1);
+        x = Math.round(15 + rowPct * 30);
+        vy = Math.round(83 - rowPct * 27);
+      }
+    } else {
+      if (r === 1) {
+        x = 94;
+        y = 50;
+        vx = 50;
+        vy = 7;
+      } else {
+        const rowPct = (r - 1) / Math.max(1, maxRow - 1);
+        x = Math.round(85 - rowPct * 30);
+        vy = Math.round(17 + rowPct * 27);
+      }
+    }
+
+    const shortName = p.name ? p.name.split(' ').pop() || p.name : `P${p.number}`;
+    const isScorer = events.some(
+      (ev) =>
+        ev.type === 'Goal' &&
+        (ev.player?.toLowerCase().includes(shortName.toLowerCase()) ||
+          shortName.toLowerCase().includes(ev.player?.toLowerCase()))
+    );
+
+    const baseRating = 6.6 + ((p.number * 7) % 15) / 10;
+    const rating = isScorer ? 8.2 : Number(baseRating.toFixed(1));
+
+    return {
+      num: p.number || idx + 1,
+      name: p.name,
+      shortName,
+      pos: p.pos === 'G' ? 'GK' : p.pos === 'D' ? 'CB' : p.pos === 'M' ? 'CM' : 'FW',
+      rating,
+      isCaptain: colIdx === 0 && r === 2,
+      isScorer,
+      x,
+      y,
+      vx,
+      vy,
+      photoUrl: p.photoUrl || (p.id ? `https://media.api-sports.io/football/players/${p.id}.png` : undefined),
+    };
+  });
+
+  const substitutes: SubstitutePlayer[] = (rawTeam.substitutes || []).slice(0, 9).map((p: any, idx: number) => ({
+    num: p.number || idx + 12,
+    name: p.name,
+    pos: p.pos === 'G' ? 'GK' : p.pos === 'D' ? 'DF' : p.pos === 'M' ? 'MF' : 'FW',
+    rating: 6.5,
+    photoUrl: p.photoUrl || (p.id ? `https://media.api-sports.io/football/players/${p.id}.png` : undefined),
+  }));
+
+  const avgRating =
+    starters.reduce((acc, curr) => acc + (curr.rating || 7.0), 0) / Math.max(1, starters.length);
+
+  return {
+    formation,
+    teamRating: Number(avgRating.toFixed(1)),
+    starters,
+    substitutes,
+  };
+}
+
+function getTeamCoach(teamName: string): { name: string; photoUrl: string } {
+  const lower = (teamName || '').toLowerCase();
+  if (lower.includes('united') || lower.includes('manchester united')) {
+    return { name: 'Rúben Amorim', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man1427.png' };
+  }
+  if (lower.includes('city') || lower.includes('manchester city')) {
+    return { name: 'Pep Guardiola', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man279.png' };
+  }
+  if (lower.includes('brazil') || lower.includes('brasil')) {
+    return { name: 'Dorival Júnior', photoUrl: 'https://media.api-sports.io/football/coachs/1838.png' };
+  }
+  if (lower.includes('australia')) {
+    return { name: 'Tony Popovic', photoUrl: 'https://media.api-sports.io/football/coachs/1723.png' };
+  }
+  if (lower.includes('arsenal')) {
+    return { name: 'Mikel Arteta', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5101.png' };
+  }
+  if (lower.includes('chelsea')) {
+    return { name: 'Enzo Maresca', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5300.png' };
+  }
+  if (lower.includes('liverpool')) {
+    return { name: 'Arne Slot', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5300.png' };
+  }
+  return { name: `${teamName} Coach`, photoUrl: '' };
+}
+
+function getTeamColor(teamName: string): string {
+  const lower = (teamName || '').toLowerCase();
+  if (lower.includes('brazil') || lower.includes('brasil')) return '#FED100';
+  if (lower.includes('australia')) return '#00843D';
+  if (lower.includes('liverpool')) return '#C8102E';
+  if (lower.includes('chelsea')) return '#034694';
+  if (lower.includes('manchester united') || lower.includes('man united')) return '#DA291C';
+  if (lower.includes('manchester city') || lower.includes('man city')) return '#6CABDD';
+  if (lower.includes('arsenal')) return '#EF0107';
+  if (lower.includes('real madrid')) return '#EEA320';
+  if (lower.includes('barcelona')) return '#A50044';
+  if (lower.includes('bayern')) return '#DC052D';
+  if (lower.includes('dortmund')) return '#FDE100';
+  if (lower.includes('psg') || lower.includes('paris')) return '#004170';
+  if (lower.includes('tottenham')) return '#132257';
+  if (lower.includes('aston villa')) return '#670E36';
+  if (lower.includes('newcastle')) return '#241F20';
+  if (lower.includes('argentina')) return '#75AADB';
+  if (lower.includes('france')) return '#002654';
+  if (lower.includes('germany')) return '#111111';
+  if (lower.includes('spain')) return '#AA151B';
+  if (lower.includes('italy')) return '#0064AA';
+  if (lower.includes('england')) return '#CE1124';
+  if (lower.includes('netherlands')) return '#FF4F00';
+  if (lower.includes('portugal')) return '#E42518';
+  if (lower.includes('japan')) return '#001489';
+  if (lower.includes('indonesia')) return '#DA251D';
+  return '#10B981';
+}
+
 function MatchStatRow({
   label,
   homeVal,
@@ -687,6 +864,15 @@ export default function MatchCenterPage() {
     isLiveFeed: false,
   });
 
+  const [activeLineup, setActiveLineup] = useState<{ home: TeamLineup; away: TeamLineup }>(LINEUPS);
+  const [matchStatsData, setMatchStatsData] = useState<typeof STATS_DATA>(STATS_DATA);
+  const [matchH2HData, setMatchH2HData] = useState<H2HEncounter[]>(H2H_ENCOUNTERS);
+  const [h2hSummary, setH2HSummary] = useState<{ homeWins: number; draws: number; awayWins: number }>({
+    homeWins: 2,
+    draws: 0,
+    awayWins: 3,
+  });
+
   const handleSelectLiveMatch = (m: any) => {
     const goalEvents = Array.isArray(m.events) ? m.events.filter((ev: any) => ev.type === 'Goal') : [];
     const homeGoals = goalEvents
@@ -715,16 +901,19 @@ export default function MatchCenterPage() {
     const hShort = (m.homeTeam || 'HOM').slice(0, 3).toUpperCase();
     const aShort = (m.awayTeam || 'AWA').slice(0, 3).toUpperCase();
 
+    const hColor = getTeamColor(m.homeTeam);
+    const aColor = getTeamColor(m.awayTeam);
+
     setActiveMatch({
       id: String(m.fixtureId),
       league: `${m.league} · Live In-Play`,
       venue: 'International Stadium',
       homeTeam: m.homeTeam,
       homeShort: hShort,
-      homeColor: '#00843D',
+      homeColor: hColor,
       awayTeam: m.awayTeam,
       awayShort: aShort,
-      awayColor: '#FED100',
+      awayColor: aColor,
       homeScore: hScore,
       awayScore: aScore,
       statusType: m.status === 'FT' ? 'FINISHED' : 'LIVE',
@@ -739,6 +928,45 @@ export default function MatchCenterPage() {
       isLiveFeed: true,
       events: m.events || [],
     });
+
+    // Fetch live lineup, statistics, and H2H from API
+    if (m.fixtureId) {
+      api.getMatchLineup(String(m.fixtureId), { home: m.homeTeam, away: m.awayTeam }).then((res) => {
+        if (res && res.home && res.away) {
+          const homeL = buildTeamLineupFromApi(res.home, true, m.events || []);
+          const awayL = buildTeamLineupFromApi(res.away, false, m.events || []);
+          setActiveLineup({ home: homeL, away: awayL });
+        }
+      }).catch((e) => console.warn('Lineup fetch err:', e));
+
+      api.getMatchStatistics(String(m.fixtureId), { home: m.homeTeam, away: m.awayTeam }).then((res) => {
+        if (res && res.ALL) {
+          setMatchStatsData(res);
+        }
+      }).catch((e) => console.warn('Stats fetch err:', e));
+
+      const h2hQuery = m.homeTeamId && m.awayTeamId ? `${m.homeTeamId}-${m.awayTeamId}` : undefined;
+      api.getMatchH2H(String(m.fixtureId), { h2h: h2hQuery, home: m.homeTeam, away: m.awayTeam }).then((res) => {
+        if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
+          setH2HSummary({
+            homeWins: res.homeWins ?? 0,
+            draws: res.draws ?? 0,
+            awayWins: res.awayWins ?? 0,
+          });
+          const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
+            date: enc.date,
+            homeTeam: enc.homeTeam,
+            awayTeam: enc.awayTeam,
+            homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
+            awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
+            homeScore: enc.homeScore,
+            awayScore: enc.awayScore,
+            competition: enc.competition,
+          }));
+          setMatchH2HData(mappedEncounters);
+        }
+      }).catch((e) => console.warn('H2H fetch err:', e));
+    }
 
     setCurrentStatus(m.status === 'FT' ? 'FINISHED' : 'LIVE');
     setMatchTab('stats');
@@ -773,6 +1001,11 @@ export default function MatchCenterPage() {
       winProbAway: 24,
       isLiveFeed: false,
     });
+
+    setActiveLineup(LINEUPS);
+    setMatchStatsData(STATS_DATA);
+    setMatchH2HData(H2H_ENCOUNTERS);
+    setH2HSummary({ homeWins: 2, draws: 0, awayWins: 3 });
 
     setCurrentStatus(fix.statusType);
     if (fix.statusType === 'UPCOMING') {
@@ -914,6 +1147,59 @@ export default function MatchCenterPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-sync lineup, statistics, and H2H whenever activeMatch changes
+  useEffect(() => {
+    if (activeMatch.id) {
+      const isNum = /^\d+$/.test(activeMatch.id);
+      const isFeed = activeMatch.isLiveFeed || isNum;
+      if (isFeed) {
+        api.getMatchLineup(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
+          .then((res) => {
+            if (res && res.home && res.away) {
+              const homeL = buildTeamLineupFromApi(res.home, true, activeMatch.events || []);
+              const awayL = buildTeamLineupFromApi(res.away, false, activeMatch.events || []);
+              setActiveLineup({ home: homeL, away: awayL });
+            }
+          })
+          .catch((e) => console.warn('[MatchCenter] Auto lineup sync err:', e));
+
+        api.getMatchStatistics(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
+          .then((res) => {
+            if (res && res.ALL) {
+              setMatchStatsData(res);
+            }
+          })
+          .catch((e) => console.warn('[MatchCenter] Auto stats sync err:', e));
+
+        api.getMatchH2H(activeMatch.id, {
+          home: activeMatch.homeTeam,
+          away: activeMatch.awayTeam,
+        })
+          .then((res) => {
+            if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
+              setH2HSummary({
+                homeWins: res.homeWins ?? 0,
+                draws: res.draws ?? 0,
+                awayWins: res.awayWins ?? 0,
+              });
+              const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
+                date: enc.date,
+                homeTeam: enc.homeTeam,
+                awayTeam: enc.awayTeam,
+                homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
+                awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
+                homeScore: enc.homeScore,
+                awayScore: enc.awayScore,
+                competition: enc.competition,
+              }));
+              setMatchH2HData(mappedEncounters);
+            }
+          })
+          .catch((e) => console.warn('[MatchCenter] Auto H2H sync err:', e));
+      }
+    }
+  }, [activeMatch.id, activeMatch.homeTeam, activeMatch.awayTeam, activeMatch.isLiveFeed]);
+
   const handleOpenAiModal = async () => {
     setShowAiModal(true);
     try {
@@ -977,7 +1263,12 @@ export default function MatchCenterPage() {
     mciWidth: `${activeMatch.winProbAway}%`,
   };
 
-  const activeStats = STATS_DATA[statsPeriod];
+  const activeStats = matchStatsData[statsPeriod] || STATS_DATA[statsPeriod];
+  const isPremierLeague =
+    activeMatch.league.toLowerCase().includes('premier league') ||
+    ['MCI', 'ARS', 'LIV', 'CHE', 'MUN', 'TOT', 'NEW', 'AVL', 'FUL', 'BHA'].includes(activeMatch.homeShort);
+  const homeCoach = getTeamCoach(activeMatch.homeTeam);
+  const awayCoach = getTeamCoach(activeMatch.awayTeam);
 
   const availableTabs = currentStatus === 'UPCOMING'
     ? ['preview', 'h2h', 'lineups', 'table']
@@ -1765,8 +2056,8 @@ export default function MatchCenterPage() {
                     Top Stats
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-[#222227]">
-                    {activeStats.top.map((s, idx) => (
-                      <MatchStatRow key={idx} {...s} />
+                    {activeStats.top.map((s: any, idx: number) => (
+                      <MatchStatRow key={idx} {...s} homeColor={activeMatch.homeColor} awayColor={activeMatch.awayColor} />
                     ))}
                   </div>
                 </div>
@@ -1777,8 +2068,8 @@ export default function MatchCenterPage() {
                       Shots
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-[#222227]">
-                      {activeStats.shots.map((s, idx) => (
-                        <MatchStatRow key={idx} {...s} />
+                      {activeStats.shots.map((s: any, idx: number) => (
+                        <MatchStatRow key={idx} {...s} homeColor={activeMatch.homeColor} awayColor={activeMatch.awayColor} />
                       ))}
                     </div>
                   </div>
@@ -1788,8 +2079,8 @@ export default function MatchCenterPage() {
                       Passes
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-[#222227]">
-                      {activeStats.passes.map((s, idx) => (
-                        <MatchStatRow key={idx} {...s} />
+                      {activeStats.passes.map((s: any, idx: number) => (
+                        <MatchStatRow key={idx} {...s} homeColor={activeMatch.homeColor} awayColor={activeMatch.awayColor} />
                       ))}
                     </div>
                   </div>
@@ -1800,8 +2091,8 @@ export default function MatchCenterPage() {
                     Defence & Duels
                   </div>
                   <div className="divide-y divide-slate-100 dark:divide-[#222227]">
-                    {activeStats.defence.map((s, idx) => (
-                      <MatchStatRow key={idx} {...s} />
+                    {activeStats.defence.map((s: any, idx: number) => (
+                      <MatchStatRow key={idx} {...s} homeColor={activeMatch.homeColor} awayColor={activeMatch.awayColor} />
                     ))}
                   </div>
                 </div>
@@ -1814,16 +2105,16 @@ export default function MatchCenterPage() {
                 
                 {/* ── Ringkasan Kapsul H2H (Terkunci Sumbu Tengah 50% & Logo Proporsional - Solid Opsi A) ── */}
                 <div className="py-2.5 w-full flex items-center justify-center gap-2 sm:gap-4 select-none">
-                  {/* Crest Home (Ukuran Optik Proporsional: MUN Perisai Padat) */}
+                  {/* Crest Home */}
                   <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-end shrink-0">
-                    <ClubCrest code="MUN" size={36} className="w-8.5 h-8.5 sm:w-10 sm:h-10 drop-shadow-xs shrink-0" />
+                    <ClubCrest code={activeMatch.homeShort} size={36} className="w-8.5 h-8.5 sm:w-10 sm:h-10 drop-shadow-xs shrink-0" />
                   </div>
 
                   {/* Kapsul Segmented Terpadu (Opsi A) */}
                   <div className="inline-flex items-center p-0.5 sm:p-1 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/60 rounded-full shadow-xs gap-0.5 sm:gap-1">
                     {/* Kapsul Home Wins */}
-                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#DA291C] text-white shadow-xs">
-                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">2</span>
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#DA291C] text-white shadow-xs" style={{ backgroundColor: activeMatch.homeColor || '#DA291C' }}>
+                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">{h2hSummary.homeWins}</span>
                       <span className="text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider opacity-95">
                         Wins
                       </span>
@@ -1831,24 +2122,24 @@ export default function MatchCenterPage() {
 
                     {/* Kapsul Titik Tengah (DRAWS) - Solid Neutral */}
                     <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-slate-200 dark:bg-zinc-700 shadow-xs">
-                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none text-slate-900 dark:text-white">0</span>
+                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none text-slate-900 dark:text-white">{h2hSummary.draws}</span>
                       <span className="text-[9.5px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-zinc-300">
                         Draws
                       </span>
                     </div>
 
-                    {/* Kapsul Away Wins - Solid Sky Blue */}
-                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#6CABDD] text-slate-950 shadow-xs">
-                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">3</span>
+                    {/* Kapsul Away Wins */}
+                    <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#6CABDD] text-slate-950 shadow-xs" style={{ backgroundColor: activeMatch.awayColor || '#6CABDD' }}>
+                      <span className="font-extrabold text-xs sm:text-sm font-mono leading-none">{h2hSummary.awayWins}</span>
                       <span className="text-[9.5px] sm:text-[11px] font-extrabold uppercase tracking-wider">
                         Wins
                       </span>
                     </div>
                   </div>
 
-                  {/* Crest Away (Ukuran Optik Proporsional: MCI Lingkaran) */}
+                  {/* Crest Away */}
                   <div className="w-10 sm:w-12 h-10 sm:h-12 flex items-center justify-start shrink-0">
-                    <ClubCrest code="MCI" size={46} className="w-10.5 h-10.5 sm:w-12 sm:h-12 drop-shadow-xs shrink-0" />
+                    <ClubCrest code={activeMatch.awayShort} size={46} className="w-10.5 h-10.5 sm:w-12 sm:h-12 drop-shadow-xs shrink-0" />
                   </div>
                 </div>
 
@@ -1856,7 +2147,7 @@ export default function MatchCenterPage() {
 
                 {/* ── List Pertandingan H2H (Pure Text Seamless, Sumbu Tengah Presisi) ── */}
                 <div className="divide-y divide-slate-100 dark:divide-[#222227]">
-                  {H2H_ENCOUNTERS.map((h, i) => (
+                  {matchH2HData.map((h, i) => (
                     <div
                       key={i}
                       className="py-3 px-1 sm:px-2 rounded-xl hover:bg-slate-50/70 dark:hover:bg-[#1A1A1E] transition-colors"
@@ -1914,15 +2205,15 @@ export default function MatchCenterPage() {
                   <div className="flex items-center gap-2 min-w-0">
                     {currentStatus !== 'UPCOMING' && (
                       <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-emerald-600 text-white shrink-0 shadow-2xs">
-                        {LINEUPS.home.teamRating.toFixed(1)}
+                        {activeLineup.home.teamRating.toFixed(1)}
                       </span>
                     )}
-                    <ClubCrest code="MUN" size={20} className="shrink-0 drop-shadow-xs" />
+                    <ClubCrest code={activeMatch.homeShort} size={20} className="shrink-0 drop-shadow-xs" />
                     <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
-                      Man United
+                      {activeMatch.homeTeam}
                     </span>
                     <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-zinc-400 shrink-0">
-                      {LINEUPS.home.formation}
+                      {activeLineup.home.formation}
                     </span>
                   </div>
 
@@ -1934,34 +2225,34 @@ export default function MatchCenterPage() {
 
                   <div className="flex items-center justify-end gap-2 min-w-0 text-right">
                     <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-zinc-400 shrink-0">
-                      {LINEUPS.away.formation}
+                      {activeLineup.away.formation}
                     </span>
                     <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
-                      Man City
+                      {activeMatch.awayTeam}
                     </span>
-                    <ClubCrest code="MCI" size={20} className="shrink-0 drop-shadow-xs" />
+                    <ClubCrest code={activeMatch.awayShort} size={20} className="shrink-0 drop-shadow-xs" />
                     {currentStatus !== 'UPCOMING' && (
                       <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-emerald-600/90 text-white shrink-0 shadow-2xs">
-                        {LINEUPS.away.teamRating.toFixed(1)}
+                        {activeLineup.away.teamRating.toFixed(1)}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Header Mobile (< md): Tim Atas (Man City) */}
+                {/* Header Mobile (< md): Tim Atas (Away) */}
                 <div className="md:hidden flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100/70 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] text-xs">
                   <div className="flex items-center gap-2 min-w-0">
-                    <ClubCrest code="MCI" size={20} className="shrink-0 drop-shadow-xs" />
+                    <ClubCrest code={activeMatch.awayShort} size={20} className="shrink-0 drop-shadow-xs" />
                     <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
-                      Man City
+                      {activeMatch.awayTeam}
                     </span>
                     <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
-                      {LINEUPS.away.formation}
+                      {activeLineup.away.formation}
                     </span>
                   </div>
                   {currentStatus !== 'UPCOMING' ? (
                     <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-emerald-600/90 text-white shrink-0 shadow-2xs">
-                      {LINEUPS.away.teamRating.toFixed(1)}
+                      {activeLineup.away.teamRating.toFixed(1)}
                     </span>
                   ) : (
                     <span className="text-[10px] font-mono uppercase text-zinc-400 font-medium">Predicted</span>
@@ -1997,29 +2288,29 @@ export default function MatchCenterPage() {
                     <path d="M 248 833 A 75 75 0 0 1 352 833" vectorEffect="non-scaling-stroke" />
                   </svg>
 
-                  {LINEUPS.away.starters.map((p) => (
+                  {activeLineup.away.starters.map((p) => (
                     <UniversalPlayerNode key={p.num} p={p} isVertical={true} hideRating={currentStatus === 'UPCOMING'} />
                   ))}
 
-                  {LINEUPS.home.starters.map((p) => (
+                  {activeLineup.home.starters.map((p) => (
                     <UniversalPlayerNode key={p.num} p={p} isVertical={true} hideRating={currentStatus === 'UPCOMING'} />
                   ))}
                 </div>
 
-                {/* Header Mobile (< md): Tim Bawah (Man United) */}
+                {/* Header Mobile (< md): Tim Bawah (Home) */}
                 <div className="md:hidden flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100/70 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] text-xs">
                   <div className="flex items-center gap-2 min-w-0">
-                    <ClubCrest code="MUN" size={20} className="shrink-0 drop-shadow-xs" />
+                    <ClubCrest code={activeMatch.homeShort} size={20} className="shrink-0 drop-shadow-xs" />
                     <span className="font-bold text-slate-900 dark:text-white truncate text-xs sm:text-sm">
-                      Man United
+                      {activeMatch.homeTeam}
                     </span>
                     <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
-                      {LINEUPS.home.formation}
+                      {activeLineup.home.formation}
                     </span>
                   </div>
                   {currentStatus !== 'UPCOMING' ? (
                     <span className="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] bg-emerald-600 text-white shrink-0 shadow-2xs">
-                      {LINEUPS.home.teamRating.toFixed(1)}
+                      {activeLineup.home.teamRating.toFixed(1)}
                     </span>
                   ) : (
                     <span className="text-[10px] font-mono uppercase text-zinc-400 font-medium">Predicted</span>
@@ -2057,11 +2348,11 @@ export default function MatchCenterPage() {
                     <path d="M 821 248 A 75 75 0 0 0 821 352" vectorEffect="non-scaling-stroke" />
                   </svg>
 
-                  {LINEUPS.home.starters.map((p) => (
+                  {activeLineup.home.starters.map((p) => (
                     <UniversalPlayerNode key={p.num} p={p} isVertical={false} hideRating={currentStatus === 'UPCOMING'} />
                   ))}
 
-                  {LINEUPS.away.starters.map((p) => (
+                  {activeLineup.away.starters.map((p) => (
                     <UniversalPlayerNode key={p.num} p={p} isVertical={false} hideRating={currentStatus === 'UPCOMING'} />
                   ))}
                 </div>
@@ -2069,18 +2360,22 @@ export default function MatchCenterPage() {
                 {/* Strip Pelatih */}
                 <div className="px-3 sm:px-4 py-2 rounded-xl bg-slate-100/70 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0">
-                      <img
-                        src="https://resources.premierleague.com/premierleague25/photos/players/110x140/man1427.png"
-                        alt="Rúben Amorim"
-                        className="w-full h-full object-cover object-top"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0 flex items-center justify-center">
+                      {homeCoach.photoUrl ? (
+                        <img
+                          src={homeCoach.photoUrl}
+                          alt={homeCoach.name}
+                          className="w-full h-full object-cover object-top"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <User size={13} className="text-zinc-500" />
+                      )}
                     </div>
                     <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[11px] sm:text-xs truncate">
-                      Rúben Amorim
+                      {homeCoach.name}
                     </span>
                   </div>
 
@@ -2090,48 +2385,52 @@ export default function MatchCenterPage() {
 
                   <div className="flex items-center gap-2 min-w-0 text-right justify-end">
                     <span className="font-semibold text-slate-800 dark:text-zinc-200 text-[11px] sm:text-xs truncate">
-                      Pep Guardiola
+                      {awayCoach.name}
                     </span>
-                    <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0">
-                      <img
-                        src="https://resources.premierleague.com/premierleague25/photos/players/110x140/man279.png"
-                        alt="Pep Guardiola"
-                        className="w-full h-full object-cover object-top"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/20 shrink-0 flex items-center justify-center">
+                      {awayCoach.photoUrl ? (
+                        <img
+                          src={awayCoach.photoUrl}
+                          alt={awayCoach.name}
+                          className="w-full h-full object-cover object-top"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <User size={13} className="text-zinc-500" />
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Substitutes Section (Minimalist, Uncarded) */}
+                {/* Substitutes Section */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-[#27272A] mb-2 px-1">
                     <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold">
                       Substitutes
                     </span>
                     <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
-                      9 per team
+                      Confirmed Bench
                     </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-10 gap-y-4">
-                    {/* Home: Man United Substitutes */}
+                    {/* Home Substitutes */}
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between pb-1.5 mb-0.5 border-b border-slate-100 dark:border-[#27272A]/70 px-1">
                         <div className="flex items-center gap-1.5">
-                          <ClubCrest code="MUN" size={15} />
+                          <ClubCrest code={activeMatch.homeShort} size={15} />
                           <span className="font-semibold text-slate-800 dark:text-zinc-300 text-xs">
-                            Man United
+                            {activeMatch.homeTeam}
                           </span>
                         </div>
                         <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500">
-                          {LINEUPS.home.substitutes.length} subs
+                          {activeLineup.home.substitutes.length} subs
                         </span>
                       </div>
                       <div className="divide-y divide-slate-100/50 dark:divide-[#27272A]/30">
-                        {LINEUPS.home.substitutes.map((player) => (
+                        {activeLineup.home.substitutes.map((player) => (
                           <SubstituteRow
                             key={player.num}
                             player={player}
@@ -2141,21 +2440,21 @@ export default function MatchCenterPage() {
                       </div>
                     </div>
 
-                    {/* Away: Man City Substitutes */}
+                    {/* Away Substitutes */}
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between pb-1.5 mb-0.5 border-b border-slate-100 dark:border-[#27272A]/70 px-1">
                         <div className="flex items-center gap-1.5">
-                          <ClubCrest code="MCI" size={15} />
+                          <ClubCrest code={activeMatch.awayShort} size={15} />
                           <span className="font-semibold text-slate-800 dark:text-zinc-300 text-xs">
-                            Man City
+                            {activeMatch.awayTeam}
                           </span>
                         </div>
                         <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500">
-                          {LINEUPS.away.substitutes.length} subs
+                          {activeLineup.away.substitutes.length} subs
                         </span>
                       </div>
                       <div className="divide-y divide-slate-100/50 dark:divide-[#27272A]/30">
-                        {LINEUPS.away.substitutes.map((player) => (
+                        {activeLineup.away.substitutes.map((player) => (
                           <SubstituteRow
                             key={player.num}
                             player={player}
@@ -2173,52 +2472,87 @@ export default function MatchCenterPage() {
             {/* 5. TAB TABLE */}
             {matchTab === 'table' && (
               <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-6 shadow-xs">
-                <div className="font-mono text-xs divide-y divide-slate-100 dark:divide-[#27272A]">
-                  <div className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2 px-2.5 sm:px-3 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
-                    <span className="text-left">Club</span>
-                    <span className="text-center">P</span>
-                    <span className="text-center">GD</span>
-                    <span className="text-center text-slate-900 dark:text-white">PTS</span>
-                    <span className="text-center">Form</span>
-                  </div>
+                {isPremierLeague ? (
+                  <div className="font-mono text-xs divide-y divide-slate-100 dark:divide-[#27272A]">
+                    <div className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2 px-2.5 sm:px-3 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
+                      <span className="text-left">Club</span>
+                      <span className="text-center">P</span>
+                      <span className="text-center">GD</span>
+                      <span className="text-center text-slate-900 dark:text-white">PTS</span>
+                      <span className="text-center">Form</span>
+                    </div>
 
-                  {standings.map((row) => (
-                    <div
-                      key={row.code ? `${row.code}-${row.rank}` : row.rank}
-                      className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
-                        <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs shrink-0">
-                          {row.rank}
-                        </span>
-                        <ClubCrest code={row.code || row.club} size={16} />
-                        <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
-                          {row.club}
-                        </span>
-                      </div>
-
-                      <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs">
-                        {row.played}
-                      </span>
-
-                      <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs font-semibold">
-                        {row.gd}
-                      </span>
-
-                      <span className="text-center font-bold text-slate-900 dark:text-white tabular-nums text-[11px] sm:text-xs">
-                        {row.pts}
-                      </span>
-
-                      <div className="flex items-center justify-center gap-1">
-                        {row.form.map((f, i) => (
-                          <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
-                            {f}
+                    {standings.map((row) => (
+                      <div
+                        key={row.code ? `${row.code}-${row.rank}` : row.rank}
+                        className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
+                          <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs shrink-0">
+                            {row.rank}
                           </span>
-                        ))}
+                          <ClubCrest code={row.code || row.club} size={16} />
+                          <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
+                            {row.club}
+                          </span>
+                        </div>
+
+                        <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs">
+                          {row.played}
+                        </span>
+
+                        <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs font-semibold">
+                          {row.gd}
+                        </span>
+
+                        <span className="text-center font-bold text-slate-900 dark:text-white tabular-nums text-[11px] sm:text-xs">
+                          {row.pts}
+                        </span>
+
+                        <div className="flex items-center justify-center gap-1">
+                          {row.form.map((f, i) => (
+                            <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
+                              {f}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 sm:p-8 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <ClubCrest code={activeMatch.homeShort} size={36} />
+                      <span className="text-xs font-bold font-mono text-zinc-500">VS</span>
+                      <ClubCrest code={activeMatch.awayShort} size={36} />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                        {activeMatch.league}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-md mx-auto">
+                        Pertandingan ini merupakan laga uji coba internasional / kompetisi non-liga domestik. Klasemen resmi Premier League tetap dapat diakses melalui jadwal GW08.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-md pt-2">
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] text-left">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <ClubCrest code={activeMatch.homeShort} size={14} />
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{activeMatch.homeTeam}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 block">Status: Tuan Rumah</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] text-left">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <ClubCrest code={activeMatch.awayShort} size={14} />
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{activeMatch.awayTeam}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500 block">Status: Tim Tamu</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 

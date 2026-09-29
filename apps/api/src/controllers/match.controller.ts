@@ -256,7 +256,9 @@ export class MatchController {
   public static async getLineup(req: Request, res: Response): Promise<void> {
     try {
       const { ApiFootballService } = await import('../services/apiFootball.service.js');
-      const lineup = await ApiFootballService.getMatchLineup(req.params.id);
+      const homeName = (req.query.home as string) || '';
+      const awayName = (req.query.away as string) || '';
+      const lineup = await ApiFootballService.getMatchLineup(req.params.id, homeName, awayName);
       res.json({
         success: true,
         data: lineup,
@@ -290,6 +292,55 @@ export class MatchController {
       res.status(500).json({
         success: false,
         error: { code: 'ABSENTEES_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/matches/:id/statistics
+   * Live match statistics (possession, shots, passes, defence)
+   */
+  public static async getStatistics(req: Request, res: Response): Promise<void> {
+    try {
+      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const homeName = (req.query.home as string) || '';
+      const awayName = (req.query.away as string) || '';
+      const stats = await ApiFootballService.getMatchStatistics(req.params.id, homeName, awayName);
+      res.json({
+        success: true,
+        data: stats,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'STATS_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/matches/:id/h2h
+   * Historical head to head encounters & record
+   */
+  public static async getFixtureH2H(req: Request, res: Response): Promise<void> {
+    try {
+      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const h2hCode = (req.query.h2h as string) || undefined;
+      const homeName = (req.query.home as string) || 'Home Team';
+      const awayName = (req.query.away as string) || 'Away Team';
+      const h2h = await ApiFootballService.getMatchH2H(h2hCode, homeName, awayName);
+      res.json({
+        success: true,
+        data: h2h,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'H2H_FAILED', message: (error as Error).message },
         timestamp: new Date().toISOString(),
       });
     }
