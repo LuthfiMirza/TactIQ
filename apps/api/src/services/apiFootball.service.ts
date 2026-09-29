@@ -92,6 +92,7 @@ export class ApiFootballService {
    */
   public static async getLiveScores(): Promise<LiveScoreMatch[]> {
     const apiKey = process.env.API_FOOTBALL_KEY;
+    const { LiveMatchEngineService } = await import('./liveMatchEngine.service.js');
 
     if (apiKey) {
       try {
@@ -106,7 +107,7 @@ export class ApiFootballService {
           const json = (await res.json()) as any;
           const items = (json?.response as any[]) || [];
           if (Array.isArray(items) && items.length > 0) {
-            return items.map((f) => ({
+            const mapped: LiveScoreMatch[] = items.map((f) => ({
               fixtureId: String(f.fixture.id),
               league: f.league.name,
               homeTeam: f.teams.home.name,
@@ -127,64 +128,16 @@ export class ApiFootballService {
                 detail: ev.detail,
               })),
             }));
+
+            LiveMatchEngineService.updateFromExternalApi(mapped);
           }
         }
       } catch (e) {
-        console.warn('⚠️ [API-Football] Live scores fetch failed, using realistic fallback:', e);
+        console.warn('⚠️ [API-Football] Live scores fetch failed, using LiveMatchEngine:', e);
       }
     }
 
-    // High-Fidelity Fallback Live Matchday (Australia vs Brazil, Arsenal vs Chelsea, Man City vs Liverpool)
-    return [
-      {
-        fixtureId: '1583654',
-        league: 'Friendlies',
-        homeTeam: 'Australia',
-        homeTeamId: 1530,
-        homeLogo: 'https://media.api-sports.io/football/teams/1530.png',
-        homeScore: 0,
-        awayTeam: 'Brazil',
-        awayTeamId: 6,
-        awayLogo: 'https://media.api-sports.io/football/teams/6.png',
-        awayScore: 1,
-        status: 'LIVE',
-        minute: 17,
-        events: [
-          { minute: 3, team: 'Brazil', player: 'Vanderson', type: 'Goal', detail: 'Normal Goal' },
-          { minute: 14, team: 'Australia', player: 'Jackson Irvine', type: 'Card', detail: 'Yellow Card' },
-        ],
-      },
-      {
-        fixtureId: 'live-gw08-ars-che',
-        league: 'Premier League',
-        homeTeam: 'Arsenal FC',
-        homeScore: 2,
-        awayTeam: 'Chelsea FC',
-        awayScore: 1,
-        status: 'LIVE',
-        minute: 73,
-        events: [
-          { minute: 18, team: 'Arsenal FC', player: 'Bukayo Saka', type: 'Goal', detail: 'Left-foot curl' },
-          { minute: 42, team: 'Chelsea FC', player: 'Cole Palmer', type: 'Goal', detail: 'Penalty' },
-          { minute: 61, team: 'Arsenal FC', player: 'Kai Havertz', type: 'Goal', detail: 'Header' },
-          { minute: 68, team: 'Chelsea FC', player: 'Marc Cucurella', type: 'Card', detail: 'Yellow Card' },
-        ],
-      },
-      {
-        fixtureId: 'live-gw08-mci-liv',
-        league: 'Premier League',
-        homeTeam: 'Manchester City',
-        homeScore: 1,
-        awayTeam: 'Liverpool FC',
-        awayScore: 1,
-        status: 'LIVE',
-        minute: 82,
-        events: [
-          { minute: 27, team: 'Manchester City', player: 'Erling Haaland', type: 'Goal', detail: 'Box strike' },
-          { minute: 54, team: 'Liverpool FC', player: 'Mohamed Salah', type: 'Goal', detail: 'Fast break counter' },
-        ],
-      },
-    ];
+    return LiveMatchEngineService.getLiveMatches();
   }
 
   /**

@@ -177,6 +177,10 @@ export interface ClientToServerEvents {
         sessionId: string;
     }) => void;
     ping_stream: () => void;
+    simulate_match_event?: (data: {
+        fixtureId: string;
+        type?: string;
+    }) => void;
 }
 export interface ServerToClientEvents {
     frame_update: (payload: TrackingFramePayload) => void;
@@ -190,6 +194,17 @@ export interface ServerToClientEvents {
     }) => void;
     pong_stream: (data: {
         timestamp: number;
+    }) => void;
+    match_score_update: (matches: any[]) => void;
+    match_event: (event: {
+        fixtureId: string;
+        minute: number;
+        team: string;
+        player: string;
+        type: 'Goal' | 'Card' | 'subst' | string;
+        detail?: string;
+        homeScore: number;
+        awayScore: number;
     }) => void;
 }
 //# sourceMappingURL=index.d.ts.map

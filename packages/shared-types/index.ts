@@ -221,6 +221,7 @@ export interface ClientToServerEvents {
   join_session: (data: { sessionId: string }) => void;
   leave_session: (data: { sessionId: string }) => void;
   ping_stream: () => void;
+  simulate_match_event?: (data: { fixtureId: string; type?: string }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -228,4 +229,16 @@ export interface ServerToClientEvents {
   session_status: (data: { sessionId: string; status: TrackingSessionStatus }) => void;
   stream_error: (data: { sessionId: string; message: string }) => void;
   pong_stream: (data: { timestamp: number }) => void;
+  match_score_update: (matches: any[]) => void;
+  match_event: (event: {
+    fixtureId: string;
+    minute: number;
+    team: string;
+    player: string;
+    type: 'Goal' | 'Card' | 'subst' | string;
+    detail?: string;
+    homeScore: number;
+    awayScore: number;
+  }) => void;
 }
+

@@ -6,8 +6,17 @@ export const matchRoutes = Router();
 // GET /api/v1/matches/fixtures (scheduled fixtures)
 matchRoutes.get('/fixtures', MatchController.getFixtures);
 
-// GET /api/v1/matches/live/scores (API-Football live scores)
+// GET /api/v1/matches/live/scores (API-Football live scores / LiveMatchEngine)
 matchRoutes.get('/live/scores', MatchController.getLiveScores);
+
+// POST /api/v1/matches/live/simulate-event (Simulate real-time goal or event)
+matchRoutes.post('/live/simulate-event', MatchController.simulateLiveEvent);
+
+// POST /api/v1/matches/live/advance-minute (Advance minute on live match)
+matchRoutes.post('/live/advance-minute', MatchController.advanceLiveMinute);
+
+// POST /api/v1/matches/live/reset (Reset live match to baseline)
+matchRoutes.post('/live/reset', MatchController.resetLiveMatch);
 
 // GET /api/v1/matches/preview/absentees (Transfermarkt injury & ban intelligence)
 matchRoutes.get('/preview/absentees', MatchController.getAbsentees);

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import { api } from '@/lib/api';
+import { getSocket } from '@/lib/socket';
 
 // ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
@@ -808,6 +809,10 @@ export default function MatchCenterPage() {
   const [liveScores, setLiveScores] = useState<any[]>([]);
   const [isSyncingLive, setIsSyncingLive] = useState(false);
   const [syncStatusToast, setSyncStatusToast] = useState<string | null>(null);
+  const [isWsConnected, setIsWsConnected] = useState(false);
+  const [liveEventToast, setLiveEventToast] = useState<any | null>(null);
+  const [isSimulatingEvent, setIsSimulatingEvent] = useState(false);
+  const [scoreFlash, setScoreFlash] = useState(false);
   const [predictionData, setPredictionData] = useState<{
     score: string;
     homeWin: number;
@@ -1015,40 +1020,80 @@ export default function MatchCenterPage() {
     }
   };
 
+  const applyLiveScoresUpdate = (data: any[]) => {
+    if (!Array.isArray(data) || data.length === 0) return;
+    setLiveScores(data);
+
+    // If active match is a live feed match, keep score and clock in real-time sync
+    setActiveMatch((prev) => {
+      if (prev.isLiveFeed) {
+        const live = data.find((d: any) => String(d.fixtureId) === prev.id);
+        if (live) {
+          const goalEvents = Array.isArray(live.events) ? live.events.filter((ev: any) => ev.type === 'Goal') : [];
+          const homeGoals = goalEvents
+            .filter((ev: any) => ev.team === live.homeTeam || ev.team?.toLowerCase().includes(live.homeTeam?.toLowerCase()) || live.homeTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+            .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+          const awayGoals = goalEvents
+            .filter((ev: any) => ev.team === live.awayTeam || ev.team?.toLowerCase().includes(live.awayTeam?.toLowerCase()) || live.awayTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+            .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+
+          const newHScore = Number(live.homeScore ?? prev.homeScore);
+          const newAScore = Number(live.awayScore ?? prev.awayScore);
+
+          if (newHScore !== prev.homeScore || newAScore !== prev.awayScore) {
+            setScoreFlash(true);
+            setTimeout(() => setScoreFlash(false), 2500);
+          }
+
+          // Dynamic xG calculation based on elapsed time and score
+          const newXgHome = Number((0.45 + (homeGoals.length * 0.72) + ((live.minute || 20) * 0.015)).toFixed(2));
+          const newXgAway = Number((0.85 + (awayGoals.length * 0.65) + ((live.minute || 20) * 0.018)).toFixed(2));
+
+          return {
+            ...prev,
+            homeScore: newHScore,
+            awayScore: newAScore,
+            timeOrStatus: live.status === 'HT' ? 'Half Time' : `${live.minute ?? 45}'`,
+            statusType: live.status === 'FT' ? 'FINISHED' : 'LIVE',
+            scorersHome: homeGoals.length > 0 ? homeGoals : prev.scorersHome,
+            scorersAway: awayGoals.length > 0 ? awayGoals : prev.scorersAway,
+            events: live.events || prev.events,
+            xgHome: newXgHome,
+            xgAway: newXgAway,
+          };
+        }
+      }
+      return prev;
+    });
+  };
+
   const fetchLiveScores = () => {
     api.getLiveScores()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setLiveScores(data);
-          // If active match is a live feed match, keep score in sync
-          setActiveMatch((prev) => {
-            if (prev.isLiveFeed) {
-              const live = data.find((d: any) => String(d.fixtureId) === prev.id);
-              if (live) {
-                const goalEvents = Array.isArray(live.events) ? live.events.filter((ev: any) => ev.type === 'Goal') : [];
-                const homeGoals = goalEvents
-                  .filter((ev: any) => ev.team === live.homeTeam || ev.team?.toLowerCase().includes(live.homeTeam?.toLowerCase()) || live.homeTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
-                  .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
-                const awayGoals = goalEvents
-                  .filter((ev: any) => ev.team === live.awayTeam || ev.team?.toLowerCase().includes(live.awayTeam?.toLowerCase()) || live.awayTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
-                  .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
-
-                return {
-                  ...prev,
-                  homeScore: Number(live.homeScore ?? prev.homeScore),
-                  awayScore: Number(live.awayScore ?? prev.awayScore),
-                  timeOrStatus: live.status === 'HT' ? 'Half Time' : `${live.minute ?? 45}'`,
-                  statusType: live.status === 'FT' ? 'FINISHED' : 'LIVE',
-                  scorersHome: homeGoals.length > 0 ? homeGoals : prev.scorersHome,
-                  scorersAway: awayGoals.length > 0 ? awayGoals : prev.scorersAway,
-                };
-              }
-            }
-            return prev;
-          });
-        }
+        applyLiveScoresUpdate(data);
       })
       .catch((e) => console.warn('[MatchCenter] Live scores fetch error:', e));
+  };
+
+  const handleSimulateLiveGoal = async (teamSide: 'home' | 'away' = 'away') => {
+    setIsSimulatingEvent(true);
+    try {
+      const res = await api.simulateLiveEvent({
+        fixtureId: activeMatch.id,
+        team: teamSide,
+      });
+      if (res?.data?.event) {
+        const ev = res.data.event;
+        setLiveEventToast(ev);
+        setScoreFlash(true);
+        setTimeout(() => setScoreFlash(false), 2500);
+        setTimeout(() => setLiveEventToast(null), 7000);
+      }
+    } catch (err) {
+      console.warn('Simulation trigger failed:', err);
+    } finally {
+      setIsSimulatingEvent(false);
+    }
   };
 
   const handleSyncLiveData = async () => {
@@ -1085,9 +1130,42 @@ export default function MatchCenterPage() {
   useEffect(() => {
     setMounted(true);
 
-    // Fetch live scores immediately and every 30s
+    // Initial fetch live scores & 10s fallback polling
     fetchLiveScores();
-    const interval = setInterval(fetchLiveScores, 30000);
+    const interval = setInterval(fetchLiveScores, 10000);
+
+    // WebSocket real-time subscription
+    const socket = getSocket();
+
+    const onConnect = () => {
+      console.log('⚡ Connected to TactIQ Live WebSocket Hub');
+      setIsWsConnected(true);
+    };
+
+    const onDisconnect = () => {
+      setIsWsConnected(false);
+    };
+
+    const onScoreUpdate = (data: any[]) => {
+      setIsWsConnected(true);
+      applyLiveScoresUpdate(data);
+    };
+
+    const onMatchEvent = (event: any) => {
+      setLiveEventToast(event);
+      setScoreFlash(true);
+      setTimeout(() => setScoreFlash(false), 2500);
+      setTimeout(() => setLiveEventToast(null), 7000);
+    };
+
+    if (socket.connected) {
+      setIsWsConnected(true);
+    }
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('match_score_update', onScoreUpdate);
+    socket.on('match_event', onMatchEvent);
 
     // Fetch real matchday fixtures from PostgreSQL
     api.getFixtures()
@@ -1144,7 +1222,13 @@ export default function MatchCenterPage() {
       })
       .catch(() => {});
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('match_score_update', onScoreUpdate);
+      socket.off('match_event', onMatchEvent);
+    };
   }, []);
 
   // Auto-sync lineup, statistics, and H2H whenever activeMatch changes
@@ -1361,6 +1445,34 @@ export default function MatchCenterPage() {
             <span className="hidden sm:inline">{isSyncingLive ? 'Syncing...' : 'Sync Live'}</span>
           </button>
 
+          {/* WebSocket Live Status Indicator */}
+          <div
+            title={isWsConnected ? 'Connected to TactIQ Real-Time WebSocket Hub (Port 4000)' : 'Connecting to WebSocket Hub...'}
+            className={`min-h-[34px] sm:min-h-[36px] px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold transition-all shadow-xs ${
+              isWsConnected
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
+                : 'border-zinc-700/50 bg-zinc-800/40 text-zinc-400'
+            }`}
+          >
+            <span className="relative flex h-2 w-2">
+              {isWsConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isWsConnected ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
+            </span>
+            <span className="hidden md:inline">{isWsConnected ? 'LIVE WS' : 'CONNECTING'}</span>
+          </div>
+
+          {/* Real-time Goal Simulation Trigger */}
+          <button
+            type="button"
+            onClick={() => handleSimulateLiveGoal('away')}
+            disabled={isSimulatingEvent}
+            title="Klik untuk mensimulasikan gol secara langsung (Real-Time WebSocket Push)"
+            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all flex items-center gap-1.5 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
+          >
+            <span className={isSimulatingEvent ? 'animate-spin' : ''}>⚡</span>
+            <span className="hidden sm:inline">Simulasi Gol</span>
+          </button>
+
           {/* Prototype Scenario Switcher Popover */}
           <div className="relative">
             <button
@@ -1411,6 +1523,37 @@ export default function MatchCenterPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Real-Time Goal / Event Toast Banner ── */}
+      {liveEventToast && (
+        <div className="w-full bg-gradient-to-r from-emerald-600/25 via-zinc-900 to-emerald-950/40 border-2 border-emerald-500 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between animate-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl animate-bounce">⚽</span>
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-black flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                REAL-TIME WEBSOCKET EVENT · {liveEventToast.minute}'
+              </div>
+              <div className="text-sm font-extrabold text-white">
+                {liveEventToast.type === 'Goal' ? 'GOAL!' : liveEventToast.type}: {liveEventToast.player} ({liveEventToast.team})
+              </div>
+              <div className="text-xs text-zinc-300 font-mono">
+                {liveEventToast.detail ? `${liveEventToast.detail} · ` : ''}Skor: {liveEventToast.homeScore} - {liveEventToast.awayScore}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setLiveEventToast(null)}
+            className="text-zinc-400 hover:text-white cursor-pointer p-1"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ── Status Toast Banner ── */}
       {syncStatusToast && (
@@ -1614,11 +1757,19 @@ export default function MatchCenterPage() {
                   ) : (
                     <>
                       <div className="flex items-center justify-center gap-1.5 sm:gap-3">
-                        <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                        <span className={`font-black text-2xl sm:text-4xl tracking-tight tabular-nums transition-all duration-300 ${
+                          scoreFlash
+                            ? 'text-emerald-500 scale-115 drop-shadow-[0_0_15px_rgba(16,185,129,0.7)]'
+                            : 'text-slate-900 dark:text-white'
+                        }`}>
                           {periodInfo.homeScore}
                         </span>
                         <span className="font-normal text-lg sm:text-2xl text-slate-300 dark:text-slate-600">-</span>
-                        <span className="font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums transition-all">
+                        <span className={`font-black text-2xl sm:text-4xl tracking-tight tabular-nums transition-all duration-300 ${
+                          scoreFlash
+                            ? 'text-emerald-500 scale-115 drop-shadow-[0_0_15px_rgba(16,185,129,0.7)]'
+                            : 'text-slate-900 dark:text-white'
+                        }`}>
                           {periodInfo.awayScore}
                         </span>
                       </div>

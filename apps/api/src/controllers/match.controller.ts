@@ -229,7 +229,7 @@ export class MatchController {
 
   /**
    * GET /api/v1/matches/live/scores
-   * Live in-play scores via API-Football with real-time events
+   * Live in-play scores via API-Football or dynamic LiveMatchEngine
    */
   public static async getLiveScores(_req: Request, res: Response): Promise<void> {
     try {
@@ -244,6 +244,84 @@ export class MatchController {
       res.status(500).json({
         success: false,
         error: { code: 'LIVE_SCORES_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/matches/live/simulate-event
+   * Manually trigger a goal or event on a live match and broadcast via WebSocket
+   */
+  public static async simulateLiveEvent(req: Request, res: Response): Promise<void> {
+    try {
+      const { LiveMatchEngineService } = await import('../services/liveMatchEngine.service.js');
+      const { fixtureId, team, player, detail } = req.body || {};
+      const result = LiveMatchEngineService.simulateGoal(
+        fixtureId || '1583654',
+        team === 'home' ? 'home' : 'away',
+        player,
+        detail
+      );
+
+      res.json({
+        success: true,
+        data: result,
+        message: `Simulated event triggered for ${result.match.homeTeam} vs ${result.match.awayTeam}`,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'SIMULATE_EVENT_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/matches/live/advance-minute
+   * Advance minute on live match
+   */
+  public static async advanceLiveMinute(req: Request, res: Response): Promise<void> {
+    try {
+      const { LiveMatchEngineService } = await import('../services/liveMatchEngine.service.js');
+      const { fixtureId, minutes } = req.body || {};
+      const updated = LiveMatchEngineService.advanceMinute(fixtureId, minutes || 2);
+
+      res.json({
+        success: true,
+        data: updated,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'ADVANCE_MINUTE_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/matches/live/reset
+   * Reset match back to starting state
+   */
+  public static async resetLiveMatch(req: Request, res: Response): Promise<void> {
+    try {
+      const { LiveMatchEngineService } = await import('../services/liveMatchEngine.service.js');
+      const { fixtureId } = req.body || {};
+      const reset = LiveMatchEngineService.resetMatch(fixtureId);
+
+      res.json({
+        success: true,
+        data: reset,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'RESET_FAILED', message: (error as Error).message },
         timestamp: new Date().toISOString(),
       });
     }

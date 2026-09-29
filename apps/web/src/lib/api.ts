@@ -138,6 +138,27 @@ class ApiClient {
     return this.request<any[]>('/api/v1/matches/live/scores');
   }
 
+  public async simulateLiveEvent(payload?: { fixtureId?: string; team?: 'home' | 'away'; player?: string; detail?: string }): Promise<any> {
+    return this.request<any>('/api/v1/matches/live/simulate-event', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    });
+  }
+
+  public async advanceLiveMinute(payload?: { fixtureId?: string; minutes?: number }): Promise<any> {
+    return this.request<any>('/api/v1/matches/live/advance-minute', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    });
+  }
+
+  public async resetLiveMatch(payload?: { fixtureId?: string }): Promise<any> {
+    return this.request<any>('/api/v1/matches/live/reset', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    });
+  }
+
   public async getMatchLineup(fixtureId: string, params?: { home?: string; away?: string }): Promise<any> {
     const q = new URLSearchParams();
     if (params?.home) q.set('home', params.home);

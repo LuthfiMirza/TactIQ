@@ -5,6 +5,7 @@ import { connectDatabase } from './services/prisma.service.js';
 import { initRedisClients } from './services/redis.service.js';
 import { setupSocketServer } from './websocket/socket.server.js';
 import { etlService } from './services/etl.service.js';
+import { LiveMatchEngineService } from './services/liveMatchEngine.service.js';
 
 async function bootstrap() {
   console.log('🚀 Booting TactIQ API Gateway & Socket Server...');
@@ -27,6 +28,9 @@ async function bootstrap() {
   // Initialize Background ETL Ingestion Scheduler (TSK-02)
   etlService.startETLCronJob();
 
+  // Start Real-Time Live Match Engine (TSK-03: Real-Time In-Play Scores)
+  LiveMatchEngineService.startEngine(10000);
+
   // Start listening
   httpServer.listen(config.port, () => {
     console.log(`=======================================================`);
@@ -41,6 +45,7 @@ async function bootstrap() {
   const shutdown = async () => {
     console.log('🛑 Shutting down TactIQ API Gateway gracefully...');
     etlService.stopETLCronJob();
+    LiveMatchEngineService.stopEngine();
     httpServer.close(() => {
       console.log('✅ HTTP and WebSocket server closed.');
       process.exit(0);
