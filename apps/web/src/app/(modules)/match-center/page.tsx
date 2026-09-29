@@ -13,6 +13,7 @@ import {
   Share2,
   FlaskConical,
   Check,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 
@@ -319,10 +320,21 @@ interface LineupPlayer {
   vy: number;
 }
 
+interface SubstitutePlayer {
+  num: number;
+  name: string;
+  pos: string;
+  rating?: number;
+  photoUrl?: string;
+  subbedInMinute?: number;
+  isCaptain?: boolean;
+}
+
 interface TeamLineup {
   formation: string;
   teamRating: number;
   starters: LineupPlayer[];
+  substitutes: SubstitutePlayer[];
 }
 
 const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
@@ -342,6 +354,17 @@ const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
       { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 36, y: 82, vx: 17, vy: 64, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
       { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 44, y: 50, vx: 50, vy: 56, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
     ],
+    substitutes: [
+      { num: 1, name: 'Altay Bayındır', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/463748.png' },
+      { num: 2, name: 'Victor Lindelöf', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/184667.png' },
+      { num: 5, name: 'Jonny Evans', pos: 'DF', rating: 6.4, subbedInMinute: 78, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/37642.png' },
+      { num: 25, name: 'Manuel Ugarte', pos: 'MF', rating: 6.8, subbedInMinute: 65, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/487994.png' },
+      { num: 14, name: 'Christian Eriksen', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/80607.png' },
+      { num: 43, name: 'Toby Collyer', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/512591.png' },
+      { num: 16, name: 'Amad Diallo', pos: 'FW', rating: 7.1, subbedInMinute: 72, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/490459.png' },
+      { num: 21, name: 'Antony', pos: 'FW', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/467169.png' },
+      { num: 11, name: 'Joshua Zirkzee', pos: 'FW', rating: 6.5, subbedInMinute: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/464831.png' },
+    ],
   },
   away: {
     formation: '4-1-4-1',
@@ -358,6 +381,17 @@ const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
       { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 65, y: 62, vx: 61, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
       { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 64, y: 82, vx: 83, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
       { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 56, y: 50, vx: 50, vy: 44, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
+    ],
+    substitutes: [
+      { num: 18, name: 'Stefan Ortega', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/88248.png' },
+      { num: 5, name: 'John Stones', pos: 'DF', rating: 6.7, subbedInMinute: 75, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/97299.png' },
+      { num: 82, name: 'Rico Lewis', pos: 'DF', rating: 6.6, subbedInMinute: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493015.png' },
+      { num: 8, name: 'Mateo Kovačić', pos: 'MF', rating: 6.9, subbedInMinute: 70, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/91651.png' },
+      { num: 19, name: 'İlkay Gündoğan', pos: 'MF', rating: 7.0, subbedInMinute: 58, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/59859.png' },
+      { num: 27, name: 'Matheus Nunes', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/476901.png' },
+      { num: 87, name: 'James McAtee', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/472464.png' },
+      { num: 10, name: 'Jack Grealish', pos: 'FW', rating: 6.8, subbedInMinute: 80, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/114283.png' },
+      { num: 26, name: 'Savinho', pos: 'FW', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/494189.png' },
     ],
   },
 };
@@ -501,6 +535,79 @@ function UniversalPlayerNode({
         <span className="text-white text-[9.5px] sm:text-[10px] font-semibold tracking-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] max-w-[56px] sm:max-w-[66px] truncate">
           {p.shortName}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function SubstituteRow({
+  player,
+  hideRating = false,
+}: {
+  player: SubstitutePlayer;
+  hideRating?: boolean;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const hasPhoto = Boolean(player.photoUrl) && !imgError;
+
+  return (
+    <div className="flex items-center justify-between py-1.5 px-1 hover:bg-slate-100/60 dark:hover:bg-white/[0.03] rounded-md transition-colors group">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="font-mono text-[11px] text-slate-400 dark:text-zinc-500 w-4 text-right shrink-0 font-medium">
+          {player.num}
+        </span>
+        <div className="w-6 h-6 rounded-full overflow-hidden bg-zinc-800/80 ring-1 ring-white/10 shrink-0 flex items-center justify-center">
+          {hasPhoto ? (
+            <img
+              src={player.photoUrl}
+              alt={player.name}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-top"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <User className="w-3 h-3 text-zinc-400" />
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-xs font-medium text-slate-700 dark:text-zinc-300 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+            {player.name}
+          </span>
+          {player.isCaptain && (
+            <span className="text-[9px] font-mono font-bold text-amber-500">
+              (C)
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 shrink-0">
+        {player.subbedInMinute && !hideRating ? (
+          <span className="inline-flex items-center gap-1 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">
+            <ArrowLeftRight className="w-2.5 h-2.5" />
+            <span>{player.subbedInMinute}&apos;</span>
+          </span>
+        ) : null}
+        <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500 font-semibold uppercase tracking-wider min-w-[20px] text-center">
+          {player.pos}
+        </span>
+        {!hideRating && player.rating ? (
+          <span
+            className={`px-1.5 py-0.5 rounded font-mono font-bold text-[10px] text-white min-w-[26px] text-center ${
+              player.rating >= 7.0
+                ? 'bg-emerald-600'
+                : player.rating >= 6.0
+                ? 'bg-amber-600'
+                : 'bg-rose-600'
+            }`}
+          >
+            {player.rating.toFixed(1)}
+          </span>
+        ) : !hideRating ? (
+          <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-600 min-w-[26px] text-center">
+            —
+          </span>
+        ) : null}
       </div>
     </div>
   );
@@ -1596,6 +1703,68 @@ export default function MatchCenterPage() {
                           (e.target as HTMLElement).style.display = 'none';
                         }}
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Substitutes Section (Minimalist, Uncarded) */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-[#27272A] mb-2 px-1">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-bold">
+                      Substitutes
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
+                      9 per team
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-10 gap-y-4">
+                    {/* Home: Man United Substitutes */}
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-between pb-1.5 mb-0.5 border-b border-slate-100 dark:border-[#27272A]/70 px-1">
+                        <div className="flex items-center gap-1.5">
+                          <ClubCrest code="MUN" size={15} />
+                          <span className="font-semibold text-slate-800 dark:text-zinc-300 text-xs">
+                            Man United
+                          </span>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500">
+                          {LINEUPS.home.substitutes.length} subs
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100/50 dark:divide-[#27272A]/30">
+                        {LINEUPS.home.substitutes.map((player) => (
+                          <SubstituteRow
+                            key={player.num}
+                            player={player}
+                            hideRating={currentStatus === 'UPCOMING'}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Away: Man City Substitutes */}
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-between pb-1.5 mb-0.5 border-b border-slate-100 dark:border-[#27272A]/70 px-1">
+                        <div className="flex items-center gap-1.5">
+                          <ClubCrest code="MCI" size={15} />
+                          <span className="font-semibold text-slate-800 dark:text-zinc-300 text-xs">
+                            Man City
+                          </span>
+                        </div>
+                        <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500">
+                          {LINEUPS.away.substitutes.length} subs
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100/50 dark:divide-[#27272A]/30">
+                        {LINEUPS.away.substitutes.map((player) => (
+                          <SubstituteRow
+                            key={player.num}
+                            player={player}
+                            hideRating={currentStatus === 'UPCOMING'}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
