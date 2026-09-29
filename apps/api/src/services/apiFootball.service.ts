@@ -212,19 +212,28 @@ export class ApiFootballService {
     // Resolve team names from parameters or known fixture IDs
     let hName = homeTeamName;
     let aName = awayTeamName;
-    if (fixtureId === "1583654" || (!hName && !aName)) {
+    if (!hName || !aName) {
       if (fixtureId === "1583654") {
-        hName = "Australia";
-        aName = "Brazil";
+        hName = hName || "Australia";
+        aName = aName || "Brazil";
       } else if (fixtureId === "live-gw08-ars-che") {
-        hName = "Arsenal FC";
-        aName = "Chelsea FC";
+        hName = hName || "Arsenal FC";
+        aName = aName || "Chelsea FC";
       } else if (fixtureId === "live-gw08-mci-liv") {
-        hName = "Manchester City";
-        aName = "Liverpool FC";
+        hName = hName || "Manchester City";
+        aName = aName || "Liverpool FC";
       } else if (fixtureId === "fix-1") {
-        hName = "Liverpool";
-        aName = "Chelsea";
+        hName = hName || "Liverpool";
+        aName = aName || "Chelsea";
+      } else if (fixtureId === "fix-2") {
+        hName = hName || "Aston Villa";
+        aName = aName || "Spurs";
+      } else if (fixtureId === "fix-3") {
+        hName = hName || "Newcastle";
+        aName = aName || "Brighton";
+      } else if (fixtureId === "fix-4") {
+        hName = hName || "Bournemouth";
+        aName = aName || "Arsenal";
       }
     }
 
@@ -252,7 +261,7 @@ export class ApiFootballService {
           { number: 21, name: "Cameron Burgess", pos: "D", grid: "2:3", photoUrl: "https://media.api-sports.io/football/players/19391.png" },
           { number: 2, name: "Lewis Miller", pos: "M", grid: "3:1", photoUrl: "https://media.api-sports.io/football/players/81155.png" },
           { number: 22, name: "Jackson Irvine", pos: "M", grid: "3:2", photoUrl: "https://media.api-sports.io/football/players/19176.png" },
-          { number: 13, name: "Aiden O\x27Neill", pos: "M", grid: "3:3", photoUrl: "https://media.api-sports.io/football/players/19225.png" },
+          { number: 13, name: "Aiden O'Neill", pos: "M", grid: "3:3", photoUrl: "https://media.api-sports.io/football/players/19225.png" },
           { number: 5, name: "Jordan Bos", pos: "M", grid: "3:4", photoUrl: "https://media.api-sports.io/football/players/284333.png" },
           { number: 17, name: "Nestory Irankunda", pos: "F", grid: "4:1", photoUrl: "https://media.api-sports.io/football/players/325785.png" },
           { number: 14, name: "Riley McGree", pos: "M", grid: "4:2", photoUrl: "https://media.api-sports.io/football/players/19223.png" },
@@ -443,7 +452,210 @@ export class ApiFootballService {
       };
     }
 
-    // 8. DYNAMIC FALLBACK FOR ANY OTHER TEAM
+    // 8. ASTON VILLA (4-2-3-1)
+    if (lower.includes("aston villa") || lower.includes("villa")) {
+      return {
+        formation: "4-2-3-1",
+        team: "Aston Villa",
+        startXI: [
+          { number: 23, name: "Emiliano Martínez", pos: "G", grid: "1:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/98980.png" },
+          { number: 2, name: "Matty Cash", pos: "D", grid: "2:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/199798.png" },
+          { number: 4, name: "Ezri Konsa", pos: "D", grid: "2:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/212319.png" },
+          { number: 14, name: "Pau Torres", pos: "D", grid: "2:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/232413.png" },
+          { number: 12, name: "Lucas Digne", pos: "D", grid: "2:4", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/101188.png" },
+          { number: 24, name: "Amadou Onana", pos: "M", grid: "3:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/487500.png" },
+          { number: 8, name: "Youri Tielemans", pos: "M", grid: "3:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/166989.png" },
+          { number: 31, name: "Leon Bailey", pos: "F", grid: "4:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/215711.png" },
+          { number: 27, name: "Morgan Rogers", pos: "M", grid: "4:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/476901.png" },
+          { number: 7, name: "John McGinn", pos: "F", grid: "4:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/122806.png" },
+          { number: 11, name: "Ollie Watkins", pos: "F", grid: "5:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/178301.png" },
+        ],
+        substitutes: [
+          { number: 25, name: "Robin Olsen", pos: "G" },
+          { number: 3, name: "Diego Carlos", pos: "D" },
+          { number: 22, name: "Ian Maatsen", pos: "D" },
+          { number: 6, name: "Ross Barkley", pos: "M" },
+          { number: 41, name: "Jacob Ramsey", pos: "M" },
+          { number: 9, name: "Jhon Durán", pos: "F" },
+        ],
+      };
+    }
+
+    // 9. TOTTENHAM HOTSPUR / SPURS (4-3-3)
+    if (lower.includes("tottenham") || lower.includes("spurs")) {
+      return {
+        formation: "4-3-3",
+        team: "Tottenham Hotspur",
+        startXI: [
+          { number: 1, name: "Guglielmo Vicario", pos: "G", grid: "1:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png" },
+          { number: 23, name: "Pedro Porro", pos: "D", grid: "2:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/444463.png" },
+          { number: 17, name: "Cristian Romero", pos: "D", grid: "2:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png" },
+          { number: 37, name: "Micky van de Ven", pos: "D", grid: "2:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png" },
+          { number: 13, name: "Destiny Udogie", pos: "D", grid: "2:4", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/487500.png" },
+          { number: 8, name: "Yves Bissouma", pos: "M", grid: "3:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/227424.png" },
+          { number: 29, name: "Pape Matar Sarr", pos: "M", grid: "3:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/486672.png" },
+          { number: 10, name: "James Maddison", pos: "M", grid: "3:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/172780.png" },
+          { number: 21, name: "Dejan Kulusevski", pos: "F", grid: "4:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png" },
+          { number: 19, name: "Dominic Solanke", pos: "F", grid: "4:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/154561.png" },
+          { number: 7, name: "Son Heung-min", pos: "F", grid: "4:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/85971.png" },
+        ],
+        substitutes: [
+          { number: 20, name: "Fraser Forster", pos: "G" },
+          { number: 6, name: "Radu Drăgușin", pos: "D" },
+          { number: 14, name: "Archie Gray", pos: "M" },
+          { number: 30, name: "Rodrigo Bentancur", pos: "M" },
+          { number: 15, name: "Lucas Bergvall", pos: "M" },
+          { number: 22, name: "Brennan Johnson", pos: "F" },
+        ],
+      };
+    }
+
+    // 10. NEWCASTLE UNITED (4-3-3)
+    if (lower.includes("newcastle")) {
+      return {
+        formation: "4-3-3",
+        team: "Newcastle United",
+        startXI: [
+          { number: 22, name: "Nick Pope", pos: "G", grid: "1:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/98980.png" },
+          { number: 2, name: "Kieran Trippier", pos: "D", grid: "2:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/169187.png" },
+          { number: 5, name: "Fabian Schär", pos: "D", grid: "2:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/118748.png" },
+          { number: 33, name: "Dan Burn", pos: "D", grid: "2:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/97032.png" },
+          { number: 20, name: "Lewis Hall", pos: "D", grid: "2:4", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/463660.png" },
+          { number: 39, name: "Bruno Guimarães", pos: "M", grid: "3:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/10543.png" },
+          { number: 8, name: "Sandro Tonali", pos: "M", grid: "3:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png" },
+          { number: 7, name: "Joelinton", pos: "M", grid: "3:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/184029.png" },
+          { number: 23, name: "Jacob Murphy", pos: "F", grid: "4:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/154561.png" },
+          { number: 14, name: "Alexander Isak", pos: "F", grid: "4:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png" },
+          { number: 10, name: "Anthony Gordon", pos: "F", grid: "4:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/444145.png" },
+        ],
+        substitutes: [
+          { number: 1, name: "Martin Dúbravka", pos: "G" },
+          { number: 25, name: "Lloyd Kelly", pos: "D" },
+          { number: 21, name: "Tino Livramento", pos: "D" },
+          { number: 36, name: "Sean Longstaff", pos: "M" },
+          { number: 28, name: "Joe Willock", pos: "M" },
+          { number: 11, name: "Harvey Barnes", pos: "F" },
+        ],
+      };
+    }
+
+    // 11. BRIGHTON & HOVE ALBION (4-2-3-1)
+    if (lower.includes("brighton")) {
+      return {
+        formation: "4-2-3-1",
+        team: "Brighton & Hove Albion",
+        startXI: [
+          { number: 1, name: "Bart Verbruggen", pos: "G", grid: "1:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/487500.png" },
+          { number: 34, name: "Joël Veltman", pos: "D", grid: "2:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png" },
+          { number: 29, name: "Jan Paul van Hecke", pos: "D", grid: "2:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/444463.png" },
+          { number: 5, name: "Lewis Dunk", pos: "D", grid: "2:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/83299.png" },
+          { number: 30, name: "Pervis Estupiñán", pos: "D", grid: "2:4", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/204716.png" },
+          { number: 20, name: "Carlos Baleba", pos: "M", grid: "3:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/486672.png" },
+          { number: 41, name: "Jack Hinshelwood", pos: "M", grid: "3:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png" },
+          { number: 11, name: "Yankuba Minteh", pos: "F", grid: "4:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/476295.png" },
+          { number: 14, name: "Georginio Rutter", pos: "M", grid: "4:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png" },
+          { number: 22, name: "Kaoru Mitoma", pos: "F", grid: "4:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/451340.png" },
+          { number: 18, name: "Danny Welbeck", pos: "F", grid: "5:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/50175.png" },
+        ],
+        substitutes: [
+          { number: 23, name: "Jason Steele", pos: "G" },
+          { number: 3, name: "Igor Julio", pos: "D" },
+          { number: 2, name: "Tariq Lamptey", pos: "D" },
+          { number: 27, name: "Mats Wieffer", pos: "M" },
+          { number: 26, name: "Yasin Ayari", pos: "M" },
+          { number: 28, name: "Evan Ferguson", pos: "F" },
+        ],
+      };
+    }
+
+    // 12. BOURNEMOUTH (4-2-3-1)
+    if (lower.includes("bournemouth")) {
+      return {
+        formation: "4-2-3-1",
+        team: "AFC Bournemouth",
+        startXI: [
+          { number: 13, name: "Kepa Arrizabalaga", pos: "G", grid: "1:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/109745.png" },
+          { number: 15, name: "Adam Smith", pos: "D", grid: "2:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/54484.png" },
+          { number: 27, name: "Illia Zabarnyi", pos: "D", grid: "2:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/487500.png" },
+          { number: 31, name: "Marcos Senesi", pos: "D", grid: "2:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png" },
+          { number: 3, name: "Milos Kerkez", pos: "D", grid: "2:4", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png" },
+          { number: 4, name: "Lewis Cook", pos: "M", grid: "3:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/172780.png" },
+          { number: 16, name: "Marcus Tavernier", pos: "M", grid: "3:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/223340.png" },
+          { number: 11, name: "Dango Ouattara", pos: "F", grid: "4:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/476295.png" },
+          { number: 19, name: "Justin Kluivert", pos: "M", grid: "4:2", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/244855.png" },
+          { number: 24, name: "Antoine Semenyo", pos: "F", grid: "4:3", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png" },
+          { number: 9, name: "Evanilson", pos: "F", grid: "5:1", photoUrl: "https://resources.premierleague.com/premierleague25/photos/players/110x140/497565.png" },
+        ],
+        substitutes: [
+          { number: 42, name: "Mark Travers", pos: "G" },
+          { number: 2, name: "Dean Huijsen", pos: "D" },
+          { number: 5, name: "Max Aarons", pos: "D" },
+          { number: 8, name: "Alex Scott", pos: "M" },
+          { number: 10, name: "Ryan Christie", pos: "M" },
+          { number: 26, name: "Enes Ünal", pos: "F" },
+        ],
+      };
+    }
+
+    // 13. REAL MADRID (4-3-3)
+    if (lower.includes("real madrid") || lower.includes("madrid")) {
+      return {
+        formation: "4-3-3",
+        team: "Real Madrid",
+        startXI: [
+          { number: 1, name: "Thibaut Courtois", pos: "G", grid: "1:1", photoUrl: "https://media.api-sports.io/football/players/730.png" },
+          { number: 2, name: "Dani Carvajal", pos: "D", grid: "2:1", photoUrl: "https://media.api-sports.io/football/players/733.png" },
+          { number: 3, name: "Éder Militão", pos: "D", grid: "2:2", photoUrl: "https://media.api-sports.io/football/players/735.png" },
+          { number: 22, name: "Antonio Rüdiger", pos: "D", grid: "2:3", photoUrl: "https://media.api-sports.io/football/players/738.png" },
+          { number: 23, name: "Ferland Mendy", pos: "D", grid: "2:4", photoUrl: "https://media.api-sports.io/football/players/740.png" },
+          { number: 8, name: "Federico Valverde", pos: "M", grid: "3:1", photoUrl: "https://media.api-sports.io/football/players/742.png" },
+          { number: 14, name: "Aurélien Tchouaméni", pos: "M", grid: "3:2", photoUrl: "https://media.api-sports.io/football/players/744.png" },
+          { number: 5, name: "Jude Bellingham", pos: "M", grid: "3:3", photoUrl: "https://media.api-sports.io/football/players/152982.png" },
+          { number: 11, name: "Rodrygo", pos: "F", grid: "4:1", photoUrl: "https://media.api-sports.io/football/players/758.png" },
+          { number: 9, name: "Kylian Mbappé", pos: "F", grid: "4:2", photoUrl: "https://media.api-sports.io/football/players/278.png" },
+          { number: 7, name: "Vinícius Júnior", pos: "F", grid: "4:3", photoUrl: "https://media.api-sports.io/football/players/754.png" },
+        ],
+        substitutes: [
+          { number: 13, name: "Andriy Lunin", pos: "G" },
+          { number: 17, name: "Lucas Vázquez", pos: "D" },
+          { number: 20, name: "Fran García", pos: "D" },
+          { number: 6, name: "Eduardo Camavinga", pos: "M" },
+          { number: 10, name: "Luka Modrić", pos: "M" },
+          { number: 21, name: "Brahim Díaz", pos: "F" },
+        ],
+      };
+    }
+
+    // 14. BARCELONA (4-2-3-1)
+    if (lower.includes("barcelona") || lower.includes("barca")) {
+      return {
+        formation: "4-2-3-1",
+        team: "FC Barcelona",
+        startXI: [
+          { number: 13, name: "Iñaki Peña", pos: "G", grid: "1:1", photoUrl: "https://media.api-sports.io/football/players/145.png" },
+          { number: 23, name: "Jules Koundé", pos: "D", grid: "2:1", photoUrl: "https://media.api-sports.io/football/players/147.png" },
+          { number: 2, name: "Pau Cubarsí", pos: "D", grid: "2:2", photoUrl: "https://media.api-sports.io/football/players/356598.png" },
+          { number: 5, name: "Iñigo Martínez", pos: "D", grid: "2:3", photoUrl: "https://media.api-sports.io/football/players/149.png" },
+          { number: 3, name: "Alejandro Balde", pos: "D", grid: "2:4", photoUrl: "https://media.api-sports.io/football/players/151.png" },
+          { number: 17, name: "Marc Casadó", pos: "M", grid: "3:1", photoUrl: "https://media.api-sports.io/football/players/325785.png" },
+          { number: 8, name: "Pedri", pos: "M", grid: "3:2", photoUrl: "https://media.api-sports.io/football/players/153.png" },
+          { number: 19, name: "Lamine Yamal", pos: "F", grid: "4:1", photoUrl: "https://media.api-sports.io/football/players/356801.png" },
+          { number: 20, name: "Dani Olmo", pos: "M", grid: "4:2", photoUrl: "https://media.api-sports.io/football/players/155.png" },
+          { number: 11, name: "Raphinha", pos: "F", grid: "4:3", photoUrl: "https://media.api-sports.io/football/players/18959.png" },
+          { number: 9, name: "Robert Lewandowski", pos: "F", grid: "5:1", photoUrl: "https://media.api-sports.io/football/players/521.png" },
+        ],
+        substitutes: [
+          { number: 25, name: "Wojciech Szczęsny", pos: "G" },
+          { number: 32, name: "Héctor Fort", pos: "D" },
+          { number: 15, name: "Andreas Christensen", pos: "D" },
+          { number: 21, name: "Frenkie de Jong", pos: "M" },
+          { number: 6, name: "Gavi", pos: "M" },
+          { number: 7, name: "Ferran Torres", pos: "F" },
+        ],
+      };
+    }
+
+    // 15. DYNAMIC FALLBACK FOR ANY OTHER TEAM
     const namePrefix = teamName || (isHome ? "Home Team" : "Away Team");
     return {
       formation: isHome ? "4-3-3" : "4-2-3-1",

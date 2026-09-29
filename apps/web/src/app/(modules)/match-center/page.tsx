@@ -343,59 +343,53 @@ interface TeamLineup {
 
 const LINEUPS: { home: TeamLineup; away: TeamLineup } = {
   home: {
-    formation: '4-2-3-1',
-    teamRating: 7.4,
+    formation: '4-3-3',
+    teamRating: 7.7,
     starters: [
-      { num: 24, name: 'André Onana', shortName: 'Onana', pos: 'GK', rating: 7.1, x: 6, y: 50, vx: 50, vy: 93, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/202641.png' },
-      { num: 20, name: 'Diogo Dalot', shortName: 'Dalot', pos: 'RB', rating: 6.8, x: 16, y: 16, vx: 83, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/216051.png' },
-      { num: 4, name: 'Matthijs de Ligt', shortName: 'De Ligt', pos: 'CB', rating: 7.2, x: 15, y: 38, vx: 61, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 6, name: 'Lisandro Martínez', shortName: 'Martínez', pos: 'CB', rating: 7.4, x: 15, y: 62, vx: 39, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/221820.png' },
-      { num: 23, name: 'Luke Shaw', shortName: 'Shaw', pos: 'LB', rating: 6.7, x: 16, y: 84, vx: 17, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/106757.png' },
-      { num: 18, name: 'Casemiro', shortName: 'Casemiro', pos: 'DM', rating: 7.3, x: 26, y: 36, vx: 38, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/112465.png' },
-      { num: 37, name: 'Kobbie Mainoo', shortName: 'Mainoo', pos: 'CM', rating: 7.0, x: 26, y: 64, vx: 62, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 17, name: 'Alejandro Garnacho', shortName: 'Garnacho', pos: 'RW', rating: 7.6, x: 36, y: 18, vx: 83, vy: 64, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
-      { num: 8, name: 'Bruno Fernandes', shortName: 'Fernandes', pos: 'AM', rating: 8.5, isCaptain: true, isScorer: true, x: 35, y: 50, vx: 50, vy: 64, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/141746.png' },
-      { num: 10, name: 'Marcus Rashford', shortName: 'Rashford', pos: 'LW', rating: 7.9, isScorer: true, x: 36, y: 82, vx: 17, vy: 64, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/176297.png' },
-      { num: 11, name: 'Rasmus Højlund', shortName: 'Højlund', pos: 'ST', rating: 6.9, x: 44, y: 50, vx: 50, vy: 56, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
+      { num: 1, name: 'Alisson Becker', shortName: 'Alisson', pos: 'GK', rating: 7.3, x: 6, y: 50, vx: 50, vy: 93, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/116535.png' },
+      { num: 66, name: 'Trent Alexander-Arnold', shortName: 'Alexander-Arnold', pos: 'RB', rating: 7.6, x: 16, y: 16, vx: 83, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/169187.png' },
+      { num: 5, name: 'Ibrahima Konaté', shortName: 'Konaté', pos: 'CB', rating: 7.2, x: 15, y: 38, vx: 61, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/204716.png' },
+      { num: 4, name: 'Virgil van Dijk', shortName: 'Van Dijk', pos: 'CB', rating: 7.8, isCaptain: true, x: 15, y: 62, vx: 39, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/97032.png' },
+      { num: 26, name: 'Andy Robertson', shortName: 'Robertson', pos: 'LB', rating: 7.1, x: 16, y: 84, vx: 17, vy: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/122798.png' },
+      { num: 38, name: 'Ryan Gravenberch', shortName: 'Gravenberch', pos: 'CM', rating: 7.4, x: 26, y: 28, vx: 32, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
+      { num: 10, name: 'Alexis Mac Allister', shortName: 'Mac Allister', pos: 'CM', rating: 7.5, x: 26, y: 72, vx: 68, vy: 73, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/243016.png' },
+      { num: 8, name: 'Dominik Szoboszlai', shortName: 'Szoboszlai', pos: 'AM', rating: 7.3, x: 33, y: 50, vx: 50, vy: 66, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/247394.png' },
+      { num: 11, name: 'Mohamed Salah', shortName: 'Salah', pos: 'RW', rating: 8.4, isScorer: true, x: 38, y: 18, vx: 83, vy: 59, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/118748.png' },
+      { num: 20, name: 'Diogo Jota', shortName: 'Jota', pos: 'ST', rating: 7.2, x: 44, y: 50, vx: 50, vy: 55, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/194634.png' },
+      { num: 7, name: 'Luis Díaz', shortName: 'Díaz', pos: 'LW', rating: 7.7, x: 38, y: 82, vx: 17, vy: 59, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/244731.png' },
     ],
     substitutes: [
-      { num: 1, name: 'Altay Bayındır', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/463748.png' },
-      { num: 2, name: 'Victor Lindelöf', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/184667.png' },
-      { num: 5, name: 'Jonny Evans', pos: 'DF', rating: 6.4, subbedInMinute: 78, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/37642.png' },
-      { num: 25, name: 'Manuel Ugarte', pos: 'MF', rating: 6.8, subbedInMinute: 65, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/487994.png' },
-      { num: 14, name: 'Christian Eriksen', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/80607.png' },
-      { num: 43, name: 'Toby Collyer', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/512591.png' },
-      { num: 16, name: 'Amad Diallo', pos: 'FW', rating: 7.1, subbedInMinute: 72, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/490459.png' },
-      { num: 21, name: 'Antony', pos: 'FW', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/467169.png' },
-      { num: 11, name: 'Joshua Zirkzee', pos: 'FW', rating: 6.5, subbedInMinute: 83, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/464831.png' },
+      { num: 62, name: 'Caoimhín Kelleher', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/200720.png' },
+      { num: 2, name: 'Joe Gomez', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171287.png' },
+      { num: 21, name: 'Kostas Tsimikas', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/214285.png' },
+      { num: 17, name: 'Curtis Jones', pos: 'MF', rating: 7.6, subbedInMinute: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/243568.png' },
+      { num: 3, name: 'Wataru Endo', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/158534.png' },
+      { num: 18, name: 'Cody Gakpo', pos: 'FW', rating: 6.9, subbedInMinute: 71, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/463650.png' },
     ],
   },
   away: {
-    formation: '4-1-4-1',
-    teamRating: 7.0,
+    formation: '4-2-3-1',
+    teamRating: 7.1,
     starters: [
-      { num: 31, name: 'Ederson', shortName: 'Ederson', pos: 'GK', rating: 6.3, x: 94, y: 50, vx: 50, vy: 6, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/121160.png' },
-      { num: 24, name: 'Joško Gvardiol', shortName: 'Gvardiol', pos: 'LB', rating: 6.9, x: 84, y: 16, vx: 17, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/477424.png' },
-      { num: 25, name: 'Manuel Akanji', shortName: 'Akanji', pos: 'CB', rating: 6.6, x: 85, y: 38, vx: 39, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/224568.png' },
-      { num: 3, name: 'Rúben Dias', shortName: 'Dias', pos: 'CB', rating: 6.8, x: 85, y: 62, vx: 61, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/171314.png' },
-      { num: 2, name: 'Kyle Walker', shortName: 'Walker', pos: 'RB', rating: 6.7, isCaptain: true, x: 84, y: 84, vx: 83, vy: 16, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/58621.png' },
-      { num: 16, name: 'Rodri', shortName: 'Rodri', pos: 'DM', rating: 7.4, x: 74, y: 50, vx: 50, vy: 26, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
-      { num: 11, name: 'Jérémy Doku', shortName: 'Doku', pos: 'LM', rating: 7.1, x: 64, y: 18, vx: 17, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/443204.png' },
-      { num: 17, name: 'Kevin De Bruyne', shortName: 'De Bruyne', pos: 'AM', rating: 7.8, x: 65, y: 38, vx: 39, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/61366.png' },
-      { num: 47, name: 'Phil Foden', shortName: 'Foden', pos: 'AM', rating: 7.2, x: 65, y: 62, vx: 61, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
-      { num: 20, name: 'Bernardo Silva', shortName: 'B. Silva', pos: 'RM', rating: 7.0, x: 64, y: 82, vx: 83, vy: 36, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/165809.png' },
-      { num: 9, name: 'Erling Haaland', shortName: 'Haaland', pos: 'ST', rating: 7.5, isScorer: true, x: 56, y: 50, vx: 50, vy: 44, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png' },
+      { num: 1, name: 'Robert Sánchez', shortName: 'Sánchez', pos: 'GK', rating: 6.7, x: 94, y: 50, vx: 50, vy: 7, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/215059.png' },
+      { num: 27, name: 'Malo Gusto', shortName: 'Gusto', pos: 'RB', rating: 6.8, x: 84, y: 84, vx: 83, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/487500.png' },
+      { num: 29, name: 'Wesley Fofana', shortName: 'Fofana', pos: 'CB', rating: 6.9, x: 85, y: 62, vx: 61, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/444463.png' },
+      { num: 6, name: 'Levi Colwill', shortName: 'Colwill', pos: 'CB', rating: 7.0, x: 85, y: 38, vx: 39, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/463660.png' },
+      { num: 3, name: 'Marc Cucurella', shortName: 'Cucurella', pos: 'LB', rating: 6.8, x: 84, y: 16, vx: 17, vy: 17, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/179268.png' },
+      { num: 25, name: 'Moisés Caicedo', shortName: 'Caicedo', pos: 'DM', rating: 7.2, x: 74, y: 62, vx: 61, vy: 27, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/486672.png' },
+      { num: 45, name: 'Roméo Lavia', shortName: 'Lavia', pos: 'DM', rating: 6.9, x: 74, y: 38, vx: 39, vy: 27, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493108.png' },
+      { num: 11, name: 'Noni Madueke', shortName: 'Madueke', pos: 'RM', rating: 6.9, x: 64, y: 82, vx: 83, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/476295.png' },
+      { num: 20, name: 'Cole Palmer', shortName: 'Palmer', pos: 'AM', rating: 7.8, isCaptain: true, x: 65, y: 50, vx: 50, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/244855.png' },
+      { num: 19, name: 'Jadon Sancho', shortName: 'Sancho', pos: 'LM', rating: 7.0, x: 64, y: 18, vx: 17, vy: 37, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/209244.png' },
+      { num: 15, name: 'Nicolas Jackson', shortName: 'Jackson', pos: 'ST', rating: 7.4, isScorer: true, x: 56, y: 50, vx: 50, vy: 45, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/497565.png' },
     ],
     substitutes: [
-      { num: 18, name: 'Stefan Ortega', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/88248.png' },
-      { num: 5, name: 'John Stones', pos: 'DF', rating: 6.7, subbedInMinute: 75, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/97299.png' },
-      { num: 82, name: 'Rico Lewis', pos: 'DF', rating: 6.6, subbedInMinute: 62, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493015.png' },
-      { num: 8, name: 'Mateo Kovačić', pos: 'MF', rating: 6.9, subbedInMinute: 70, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/91651.png' },
-      { num: 19, name: 'İlkay Gündoğan', pos: 'MF', rating: 7.0, subbedInMinute: 58, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/59859.png' },
-      { num: 27, name: 'Matheus Nunes', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/476901.png' },
-      { num: 87, name: 'James McAtee', pos: 'MF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/472464.png' },
-      { num: 10, name: 'Jack Grealish', pos: 'FW', rating: 6.8, subbedInMinute: 80, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/114283.png' },
-      { num: 26, name: 'Savinho', pos: 'FW', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/494189.png' },
+      { num: 12, name: 'Filip Jörgensen', pos: 'GK', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/490459.png' },
+      { num: 4, name: 'Tosin Adarabioyo', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/109745.png' },
+      { num: 24, name: 'Reece James', pos: 'DF', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/225796.png' },
+      { num: 8, name: 'Enzo Fernández', pos: 'MF', rating: 7.0, subbedInMinute: 55, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/493105.png' },
+      { num: 14, name: 'João Félix', pos: 'FW', rating: 6.8, subbedInMinute: 68, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/463660.png' },
+      { num: 18, name: 'Christopher Nkunku', pos: 'FW', rating: 7.1, subbedInMinute: 76, photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/220566.png' },
     ],
   },
 };
@@ -544,7 +538,28 @@ function getTeamCoach(teamName: string): { name: string; photoUrl: string } {
   if (lower.includes('liverpool')) {
     return { name: 'Arne Slot', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5300.png' };
   }
-  return { name: `${teamName} Coach`, photoUrl: '' };
+  if (lower.includes('tottenham') || lower.includes('spurs')) {
+    return { name: 'Ange Postecoglou', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5101.png' };
+  }
+  if (lower.includes('aston villa') || lower.includes('villa')) {
+    return { name: 'Unai Emery', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man279.png' };
+  }
+  if (lower.includes('newcastle')) {
+    return { name: 'Eddie Howe', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man1427.png' };
+  }
+  if (lower.includes('brighton')) {
+    return { name: 'Fabian Hürzeler', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5300.png' };
+  }
+  if (lower.includes('bournemouth')) {
+    return { name: 'Andoni Iraola', photoUrl: 'https://resources.premierleague.com/premierleague25/photos/players/110x140/man5101.png' };
+  }
+  if (lower.includes('real madrid') || lower.includes('madrid')) {
+    return { name: 'Carlo Ancelotti', photoUrl: 'https://media.api-sports.io/football/coachs/1427.png' };
+  }
+  if (lower.includes('barcelona') || lower.includes('barca')) {
+    return { name: 'Hansi Flick', photoUrl: 'https://media.api-sports.io/football/coachs/279.png' };
+  }
+  return { name: `${teamName} Manager`, photoUrl: '' };
 }
 
 function getTeamColor(teamName: string): string {
@@ -556,6 +571,11 @@ function getTeamColor(teamName: string): string {
   if (lower.includes('manchester united') || lower.includes('man united')) return '#DA291C';
   if (lower.includes('manchester city') || lower.includes('man city')) return '#6CABDD';
   if (lower.includes('arsenal')) return '#EF0107';
+  if (lower.includes('tottenham') || lower.includes('spurs')) return '#132257';
+  if (lower.includes('aston villa') || lower.includes('villa')) return '#670E36';
+  if (lower.includes('newcastle')) return '#241F20';
+  if (lower.includes('brighton')) return '#0057B8';
+  if (lower.includes('bournemouth')) return '#DA291C';
   if (lower.includes('real madrid')) return '#EEA320';
   if (lower.includes('barcelona')) return '#A50044';
   if (lower.includes('bayern')) return '#DC052D';
@@ -1007,10 +1027,47 @@ export default function MatchCenterPage() {
       isLiveFeed: false,
     });
 
-    setActiveLineup(LINEUPS);
-    setMatchStatsData(STATS_DATA);
-    setMatchH2HData(H2H_ENCOUNTERS);
-    setH2HSummary({ homeWins: 2, draws: 0, awayWins: 3 });
+    // Fetch dynamic lineup, stats, and H2H for the selected fixture immediately
+    api.getMatchLineup(fix.id, { home: fix.homeTeam, away: fix.awayTeam })
+      .then((res) => {
+        if (res && res.home && res.away) {
+          const homeL = buildTeamLineupFromApi(res.home, true, []);
+          const awayL = buildTeamLineupFromApi(res.away, false, []);
+          setActiveLineup({ home: homeL, away: awayL });
+        }
+      })
+      .catch((e) => console.warn('[MatchCenter] Fixture lineup fetch err:', e));
+
+    api.getMatchStatistics(fix.id, { home: fix.homeTeam, away: fix.awayTeam })
+      .then((res) => {
+        if (res && res.ALL) {
+          setMatchStatsData(res);
+        }
+      })
+      .catch((e) => console.warn('[MatchCenter] Fixture stats fetch err:', e));
+
+    api.getMatchH2H(fix.id, { home: fix.homeTeam, away: fix.awayTeam })
+      .then((res) => {
+        if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
+          setH2HSummary({
+            homeWins: res.homeWins ?? 0,
+            draws: res.draws ?? 0,
+            awayWins: res.awayWins ?? 0,
+          });
+          const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
+            date: enc.date,
+            homeTeam: enc.homeTeam,
+            awayTeam: enc.awayTeam,
+            homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
+            awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
+            homeScore: enc.homeScore,
+            awayScore: enc.awayScore,
+            competition: enc.competition,
+          }));
+          setMatchH2HData(mappedEncounters);
+        }
+      })
+      .catch((e) => console.warn('[MatchCenter] Fixture H2H fetch err:', e));
 
     setCurrentStatus(fix.statusType);
     if (fix.statusType === 'UPCOMING') {
@@ -1234,55 +1291,51 @@ export default function MatchCenterPage() {
   // Auto-sync lineup, statistics, and H2H whenever activeMatch changes
   useEffect(() => {
     if (activeMatch.id) {
-      const isNum = /^\d+$/.test(activeMatch.id);
-      const isFeed = activeMatch.isLiveFeed || isNum;
-      if (isFeed) {
-        api.getMatchLineup(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
-          .then((res) => {
-            if (res && res.home && res.away) {
-              const homeL = buildTeamLineupFromApi(res.home, true, activeMatch.events || []);
-              const awayL = buildTeamLineupFromApi(res.away, false, activeMatch.events || []);
-              setActiveLineup({ home: homeL, away: awayL });
-            }
-          })
-          .catch((e) => console.warn('[MatchCenter] Auto lineup sync err:', e));
-
-        api.getMatchStatistics(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
-          .then((res) => {
-            if (res && res.ALL) {
-              setMatchStatsData(res);
-            }
-          })
-          .catch((e) => console.warn('[MatchCenter] Auto stats sync err:', e));
-
-        api.getMatchH2H(activeMatch.id, {
-          home: activeMatch.homeTeam,
-          away: activeMatch.awayTeam,
+      api.getMatchLineup(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
+        .then((res) => {
+          if (res && res.home && res.away) {
+            const homeL = buildTeamLineupFromApi(res.home, true, activeMatch.events || []);
+            const awayL = buildTeamLineupFromApi(res.away, false, activeMatch.events || []);
+            setActiveLineup({ home: homeL, away: awayL });
+          }
         })
-          .then((res) => {
-            if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
-              setH2HSummary({
-                homeWins: res.homeWins ?? 0,
-                draws: res.draws ?? 0,
-                awayWins: res.awayWins ?? 0,
-              });
-              const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
-                date: enc.date,
-                homeTeam: enc.homeTeam,
-                awayTeam: enc.awayTeam,
-                homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
-                awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
-                homeScore: enc.homeScore,
-                awayScore: enc.awayScore,
-                competition: enc.competition,
-              }));
-              setMatchH2HData(mappedEncounters);
-            }
-          })
-          .catch((e) => console.warn('[MatchCenter] Auto H2H sync err:', e));
-      }
+        .catch((e) => console.warn('[MatchCenter] Auto lineup sync err:', e));
+
+      api.getMatchStatistics(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
+        .then((res) => {
+          if (res && res.ALL) {
+            setMatchStatsData(res);
+          }
+        })
+        .catch((e) => console.warn('[MatchCenter] Auto stats sync err:', e));
+
+      api.getMatchH2H(activeMatch.id, {
+        home: activeMatch.homeTeam,
+        away: activeMatch.awayTeam,
+      })
+        .then((res) => {
+          if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
+            setH2HSummary({
+              homeWins: res.homeWins ?? 0,
+              draws: res.draws ?? 0,
+              awayWins: res.awayWins ?? 0,
+            });
+            const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
+              date: enc.date,
+              homeTeam: enc.homeTeam,
+              awayTeam: enc.awayTeam,
+              homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
+              awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
+              homeScore: enc.homeScore,
+              awayScore: enc.awayScore,
+              competition: enc.competition,
+            }));
+            setMatchH2HData(mappedEncounters);
+          }
+        })
+        .catch((e) => console.warn('[MatchCenter] Auto H2H sync err:', e));
     }
-  }, [activeMatch.id, activeMatch.homeTeam, activeMatch.awayTeam, activeMatch.isLiveFeed]);
+  }, [activeMatch.id, activeMatch.homeTeam, activeMatch.awayTeam]);
 
   const handleOpenAiModal = async () => {
     setShowAiModal(true);
