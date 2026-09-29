@@ -362,6 +362,20 @@ async function main() {
       durationSeconds: 100,
       phaseDescription: 'Midfield entrapment and counter-pressing duel',
     },
+    {
+      id: 'demo-session-metrica-game2',
+      matchTitle: 'Metrica Sports Open Tracking Data - 25 FPS High-Resolution Broadcast Tracking',
+      youtubeUrl: 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
+      durationSeconds: 120,
+      phaseDescription: 'Metrica Sports sample open tracking dataset with 22-player and ball trajectories',
+    },
+    {
+      id: 'demo-session-statsbomb360-cl',
+      matchTitle: 'StatsBomb 360 Open Data - Champions League Final Freeze-Frame Event Coordinates',
+      youtubeUrl: 'https://www.youtube.com/embed/6i2q6ZqjR4w?autoplay=1&mute=1&controls=0&loop=1&playlist=6i2q6ZqjR4w',
+      durationSeconds: 90,
+      phaseDescription: 'StatsBomb 360 Open Data spatial coordinate freeze-frames during tactical build-up',
+    },
   ];
 
   for (const s of trackingSessions) {

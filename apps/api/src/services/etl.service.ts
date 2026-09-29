@@ -1,5 +1,6 @@
 import { prisma } from './prisma.service.js';
 import { Position, MatchStatus } from '@prisma/client';
+import { FootballDataService } from './footballData.service.js';
 
 export interface ETLSyncResult {
   success: boolean;
@@ -12,8 +13,7 @@ export interface ETLSyncResult {
 }
 
 /**
- * Service to orchestrate ingestion from API-Football or fallback sports telemetry providers
- * Task TSK-02: Data Ingestion Pipeline (API-Football)
+ * Service to orchestrate ingestion from API-Football, Football-Data.org or fallback providers
  */
 export class ETLService {
   private static instance: ETLService;
@@ -58,11 +58,13 @@ export class ETLService {
       // 1. Ensure reference teams exist
       await this.ensureReferenceTeams();
 
-      // 2. Sync Match Fixtures & Recent Results
-      syncedFixtures = await this.syncFixtures();
+      // 2. Sync Match Fixtures & Recent Results (Football-Data.org with resilient fallback)
+      const fdoFixtures = await FootballDataService.syncFixtures('PL');
+      syncedFixtures = fdoFixtures > 0 ? fdoFixtures : await this.syncFixtures();
 
-      // 3. Sync League Standings
-      syncedStandings = await this.syncStandings();
+      // 3. Sync League Standings (Football-Data.org with resilient fallback)
+      const fdoStandings = await FootballDataService.syncStandings('PL');
+      syncedStandings = fdoStandings > 0 ? fdoStandings : await this.syncStandings();
 
       // 4. Sync Player Profiles & Radar Attributes
       syncedPlayers = await this.syncPlayerProfiles();

@@ -625,6 +625,7 @@ export default function MatchCenterPage() {
   const [isScenarioOpen, setIsScenarioOpen] = useState(false);
   const [fixtures, setFixtures] = useState<MatchFixture[]>(MATCHDAY_FIXTURES);
   const [standings, setStandings] = useState(LEAGUE_STANDINGS);
+  const [absentees, setAbsentees] = useState(PREVIEW_ABSENTEES);
   const [predictionData, setPredictionData] = useState<{
     score: string;
     homeWin: number;
@@ -668,17 +669,27 @@ export default function MatchCenterPage() {
         if (Array.isArray(data) && data.length > 0) {
           const mapped = data.map((s) => ({
             rank: s.position,
-            club: s.team.name,
+            club: s.team?.name || 'Club',
             played: s.played,
             gd: s.goalDifference > 0 ? `+${s.goalDifference}` : `${s.goalDifference}`,
             pts: s.points,
-            form: s.won >= 18 ? (['W', 'W', 'W'] as const) : (['W', 'D', 'L'] as const),
+            form: s.won >= 18 ? ['W', 'W', 'W'] : ['W', 'D', 'L'],
             isLeader: s.position === 1,
           }));
           setStandings(mapped);
         }
       })
       .catch((err) => console.warn('[MatchCenter] Real standings fetch error:', err));
+
+    // Fetch live Transfermarkt injury & suspension absentees
+    fetch('http://localhost:4000/api/v1/matches/preview/absentees?home=MCI&away=ARS')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setAbsentees(json.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleOpenAiModal = async () => {
@@ -1327,7 +1338,7 @@ export default function MatchCenterPage() {
                         <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">Man United</span>
                       </div>
                       <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-                        {PREVIEW_ABSENTEES.home.map((p, idx) => (
+                        {absentees.home.map((p, idx) => (
                           <div key={idx} className="py-2.5 flex items-center gap-3">
                             <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
                               <img
@@ -1369,7 +1380,7 @@ export default function MatchCenterPage() {
                         <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">Man City</span>
                       </div>
                       <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-                        {PREVIEW_ABSENTEES.away.map((p, idx) => (
+                        {absentees.away.map((p, idx) => (
                           <div key={idx} className="py-2.5 flex items-center gap-3">
                             <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
                               <img

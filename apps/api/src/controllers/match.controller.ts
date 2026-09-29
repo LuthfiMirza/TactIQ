@@ -221,4 +221,72 @@ export class MatchController {
       });
     }
   }
+
+  /**
+   * GET /api/v1/matches/live/scores
+   * Live in-play scores via API-Football with real-time events
+   */
+  public static async getLiveScores(_req: Request, res: Response): Promise<void> {
+    try {
+      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const liveMatches = await ApiFootballService.getLiveScores();
+      res.json({
+        success: true,
+        data: liveMatches,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'LIVE_SCORES_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/matches/:id/lineup
+   * Confirmed tactical lineups (formations, startXI, subs)
+   */
+  public static async getLineup(req: Request, res: Response): Promise<void> {
+    try {
+      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const lineup = await ApiFootballService.getMatchLineup(req.params.id);
+      res.json({
+        success: true,
+        data: lineup,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'LINEUP_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/matches/preview/absentees
+   * Transfermarkt injury and suspension intelligence
+   */
+  public static async getAbsentees(req: Request, res: Response): Promise<void> {
+    try {
+      const { TransfermarktService } = await import('../services/transfermarkt.service.js');
+      const homeCode = (req.query.home as string) || 'MCI';
+      const awayCode = (req.query.away as string) || 'ARS';
+      const absentees = await TransfermarktService.getMatchPreviewAbsentees(homeCode, awayCode);
+      res.json({
+        success: true,
+        data: absentees,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'ABSENTEES_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 }

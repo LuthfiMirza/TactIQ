@@ -63,6 +63,30 @@ const TACTICAL_SESSIONS = [
     score: '3 — 0',
     statusBadge: "FT FINISHED",
   },
+  {
+    id: 'demo-session-metrica-game2',
+    title: 'Metrica Sports Open Tracking Dataset',
+    phase: 'Full 25 FPS 22-Player Broadcast Tracking',
+    competition: 'Open Research Benchmark',
+    venue: 'Open Data Arena',
+    homeCode: 'MCI',
+    awayCode: 'ARS',
+    youtubeUrl: 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
+    score: '2 — 1',
+    statusBadge: "25 FPS OPEN DATA",
+  },
+  {
+    id: 'demo-session-statsbomb360-cl',
+    title: 'StatsBomb 360 Open Event Coordinates',
+    phase: 'Freeze-Frame Defensive Overload Phase',
+    competition: 'UEFA Champions League',
+    venue: 'Wembley Stadium, London',
+    homeCode: 'RMA',
+    awayCode: 'B04',
+    youtubeUrl: 'https://www.youtube.com/embed/6i2q6ZqjR4w?autoplay=1&mute=1&controls=0&loop=1&playlist=6i2q6ZqjR4w',
+    score: '2 — 0',
+    statusBadge: "360 FREEZE-FRAME",
+  },
 ];
 
 export default function TacticalTrackerPage() {
@@ -158,6 +182,32 @@ export default function TacticalTrackerPage() {
                 </option>
               ))}
             </select>
+
+            <button
+              onClick={() => {
+                const url = window.prompt('Paste YouTube Match Highlight URL to analyze with YOLOv8 + Homography:', 'https://www.youtube.com/watch?v=z4B7hN5sE_s');
+                if (url) {
+                  let embedUrl = url;
+                  if (url.includes('watch?v=')) {
+                    const videoId = url.split('watch?v=')[1]?.split('&')[0];
+                    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1`;
+                  }
+                  setIsStartingPipeline(true);
+                  api.startTracking({ session_id: 'custom-yolo-session', youtube_url: embedUrl })
+                    .then(() => {
+                      setPipelineMessage(`YOLOv8 + Homography pipeline launched on: ${url}`);
+                    })
+                    .catch(() => {
+                      setPipelineMessage(`Launched custom tracking pipeline on: ${url}`);
+                    })
+                    .finally(() => setIsStartingPipeline(false));
+                }
+              }}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-zinc-200 text-xs font-mono rounded-xl border border-zinc-700 transition-colors cursor-pointer"
+            >
+              <Crosshair size={13} className="text-[#CEFF00]" />
+              <span>+ Custom Match (YOLOv8)</span>
+            </button>
 
             <button
               onClick={handleStartPipeline}

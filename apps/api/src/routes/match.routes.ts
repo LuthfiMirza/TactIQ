@@ -6,6 +6,15 @@ export const matchRoutes = Router();
 // GET /api/v1/matches/fixtures (scheduled fixtures)
 matchRoutes.get('/fixtures', MatchController.getFixtures);
 
+// GET /api/v1/matches/live/scores (API-Football live scores)
+matchRoutes.get('/live/scores', MatchController.getLiveScores);
+
+// GET /api/v1/matches/preview/absentees (Transfermarkt injury & ban intelligence)
+matchRoutes.get('/preview/absentees', MatchController.getAbsentees);
+
+// GET /api/v1/matches/:id/lineup (API-Football tactical lineup)
+matchRoutes.get('/:id/lineup', MatchController.getLineup);
+
 // GET /api/v1/matches/standings (league table standings)
 matchRoutes.get('/standings', MatchController.getStandings);
 
