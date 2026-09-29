@@ -26,8 +26,49 @@ const ROSTER_MAP: Record<string, { name: string; pos: string; dist: string }> = 
   'away_7': { name: 'Kevin De Bruyne', pos: 'AM', dist: '8.8 km' },
 };
 
+const TACTICAL_SESSIONS = [
+  {
+    id: 'demo-session-tactical-001',
+    title: 'Manchester City vs Arsenal',
+    phase: 'Tactical High Pressing Phase',
+    competition: 'Premier League',
+    venue: 'Etihad Stadium, Manchester',
+    homeCode: 'MCI',
+    awayCode: 'ARS',
+    youtubeUrl: 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
+    score: '1 — 1',
+    statusBadge: "88' LIVE",
+  },
+  {
+    id: 'demo-session-tactical-002',
+    title: 'Real Madrid vs FC Barcelona',
+    phase: 'El Clásico Rapid Transition Phase',
+    competition: 'La Liga',
+    venue: 'Santiago Bernabéu, Madrid',
+    homeCode: 'RMA',
+    awayCode: 'FCB',
+    youtubeUrl: 'https://www.youtube.com/embed/6i2q6ZqjR4w?autoplay=1&mute=1&controls=0&loop=1&playlist=6i2q6ZqjR4w',
+    score: '2 — 1',
+    statusBadge: "FT FINISHED",
+  },
+  {
+    id: 'demo-session-tactical-003',
+    title: 'Liverpool vs Bayer Leverkusen',
+    phase: 'Gegenpressing & Turnover Phase',
+    competition: 'UEFA Champions League',
+    venue: 'Anfield, Liverpool',
+    homeCode: 'LIV',
+    awayCode: 'B04',
+    youtubeUrl: 'https://www.youtube.com/embed/8v_5w3K5zqk?autoplay=1&mute=1&controls=0&loop=1&playlist=8v_5w3K5zqk',
+    score: '3 — 0',
+    statusBadge: "FT FINISHED",
+  },
+];
+
 export default function TacticalTrackerPage() {
-  const [activeSessionId] = useState<string>('demo-session-tactical-001');
+  const [activeSessionId, setActiveSessionId] = useState<string>('demo-session-tactical-001');
+  const currentSession = TACTICAL_SESSIONS.find((s) => s.id === activeSessionId) || TACTICAL_SESSIONS[0];
+
   const [latestFrame, setLatestFrame] = useState<TrackingFramePayload | null>(null);
   const [isStartingPipeline, setIsStartingPipeline] = useState<boolean>(false);
   const [pipelineMessage, setPipelineMessage] = useState<string | null>(null);
@@ -45,7 +86,7 @@ export default function TacticalTrackerPage() {
     try {
       const data = await api.startTracking({
         session_id: activeSessionId,
-        youtube_url: 'https://www.youtube.com/watch?v=sample_tactical_cam',
+        youtube_url: currentSession.youtubeUrl,
       });
       setPipelineMessage(data.message || 'Tracking pipeline triggered via Redis stream!');
     } catch {
@@ -73,17 +114,17 @@ export default function TacticalTrackerPage() {
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
           {/* Match & Room Badge */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            {/* Flat Scorecard (No nested rounded card background) */}
+            {/* Flat Scorecard */}
             <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
               <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                <ClubCrest code="MUN" size={36} className="drop-shadow-xs" />
+                <ClubCrest code={currentSession.homeCode} size={38} className="drop-shadow-xs" />
               </div>
               <div className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] px-1 text-center">
-                <span className="font-mono font-black text-xl sm:text-2xl text-white tracking-tight tabular-nums">7 — 0</span>
-                <span className="text-[10px] font-mono text-tactiq-coral font-bold whitespace-nowrap">88&apos; LIVE</span>
+                <span className="font-mono font-black text-xl sm:text-2xl text-white tracking-tight tabular-nums">{currentSession.score}</span>
+                <span className="text-[10px] font-mono text-tactiq-coral font-bold whitespace-nowrap">{currentSession.statusBadge}</span>
               </div>
               <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                <ClubCrest code="MCI" size={40} className="drop-shadow-xs" />
+                <ClubCrest code={currentSession.awayCode} size={38} className="drop-shadow-xs" />
               </div>
             </div>
 
@@ -91,21 +132,33 @@ export default function TacticalTrackerPage() {
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
                 <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 font-bold">
-                  2D Optical Radar
+                  2D Optical Radar · {currentSession.phase}
                 </span>
               </div>
               <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-white tracking-tight mt-0.5">
-                Tactical Tracker · Live Radar
+                {currentSession.title}
               </h1>
               <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
-                <LeagueLogo league="Premier League" size={13} />
-                <span>Old Trafford · Premier League GW08</span>
+                <LeagueLogo league={currentSession.competition} size={13} />
+                <span>{currentSession.venue} · {currentSession.competition}</span>
               </div>
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-2 pt-1 md:pt-0">
+          {/* Controls & Session Switcher */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 md:pt-0">
+            <select
+              value={activeSessionId}
+              onChange={(e) => setActiveSessionId(e.target.value)}
+              className="bg-[#18181C] border border-[#27272A] text-zinc-200 text-xs font-mono rounded-xl px-3 py-2 outline-none focus:border-[#CEFF00] transition-colors"
+            >
+              {TACTICAL_SESSIONS.map((sess) => (
+                <option key={sess.id} value={sess.id}>
+                  {sess.title} ({sess.competition})
+                </option>
+              ))}
+            </select>
+
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
@@ -131,7 +184,9 @@ export default function TacticalTrackerPage() {
         {/* Left 8 cols: Video Viewport */}
         <div className="lg:col-span-8 flex flex-col gap-5">
           <VideoOverlayCanvas
+            key={activeSessionId}
             sessionId={activeSessionId}
+            youtubeUrl={currentSession.youtubeUrl}
             onFrameUpdate={handleFrameUpdate}
           />
         </div>
