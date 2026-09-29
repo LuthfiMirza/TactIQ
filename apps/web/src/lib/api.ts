@@ -134,6 +134,14 @@ class ApiClient {
     });
   }
 
+  public async getLiveScores(): Promise<any[]> {
+    return this.request<any[]>('/api/v1/matches/live/scores');
+  }
+
+  public async triggerETLSync(): Promise<any> {
+    return this.request<any>('/api/v1/sync', { method: 'POST' });
+  }
+
   // Tracking
   public async startTracking(payload: TrackingStartRequest): Promise<TrackingStartResponse> {
     return this.request<TrackingStartResponse>('/api/v1/tracking/start', {

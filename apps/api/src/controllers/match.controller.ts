@@ -18,6 +18,11 @@ export class MatchController {
   public static async getStandings(_req: Request, res: Response): Promise<void> {
     try {
       const standings = await prisma.standing.findMany({
+        where: {
+          team: {
+            league: 'Premier League',
+          },
+        },
         include: {
           team: true,
         },

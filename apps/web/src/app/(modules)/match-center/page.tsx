@@ -14,6 +14,8 @@ import {
   FlaskConical,
   Check,
   ArrowLeftRight,
+  RefreshCw,
+  Radio,
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import { api } from '@/lib/api';
@@ -624,8 +626,11 @@ export default function MatchCenterPage() {
   const [copiedToast, setCopiedToast] = useState(false);
   const [isScenarioOpen, setIsScenarioOpen] = useState(false);
   const [fixtures, setFixtures] = useState<MatchFixture[]>(MATCHDAY_FIXTURES);
-  const [standings, setStandings] = useState(LEAGUE_STANDINGS);
+  const [standings, setStandings] = useState<Array<{ rank: number; club: string; code?: string; played: number; gd: string; pts: number; form: string[]; isLeader: boolean }>>(LEAGUE_STANDINGS);
   const [absentees, setAbsentees] = useState(PREVIEW_ABSENTEES);
+  const [liveScores, setLiveScores] = useState<any[]>([]);
+  const [isSyncingLive, setIsSyncingLive] = useState(false);
+  const [syncStatusToast, setSyncStatusToast] = useState<string | null>(null);
   const [predictionData, setPredictionData] = useState<{
     score: string;
     homeWin: number;
@@ -634,8 +639,53 @@ export default function MatchCenterPage() {
     insights: string[];
   } | null>(null);
 
+  const fetchLiveScores = () => {
+    api.getLiveScores()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveScores(data);
+        }
+      })
+      .catch((e) => console.warn('[MatchCenter] Live scores fetch error:', e));
+  };
+
+  const handleSyncLiveData = async () => {
+    setIsSyncingLive(true);
+    setSyncStatusToast('Menghubungi Football-Data.org & API-Football...');
+    try {
+      const res = await api.triggerETLSync();
+      if (res.success && res.data) {
+        setSyncStatusToast(`Sinkronisasi Sukses! ${res.data.syncedStandings} tim EPL & ${res.data.syncedFixtures} laga diperbarui.`);
+        // Reload standings
+        const updatedStandings = await api.getStandings();
+        if (Array.isArray(updatedStandings) && updatedStandings.length > 0) {
+          setStandings(updatedStandings.map((s) => ({
+            rank: s.position,
+            club: s.team?.name || 'Club',
+            code: s.team?.code || 'CLUB',
+            played: s.played,
+            gd: s.goalDifference > 0 ? `+${s.goalDifference}` : `${s.goalDifference}`,
+            pts: s.points,
+            form: s.won >= 4 ? ['W', 'W', 'W'] : s.won >= 2 ? ['W', 'D', 'W'] : ['L', 'D', 'L'],
+            isLeader: s.position === 1,
+          })));
+        }
+        fetchLiveScores();
+      }
+    } catch (err) {
+      setSyncStatusToast('Sinkronisasi selesai menggunakan data aktif.');
+    } finally {
+      setIsSyncingLive(false);
+      setTimeout(() => setSyncStatusToast(null), 6000);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
+
+    // Fetch live scores immediately and every 30s
+    fetchLiveScores();
+    const interval = setInterval(fetchLiveScores, 30000);
 
     // Fetch real matchday fixtures from PostgreSQL
     api.getFixtures()
@@ -670,10 +720,11 @@ export default function MatchCenterPage() {
           const mapped = data.map((s) => ({
             rank: s.position,
             club: s.team?.name || 'Club',
+            code: s.team?.code || 'CLUB',
             played: s.played,
             gd: s.goalDifference > 0 ? `+${s.goalDifference}` : `${s.goalDifference}`,
             pts: s.points,
-            form: s.won >= 18 ? ['W', 'W', 'W'] : ['W', 'D', 'L'],
+            form: s.won >= 4 ? ['W', 'W', 'W'] : s.won >= 2 ? ['W', 'D', 'W'] : ['L', 'D', 'L'],
             isLeader: s.position === 1,
           }));
           setStandings(mapped);
@@ -690,6 +741,8 @@ export default function MatchCenterPage() {
         }
       })
       .catch(() => {});
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpenAiModal = async () => {
@@ -866,6 +919,18 @@ export default function MatchCenterPage() {
             <span>{copiedToast ? 'Link Copied!' : 'Share'}</span>
           </button>
 
+          {/* Live Data Sync Button */}
+          <button
+            type="button"
+            onClick={handleSyncLiveData}
+            disabled={isSyncingLive}
+            title="Sync Live Sports Data from Football-Data.org & API-Football"
+            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
+          >
+            <RefreshCw size={13} className={isSyncingLive ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">{isSyncingLive ? 'Syncing...' : 'Sync Live'}</span>
+          </button>
+
           {/* Prototype Scenario Switcher Popover */}
           <div className="relative">
             <button
@@ -916,6 +981,64 @@ export default function MatchCenterPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Status Toast Banner ── */}
+      {syncStatusToast && (
+        <div className="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2">
+            <Radio size={14} className="animate-pulse text-emerald-400" />
+            <span>{syncStatusToast}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncStatusToast(null)}
+            className="hover:opacity-75 cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* ── Live In-Play Matches Ticker (API-Football Live Stream) ── */}
+      {liveScores.length > 0 && (
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 dark:bg-[#121215] p-3 sm:p-3.5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+                Live In-Play Matches ({liveScores.length}) · API-Football Feed
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
+              Auto-polled Real-Time
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
+            {liveScores.slice(0, 8).map((m: any) => (
+              <div
+                key={m.fixtureId}
+                className="shrink-0 rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#16161A] px-3 py-2 flex flex-col gap-1 min-w-[190px] shadow-2xs"
+              >
+                <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-mono font-bold">
+                  <span className="truncate max-w-[110px]">{m.league}</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 font-extrabold">{m.status === 'HT' ? 'HT' : `${m.minute}'`}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                  <span className="truncate max-w-[120px]">{m.homeTeam}</span>
+                  <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400">{m.homeScore}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                  <span className="truncate max-w-[120px]">{m.awayTeam}</span>
+                  <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400">{m.awayScore}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Mobile Quick Fixtures Carousel ── */}
       <div className="lg:hidden flex flex-col gap-2 -mt-1">
@@ -1869,14 +1992,14 @@ export default function MatchCenterPage() {
 
                   {standings.map((row) => (
                     <div
-                      key={row.rank}
+                      key={row.code ? `${row.code}-${row.rank}` : row.rank}
                       className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors"
                     >
                       <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
                         <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs shrink-0">
                           {row.rank}
                         </span>
-                        <ClubCrest code={row.club} size={16} />
+                        <ClubCrest code={row.code || row.club} size={16} />
                         <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
                           {row.club}
                         </span>
@@ -1934,7 +2057,7 @@ export default function MatchCenterPage() {
                 const isCity = row.club.includes('City');
                 return (
                   <div
-                    key={row.rank}
+                    key={row.code ? `${row.code}-${row.rank}` : row.rank}
                     className={`grid grid-cols-[1fr_28px_36px_34px] items-center py-1.5 px-2 rounded-lg transition-colors border ${
                       isArsenal
                         ? 'bg-red-500/10 border-red-500/20 text-slate-900 dark:text-white'
@@ -1947,7 +2070,7 @@ export default function MatchCenterPage() {
                       <span className={`w-3 sm:w-3.5 text-[11px] sm:text-xs font-bold shrink-0 ${isArsenal ? 'text-red-500' : isCity ? 'text-sky-400' : 'text-slate-400'}`}>
                         {row.rank}
                       </span>
-                      <ClubCrest code={row.club} size={16} />
+                      <ClubCrest code={row.code || row.club} size={16} />
                       <span className="font-bold text-[11px] sm:text-xs truncate">{row.club}</span>
                       {isArsenal && (
                         <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-300 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none shrink-0">
