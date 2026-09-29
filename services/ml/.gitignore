@@ -1,0 +1,7 @@
+# ML Models, weights and media data
+*.pt
+*.pth
+*.onnx
+data/*.mp4
+__pycache__/
+*.pyc

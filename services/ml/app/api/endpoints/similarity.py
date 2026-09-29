@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import numpy as np
+import os
+import json
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
 
 router = APIRouter()
 
@@ -18,10 +21,10 @@ class PlayerRadarMetrics(BaseModel):
 
 
 class PlayerDTO(BaseModel):
-    id: str
+    id: Optional[str] = "custom-player"
     teamId: Optional[str] = None
     name: str
-    position: str
+    position: Optional[str] = "MID"
     nationality: Optional[str] = "Unknown"
     age: Optional[int] = 25
     marketValue: Optional[float] = 50000000.0
@@ -33,6 +36,9 @@ class PlayerDTO(BaseModel):
 class SimilarityRequest(BaseModel):
     targetPlayer: PlayerDTO
     candidatePool: Optional[List[PlayerDTO]] = None
+    filterPosition: Optional[bool] = Field(False, description="Whether to restrict candidate comparisons to same position")
+    limit: Optional[int] = Field(5, ge=1, le=50, description="Top K similar players to return")
+    algorithm: Optional[str] = Field("blended", description="Algorithm: 'blended' (60% cosine + 40% euclidean), 'cosine', 'knn', or 'euclidean'")
 
 
 class SimilarPlayerItem(BaseModel):
@@ -43,9 +49,11 @@ class SimilarPlayerItem(BaseModel):
 class SimilarityResponse(BaseModel):
     targetPlayer: PlayerDTO
     similarPlayers: List[SimilarPlayerItem]
+    datasetPoolSize: int = 500
+    algorithmUsed: str = "blended"
 
 
-# Fallback benchmark reference players if candidate pool is small or empty
+# Fallback benchmark reference players if dataset file is absent
 REFERENCE_BENCHMARKS: List[PlayerDTO] = [
     PlayerDTO(
         id="ref-kdb",
@@ -58,26 +66,6 @@ REFERENCE_BENCHMARKS: List[PlayerDTO] = [
         attributes=PlayerRadarMetrics(pace=74, shooting=88, passing=95, dribbling=87, defending=65, physical=78, vision=97)
     ),
     PlayerDTO(
-        id="ref-odegaard",
-        name="Martin Ødegaard",
-        position="MID",
-        nationality="Norway",
-        age=25,
-        marketValue=110000000,
-        photoUrl="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=76, shooting=82, passing=93, dribbling=90, defending=68, physical=69, vision=95)
-    ),
-    PlayerDTO(
-        id="ref-bellingham",
-        name="Jude Bellingham",
-        position="MID",
-        nationality="England",
-        age=21,
-        marketValue=180000000,
-        photoUrl="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=82, shooting=87, passing=89, dribbling=90, defending=80, physical=85, vision=91)
-    ),
-    PlayerDTO(
         id="ref-rodri",
         name="Rodri",
         position="MID",
@@ -86,16 +74,6 @@ REFERENCE_BENCHMARKS: List[PlayerDTO] = [
         marketValue=130000000,
         photoUrl="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=256&q=80",
         attributes=PlayerRadarMetrics(pace=68, shooting=78, passing=91, dribbling=84, defending=89, physical=87, vision=92)
-    ),
-    PlayerDTO(
-        id="ref-foden",
-        name="Phil Foden",
-        position="MID",
-        nationality="England",
-        age=24,
-        marketValue=150000000,
-        photoUrl="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=86, shooting=86, passing=89, dribbling=92, defending=56, physical=66, vision=90)
     ),
     PlayerDTO(
         id="ref-rice",
@@ -108,26 +86,6 @@ REFERENCE_BENCHMARKS: List[PlayerDTO] = [
         attributes=PlayerRadarMetrics(pace=78, shooting=74, passing=85, dribbling=82, defending=88, physical=89, vision=84)
     ),
     PlayerDTO(
-        id="ref-saliba",
-        name="William Saliba",
-        position="DEF",
-        nationality="France",
-        age=23,
-        marketValue=80000000,
-        photoUrl="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=83, shooting=40, passing=81, dribbling=77, defending=91, physical=88, vision=80)
-    ),
-    PlayerDTO(
-        id="ref-vvd",
-        name="Virgil van Dijk",
-        position="DEF",
-        nationality="Netherlands",
-        age=33,
-        marketValue=30000000,
-        photoUrl="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=78, shooting=60, passing=80, dribbling=73, defending=93, physical=90, vision=83)
-    ),
-    PlayerDTO(
         id="ref-haaland",
         name="Erling Haaland",
         position="FWD",
@@ -137,22 +95,57 @@ REFERENCE_BENCHMARKS: List[PlayerDTO] = [
         photoUrl="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=256&q=80",
         attributes=PlayerRadarMetrics(pace=91, shooting=94, passing=70, dribbling=82, defending=45, physical=92, vision=76)
     ),
-    PlayerDTO(
-        id="ref-vinicius",
-        name="Vinícius Júnior",
-        position="FWD",
-        nationality="Brazil",
-        age=24,
-        marketValue=200000000,
-        photoUrl="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=256&q=80",
-        attributes=PlayerRadarMetrics(pace=96, shooting=85, passing=81, dribbling=93, defending=38, physical=72, vision=84)
-    ),
 ]
+
+
+def load_players_dataset() -> List[PlayerDTO]:
+    """
+    Loads comprehensive 500+ player dataset (TSK-33) from FBref / Kaggle dataset JSON.
+    """
+    json_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "players_fbref_500.json")
+    if not os.path.exists(json_path):
+        # Alternative search in services/ml/data/
+        alt_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "players_fbref_500.json")
+        if os.path.exists(alt_path):
+            json_path = alt_path
+
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                raw_data = json.load(f)
+                loaded: List[PlayerDTO] = []
+                for p in raw_data:
+                    attrs = PlayerRadarMetrics(**p["attributes"]) if p.get("attributes") else None
+                    loaded.append(
+                        PlayerDTO(
+                            id=p["id"],
+                            teamId=p.get("teamId"),
+                            name=p["name"],
+                            position=p["position"],
+                            nationality=p.get("nationality", "Unknown"),
+                            age=p.get("age", 25),
+                            marketValue=p.get("marketValue", 20000000.0),
+                            photoUrl=p.get("photoUrl", ""),
+                            team=p.get("team"),
+                            attributes=attrs,
+                        )
+                    )
+                if len(loaded) >= 100:
+                    print(f"[SimilarityEngine] Loaded {len(loaded)} players from FBref dataset ({os.path.basename(json_path)}).")
+                    return loaded
+        except Exception as e:
+            print(f"[SimilarityEngine WARNING] Failed to load 500+ dataset: {e}")
+
+    return REFERENCE_BENCHMARKS
+
+
+# Global in-memory player dataset (TSK-33)
+EXTENDED_PLAYER_POOL: List[PlayerDTO] = load_players_dataset()
 
 
 def extract_vector(attrs: Optional[PlayerRadarMetrics]) -> np.ndarray:
     if attrs is None:
-        return np.array([75.0, 75.0, 75.0, 75.0, 75.0, 75.0, 75.0])
+        return np.array([75.0, 75.0, 75.0, 75.0, 75.0, 75.0, 75.0], dtype=np.float32)
     return np.array([
         float(attrs.pace),
         float(attrs.shooting),
@@ -161,50 +154,162 @@ def extract_vector(attrs: Optional[PlayerRadarMetrics]) -> np.ndarray:
         float(attrs.defending),
         float(attrs.physical),
         float(attrs.vision)
-    ])
+    ], dtype=np.float32)
 
 
 @router.post("/player-similarity", response_model=SimilarityResponse)
 async def calculate_player_similarity(payload: SimilarityRequest):
     """
-    Accepts player ID & attributes, returns realistic 5 similar players with similarity percentages.
-    Calculates high-dimensional cosine similarity across radar metric vectors.
+    Accepts player ID & attributes, evaluates against 500+ player database (TSK-33),
+    and returns top similar players using vectorized high-dimensional cosine & Euclidean similarity.
     """
     target = payload.targetPlayer
+
+    # Auto-resolve player attributes & metadata from 550+ database if attributes are omitted
     if not target.attributes:
-        raise HTTPException(status_code=400, detail="Target player attributes are required for similarity calculation.")
+        target_name_clean = target.name.strip().lower()
+        matched = None
+
+        # 1. Try exact ID match
+        if target.id and target.id != "custom-player":
+            for p in EXTENDED_PLAYER_POOL:
+                if p.id.lower() == target.id.lower():
+                    matched = p
+                    break
+
+        # 2. Try exact Name match
+        if not matched and target_name_clean:
+            for p in EXTENDED_PLAYER_POOL:
+                if p.name.strip().lower() == target_name_clean:
+                    matched = p
+                    break
+
+        # 3. Try substring Name match
+        if not matched and target_name_clean and len(target_name_clean) >= 3:
+            for p in EXTENDED_PLAYER_POOL:
+                if target_name_clean in p.name.lower():
+                    matched = p
+                    break
+
+        if matched:
+            target = matched
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Player '{target.name}' not found in 550+ database. Provide radar attributes or use an existing player (e.g. 'Bukayo Saka', 'Rodri', 'Erling Haaland', 'Declan Rice')."
+            )
 
     target_vec = extract_vector(target.attributes).reshape(1, -1)
 
-    # Use supplied candidate pool or reference pool
-    pool = payload.candidatePool if (payload.candidatePool and len(payload.candidatePool) > 0) else REFERENCE_BENCHMARKS
-    candidates = [p for p in pool if p.id != target.id]
+    # Determine candidate pool (custom or default 500+ dataset)
+    pool = payload.candidatePool if (payload.candidatePool and len(payload.candidatePool) > 0) else EXTENDED_PLAYER_POOL
+    
+    # Filter candidates
+    candidates = [p for p in pool if p.id != target.id and p.attributes is not None]
+    if payload.filterPosition:
+        candidates = [p for p in candidates if p.position == target.position]
 
     if not candidates:
-        candidates = [p for p in REFERENCE_BENCHMARKS if p.id != target.id]
+        candidates = [p for p in EXTENDED_PLAYER_POOL if p.id != target.id and p.attributes is not None]
+
+    # Vectorized computation across entire dataset in parallel
+    cand_matrix = np.array([extract_vector(c.attributes) for c in candidates], dtype=np.float32)
+
+    # [DEF-05] Zero-vector safe handling preventing division by zero / NaN
+    target_norm = float(np.linalg.norm(target_vec))
+    cand_norms = np.linalg.norm(cand_matrix, axis=1)
+
+    cos_sims = np.zeros(len(candidates), dtype=np.float32)
+    if target_norm > 1e-6:
+        valid_cands = cand_norms > 1e-6
+        if np.any(valid_cands):
+            valid_sims = cosine_similarity(target_vec, cand_matrix[valid_cands])[0]
+            cos_sims[valid_cands] = np.nan_to_num(valid_sims, nan=0.0, posinf=1.0, neginf=0.0)
+
+    # Euclidean proximity: shape (N,)
+    euc_dists = np.linalg.norm(cand_matrix - target_vec, axis=1)
+    max_dist = float(np.sqrt(7 * (100.0 ** 2)))
+    euc_sims = np.clip(1.0 - (euc_dists / max_dist), 0.0, 1.0)
+
+    # Algorithm selector: blended, cosine, knn / euclidean
+    algo = (payload.algorithm or "blended").lower().strip()
+    if algo == "cosine":
+        score_metric = np.clip(cos_sims, 0.0, 1.0)
+    elif algo in ("knn", "euclidean"):
+        # KNN / Normalized Euclidean proximity
+        score_metric = euc_sims
+    else:
+        # Default blended (TSK-08): 60% cosine similarity, 40% magnitude proximity
+        algo = "blended"
+        score_metric = (0.60 * np.clip(cos_sims, 0.0, 1.0)) + (0.40 * euc_sims)
+
+    # [DEF-05] Remove artificial clipping 45.0 - 99.4%, scale naturally to [0.0, 100.0]
+    percentages = np.round(np.clip(score_metric * 100.0, 0.0, 100.0), 1)
+
+    limit = payload.limit or 5
+    # Argsort descending
+    top_indices = np.argsort(percentages)[::-1][:limit]
 
     results: List[SimilarPlayerItem] = []
-
-    for candidate in candidates:
-        cand_vec = extract_vector(candidate.attributes).reshape(1, -1)
-        
-        # Calculate Cosine Similarity (direction) and Euclidean proximity (magnitude)
-        cos_sim = float(cosine_similarity(target_vec, cand_vec)[0][0])
-        euc_dist = float(np.linalg.norm(target_vec - cand_vec))
-        max_dist = float(np.sqrt(7 * (100 ** 2)))
-        euc_sim = 1.0 - (euc_dist / max_dist)
-
-        # Blend: 60% cosine similarity, 40% magnitude proximity
-        blended = (0.60 * cos_sim) + (0.40 * euc_sim)
-        percentage = round(float(np.clip(blended * 100, 45.0, 99.4)), 1)
-
-        results.append(SimilarPlayerItem(player=candidate, similarityScore=percentage))
-
-    # Sort descending by score and pick top 5
-    results.sort(key=lambda x: x.similarityScore, reverse=True)
-    top_5 = results[:5]
+    for idx in top_indices:
+        results.append(
+            SimilarPlayerItem(
+                player=candidates[idx],
+                similarityScore=float(percentages[idx])
+            )
+        )
 
     return SimilarityResponse(
         targetPlayer=target,
-        similarPlayers=top_5
+        similarPlayers=results,
+        datasetPoolSize=len(pool),
+        algorithmUsed=algo
     )
+
+
+@router.get("/players-database", response_model=List[PlayerDTO])
+async def get_players_database(
+    position: Optional[str] = Query(None, description="Filter by position: FWD, MID, DEF, GK"),
+    search: Optional[str] = Query(None, description="Search player by name"),
+    limit: int = Query(50, ge=1, le=550, description="Max players to return")
+):
+    """
+    Returns players from the 500+ player dataset with optional search and filtering (TSK-33).
+    """
+    filtered = EXTENDED_PLAYER_POOL
+    if position:
+        filtered = [p for p in filtered if p.position.upper() == position.upper()]
+    if search:
+        s_lower = search.lower()
+        filtered = [p for p in filtered if s_lower in p.name.lower()]
+
+    return filtered[:limit]
+
+
+@router.get("/similarity-dataset-stats")
+async def get_similarity_dataset_stats():
+    """
+    Returns summary statistics for the 500+ player dataset (TSK-33).
+    """
+    fwd_count = sum(1 for p in EXTENDED_PLAYER_POOL if p.position == "FWD")
+    mid_count = sum(1 for p in EXTENDED_PLAYER_POOL if p.position == "MID")
+    def_count = sum(1 for p in EXTENDED_PLAYER_POOL if p.position == "DEF")
+    gk_count = sum(1 for p in EXTENDED_PLAYER_POOL if p.position == "GK")
+
+    top_valued = sorted(EXTENDED_PLAYER_POOL, key=lambda x: x.marketValue or 0, reverse=True)[:5]
+
+    return {
+        "status": "LOADED",
+        "total_players": len(EXTENDED_PLAYER_POOL),
+        "dataset_source": "FBref & Kaggle European Leagues Benchmark",
+        "positions_breakdown": {
+            "FWD": fwd_count,
+            "MID": mid_count,
+            "DEF": def_count,
+            "GK": gk_count,
+        },
+        "top_market_value_players": [
+            {"name": p.name, "team": p.team.get("code") if p.team else "N/A", "value": p.marketValue}
+            for p in top_valued
+        ]
+    }
