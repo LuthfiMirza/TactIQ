@@ -639,11 +639,180 @@ export default function MatchCenterPage() {
     insights: string[];
   } | null>(null);
 
+  // Active match state controlling the central hero scoreboard & tabs
+  const [activeMatch, setActiveMatch] = useState<{
+    id: string;
+    league: string;
+    venue: string;
+    homeTeam: string;
+    homeShort: string;
+    homeColor: string;
+    awayTeam: string;
+    awayShort: string;
+    awayColor: string;
+    homeScore: number;
+    awayScore: number;
+    statusType: MatchStatusType;
+    timeOrStatus: string;
+    scorersHome: string[];
+    scorersAway: string[];
+    xgHome: number;
+    xgAway: number;
+    winProbHome: number;
+    winProbDraw: number;
+    winProbAway: number;
+    isLiveFeed?: boolean;
+    events?: Array<{ minute: number; team: string; player: string; type: string; detail?: string }>;
+  }>({
+    id: 'fix-1',
+    league: 'Premier League · Matchday 8',
+    venue: 'Anfield, Liverpool',
+    homeTeam: 'Liverpool',
+    homeShort: 'LIV',
+    homeColor: '#C8102E',
+    awayTeam: 'Chelsea',
+    awayShort: 'CHE',
+    awayColor: '#034694',
+    homeScore: 2,
+    awayScore: 1,
+    statusType: 'LIVE',
+    timeOrStatus: "74'",
+    scorersHome: ["Mohamed Salah 29' (P)", "Curtis Jones 51'"],
+    scorersAway: ["Nicolas Jackson 48'"],
+    xgHome: 1.94,
+    xgAway: 1.12,
+    winProbHome: 72,
+    winProbDraw: 18,
+    winProbAway: 10,
+    isLiveFeed: false,
+  });
+
+  const handleSelectLiveMatch = (m: any) => {
+    const goalEvents = Array.isArray(m.events) ? m.events.filter((ev: any) => ev.type === 'Goal') : [];
+    const homeGoals = goalEvents
+      .filter((ev: any) => ev.team === m.homeTeam || ev.team?.toLowerCase().includes(m.homeTeam?.toLowerCase()) || m.homeTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+      .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+    const awayGoals = goalEvents
+      .filter((ev: any) => ev.team === m.awayTeam || ev.team?.toLowerCase().includes(m.awayTeam?.toLowerCase()) || m.awayTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+      .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+
+    const hScore = Number(m.homeScore ?? 0);
+    const aScore = Number(m.awayScore ?? 0);
+    const xgH = Number(Math.max(0.35, hScore * 0.82 + 0.45).toFixed(2));
+    const xgA = Number(Math.max(0.30, aScore * 0.82 + 0.35).toFixed(2));
+
+    let pHome = 35, pDraw = 33, pAway = 32;
+    if (hScore > aScore) {
+      pHome = Math.min(94, 52 + (hScore - aScore) * 18);
+      pDraw = Math.max(4, 28 - (hScore - aScore) * 10);
+      pAway = Math.max(2, 100 - pHome - pDraw);
+    } else if (aScore > hScore) {
+      pAway = Math.min(94, 52 + (aScore - hScore) * 18);
+      pDraw = Math.max(4, 28 - (aScore - hScore) * 10);
+      pHome = Math.max(2, 100 - pAway - pDraw);
+    }
+
+    const hShort = (m.homeTeam || 'HOM').slice(0, 3).toUpperCase();
+    const aShort = (m.awayTeam || 'AWA').slice(0, 3).toUpperCase();
+
+    setActiveMatch({
+      id: String(m.fixtureId),
+      league: `${m.league} · Live In-Play`,
+      venue: 'International Stadium',
+      homeTeam: m.homeTeam,
+      homeShort: hShort,
+      homeColor: '#00843D',
+      awayTeam: m.awayTeam,
+      awayShort: aShort,
+      awayColor: '#FED100',
+      homeScore: hScore,
+      awayScore: aScore,
+      statusType: m.status === 'FT' ? 'FINISHED' : 'LIVE',
+      timeOrStatus: m.status === 'HT' ? 'Half Time' : `${m.minute ?? 45}'`,
+      scorersHome: homeGoals.length > 0 ? homeGoals : ['–'],
+      scorersAway: awayGoals.length > 0 ? awayGoals : ['–'],
+      xgHome: xgH,
+      xgAway: xgA,
+      winProbHome: pHome,
+      winProbDraw: pDraw,
+      winProbAway: pAway,
+      isLiveFeed: true,
+      events: m.events || [],
+    });
+
+    setCurrentStatus(m.status === 'FT' ? 'FINISHED' : 'LIVE');
+    setMatchTab('stats');
+  };
+
+  const handleSelectFixture = (fix: MatchFixture) => {
+    const hScore = fix.homeScore ?? (fix.statusType === 'UPCOMING' ? 0 : 2);
+    const aScore = fix.awayScore ?? (fix.statusType === 'UPCOMING' ? 0 : 1);
+    const xgH = fix.xgHome ?? 1.85;
+    const xgA = fix.xgAway ?? 1.10;
+
+    setActiveMatch({
+      id: fix.id,
+      league: 'Premier League · Matchday 8',
+      venue: fix.venue,
+      homeTeam: fix.homeTeam,
+      homeShort: fix.homeShort,
+      homeColor: fix.homeColor,
+      awayTeam: fix.awayTeam,
+      awayShort: fix.awayShort,
+      awayColor: fix.awayColor,
+      homeScore: hScore,
+      awayScore: aScore,
+      statusType: fix.statusType,
+      timeOrStatus: fix.timeOrStatus,
+      scorersHome: fix.statusType !== 'UPCOMING' ? [`${fix.homeTeam} Goal 34'`] : ['–'],
+      scorersAway: fix.statusType !== 'UPCOMING' ? [`${fix.awayTeam} Goal 61'`] : ['–'],
+      xgHome: xgH,
+      xgAway: xgA,
+      winProbHome: fix.winProbHome ?? 48,
+      winProbDraw: 28,
+      winProbAway: 24,
+      isLiveFeed: false,
+    });
+
+    setCurrentStatus(fix.statusType);
+    if (fix.statusType === 'UPCOMING') {
+      setMatchTab('preview');
+    } else {
+      setMatchTab('stats');
+    }
+  };
+
   const fetchLiveScores = () => {
     api.getLiveScores()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setLiveScores(data);
+          // If active match is a live feed match, keep score in sync
+          setActiveMatch((prev) => {
+            if (prev.isLiveFeed) {
+              const live = data.find((d: any) => String(d.fixtureId) === prev.id);
+              if (live) {
+                const goalEvents = Array.isArray(live.events) ? live.events.filter((ev: any) => ev.type === 'Goal') : [];
+                const homeGoals = goalEvents
+                  .filter((ev: any) => ev.team === live.homeTeam || ev.team?.toLowerCase().includes(live.homeTeam?.toLowerCase()) || live.homeTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+                  .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+                const awayGoals = goalEvents
+                  .filter((ev: any) => ev.team === live.awayTeam || ev.team?.toLowerCase().includes(live.awayTeam?.toLowerCase()) || live.awayTeam?.toLowerCase().includes(ev.team?.toLowerCase()))
+                  .map((ev: any) => `${ev.player || 'Goal'} ${ev.minute}'${ev.detail ? ` (${ev.detail})` : ''}`);
+
+                return {
+                  ...prev,
+                  homeScore: Number(live.homeScore ?? prev.homeScore),
+                  awayScore: Number(live.awayScore ?? prev.awayScore),
+                  timeOrStatus: live.status === 'HT' ? 'Half Time' : `${live.minute ?? 45}'`,
+                  statusType: live.status === 'FT' ? 'FINISHED' : 'LIVE',
+                  scorersHome: homeGoals.length > 0 ? homeGoals : prev.scorersHome,
+                  scorersAway: awayGoals.length > 0 ? awayGoals : prev.scorersAway,
+                };
+              }
+            }
+            return prev;
+          });
         }
       })
       .catch((e) => console.warn('[MatchCenter] Live scores fetch error:', e));
@@ -791,52 +960,22 @@ export default function MatchCenterPage() {
   };
 
   const periodInfo = {
-    ALL: {
-      homeScore: 7,
-      awayScore: 0,
-      statusText: "88'",
-      scorersHome: [
-        "Fernandes 14' (P), 78'",
-        "Rashford 28', 53'",
-        "Højlund 41'",
-        "Garnacho 65'",
-        "Mainoo 88'",
-      ],
-      scorersAway: ['–'],
-      munProb: '94%',
-      drawProb: '4%',
-      mciProb: '2%',
-      munWidth: '94%',
-      drawWidth: '4%',
-      mciWidth: '2%',
-    },
-    '1ST': {
-      homeScore: 3,
-      awayScore: 0,
-      statusText: 'Half Time',
-      scorersHome: ["Fernandes 14' (P)", "Rashford 28'", "Højlund 41'"],
-      scorersAway: ['–'],
-      munProb: '88%',
-      drawProb: '9%',
-      mciProb: '3%',
-      munWidth: '88%',
-      drawWidth: '9%',
-      mciWidth: '3%',
-    },
-    '2ND': {
-      homeScore: 4,
-      awayScore: 0,
-      statusText: "2nd Half",
-      scorersHome: ["Rashford 53'", "Garnacho 65'", "Fernandes 78'", "Mainoo 88'"],
-      scorersAway: ['–'],
-      munProb: '97%',
-      drawProb: '2%',
-      mciProb: '1%',
-      munWidth: '97%',
-      drawWidth: '2%',
-      mciWidth: '1%',
-    },
-  }[statsPeriod];
+    homeScore: statsPeriod === '1ST' ? Math.floor(activeMatch.homeScore / 2) : activeMatch.homeScore,
+    awayScore: statsPeriod === '1ST' ? Math.floor(activeMatch.awayScore / 2) : activeMatch.awayScore,
+    statusText: statsPeriod === '1ST' ? 'Half Time' : statsPeriod === '2ND' ? '2nd Half' : activeMatch.timeOrStatus,
+    scorersHome: activeMatch.scorersHome,
+    scorersAway: activeMatch.scorersAway,
+    homeProb: `${activeMatch.winProbHome}%`,
+    drawProb: `${activeMatch.winProbDraw}%`,
+    awayProb: `${activeMatch.winProbAway}%`,
+    homeWidth: `${activeMatch.winProbHome}%`,
+    drawWidth: `${activeMatch.winProbDraw}%`,
+    awayWidth: `${activeMatch.winProbAway}%`,
+    munProb: `${activeMatch.winProbHome}%`,
+    mciProb: `${activeMatch.winProbAway}%`,
+    munWidth: `${activeMatch.winProbHome}%`,
+    mciWidth: `${activeMatch.winProbAway}%`,
+  };
 
   const activeStats = STATS_DATA[statsPeriod];
 
@@ -1017,25 +1156,57 @@ export default function MatchCenterPage() {
             </span>
           </div>
           <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
-            {liveScores.slice(0, 8).map((m: any) => (
-              <div
-                key={m.fixtureId}
-                className="shrink-0 rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#16161A] px-3 py-2 flex flex-col gap-1 min-w-[190px] shadow-2xs"
-              >
-                <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-mono font-bold">
-                  <span className="truncate max-w-[110px]">{m.league}</span>
-                  <span className="text-emerald-500 dark:text-emerald-400 font-extrabold">{m.status === 'HT' ? 'HT' : `${m.minute}'`}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
-                  <span className="truncate max-w-[120px]">{m.homeTeam}</span>
-                  <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400">{m.homeScore}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
-                  <span className="truncate max-w-[120px]">{m.awayTeam}</span>
-                  <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400">{m.awayScore}</span>
-                </div>
-              </div>
-            ))}
+            {liveScores.map((m: any) => {
+              const isSelected = activeMatch.id === String(m.fixtureId);
+              return (
+                <button
+                  key={m.fixtureId}
+                  type="button"
+                  onClick={() => handleSelectLiveMatch(m)}
+                  className={`shrink-0 text-left rounded-xl border px-3.5 py-2.5 flex flex-col gap-1.5 min-w-[210px] sm:min-w-[230px] transition-all cursor-pointer active:scale-95 shadow-xs ${
+                    isSelected
+                      ? 'border-emerald-400 bg-emerald-500/15 ring-2 ring-emerald-400/50 shadow-emerald-500/10'
+                      : 'border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#16161A] hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-[#1a1a20]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-mono font-bold">
+                    <span className="truncate max-w-[120px]">{m.league}</span>
+                    <span className="text-emerald-500 dark:text-emerald-400 font-extrabold flex items-center gap-1">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      </span>
+                      {m.status === 'HT' ? 'HT' : `${m.minute}'`}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                    <div className="flex items-center gap-1.5 truncate max-w-[140px]">
+                      <ClubCrest code={m.homeTeam} size={16} />
+                      <span className="truncate">{m.homeTeam}</span>
+                    </div>
+                    <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400 text-sm font-black">{m.homeScore}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                    <div className="flex items-center gap-1.5 truncate max-w-[140px]">
+                      <ClubCrest code={m.awayTeam} size={16} />
+                      <span className="truncate">{m.awayTeam}</span>
+                    </div>
+                    <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400 text-sm font-black">{m.awayScore}</span>
+                  </div>
+
+                  <div className="mt-0.5 pt-1 border-t border-slate-100 dark:border-zinc-800/60 flex items-center justify-between text-[9px] font-mono">
+                    <span className={isSelected ? 'text-emerald-500 dark:text-emerald-400 font-extrabold' : 'text-slate-400 dark:text-zinc-500'}>
+                      {isSelected ? '● SEDANG AKTIF DI BOARD' : 'Klik untuk buka detail'}
+                    </span>
+                    <span className="text-slate-400 dark:text-zinc-500">
+                      {m.events?.length ? `${m.events.length} event` : ''}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1051,32 +1222,41 @@ export default function MatchCenterPage() {
           </span>
         </div>
         <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 snap-x -mx-3 px-3 sm:mx-0 sm:px-0">
-          {fixtures.map((fix) => (
-            <div
-              key={fix.id}
-              className="snap-start shrink-0 w-60 sm:w-64 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3 shadow-2xs hover:border-slate-300 dark:border-zinc-700 transition-colors"
-            >
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-zinc-400 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-[#27272A]">
-                <span className="font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200">
-                  {fix.timeOrStatus}
-                </span>
-                <span className="truncate max-w-[110px]">{fix.venue}</span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5 text-xs">
-                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                  <ClubCrest code={fix.homeShort} size={18} />
-                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.homeTeam}</span>
+          {fixtures.map((fix) => {
+            const isSelected = activeMatch.id === fix.id;
+            return (
+              <button
+                key={fix.id}
+                type="button"
+                onClick={() => handleSelectFixture(fix)}
+                className={`snap-start shrink-0 w-60 sm:w-64 text-left rounded-xl border p-3 shadow-2xs transition-all cursor-pointer active:scale-95 ${
+                  isSelected
+                    ? 'border-[#CEFF00] bg-[#CEFF00]/10 ring-2 ring-[#CEFF00]/50'
+                    : 'border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] hover:border-slate-300 dark:hover:border-zinc-700'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-zinc-400 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-[#27272A]">
+                  <span className="font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200">
+                    {fix.timeOrStatus}
+                  </span>
+                  <span className="truncate max-w-[110px]">{fix.venue}</span>
                 </div>
-                <div className="font-mono font-bold text-xs text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800/60 shrink-0">
-                  {fix.homeScore !== undefined ? `${fix.homeScore} - ${fix.awayScore}` : 'vs'}
+                <div className="flex items-center justify-between gap-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <ClubCrest code={fix.homeShort || fix.homeTeam} size={18} />
+                    <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.homeTeam}</span>
+                  </div>
+                  <div className="font-mono font-bold text-xs text-slate-900 dark:text-white px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800/60 shrink-0">
+                    {fix.homeScore !== undefined ? `${fix.homeScore} - ${fix.awayScore}` : 'vs'}
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
+                    <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.awayTeam}</span>
+                    <ClubCrest code={fix.awayShort || fix.awayTeam} size={18} />
+                  </div>
                 </div>
-                <div className="flex items-center justify-end gap-1.5 min-w-0 flex-1 text-right">
-                  <span className="font-semibold text-slate-900 dark:text-white truncate">{fix.awayTeam}</span>
-                  <ClubCrest code={fix.awayShort} size={18} />
-                </div>
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -1088,19 +1268,28 @@ export default function MatchCenterPage() {
 
           {/* Featured Match Card Dinamis */}
           <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-xs overflow-hidden transition-colors flex flex-col gap-2.5 sm:gap-3.5">
-            <div className="absolute -top-20 -left-20 w-52 sm:w-60 h-52 sm:h-60 bg-red-600/10 dark:bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-20 -left-20 w-52 sm:w-60 h-52 sm:h-60 bg-emerald-600/10 dark:bg-emerald-600/15 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -top-20 -right-20 w-52 sm:w-60 h-52 sm:h-60 bg-sky-500/10 dark:bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
 
             {/* Match Header */}
             <div className="relative flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <LeagueLogo league="Premier League" size={14} />
+                <LeagueLogo league={activeMatch.league.includes('Premier') ? 'Premier League' : 'Friendlies'} size={14} />
                 <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
-                  Premier League · Matchday 8
+                  {activeMatch.league}
                 </span>
+                {activeMatch.isLiveFeed && (
+                  <span className="inline-flex items-center gap-1 text-[9px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    API-Football Live
+                  </span>
+                )}
               </div>
               <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">
-                Old Trafford
+                {activeMatch.venue}
               </span>
             </div>
 
@@ -1111,14 +1300,13 @@ export default function MatchCenterPage() {
                 <div className="flex items-center justify-end gap-2 sm:gap-3 text-right min-w-0">
                   <div className="min-w-0">
                     <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
-                      <span className="hidden sm:inline">Man United</span>
-                      <span className="sm:hidden">Man Utd</span>
+                      {activeMatch.homeTeam}
                     </h2>
                     <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
-                      5th in PL
+                      {activeMatch.isLiveFeed ? 'Home Team' : 'Premier League'}
                     </span>
                   </div>
-                  <ClubCrest code="MUN" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                  <ClubCrest code={activeMatch.homeShort || activeMatch.homeTeam} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                 </div>
 
                 {/* Kolom Tengah (Skor atau Jam Kick-off) */}
@@ -1126,10 +1314,10 @@ export default function MatchCenterPage() {
                   {currentStatus === 'UPCOMING' ? (
                     <>
                       <span className="font-mono font-black text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
-                        20:00
+                        {activeMatch.timeOrStatus}
                       </span>
                       <span className="text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider text-zinc-400 mt-1 px-2.5 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700/50">
-                        Today
+                        Upcoming
                       </span>
                     </>
                   ) : (
@@ -1147,10 +1335,10 @@ export default function MatchCenterPage() {
                       {currentStatus === 'LIVE' ? (
                         <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
                           <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
                           </span>
-                          <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
+                          <span className="text-[11px] sm:text-xs font-semibold text-emerald-500 dark:text-emerald-400 whitespace-nowrap">
                             {periodInfo.statusText}
                           </span>
                         </div>
@@ -1165,13 +1353,13 @@ export default function MatchCenterPage() {
 
                 {/* Away */}
                 <div className="flex items-center justify-start gap-2 sm:gap-3 text-left min-w-0">
-                  <ClubCrest code="MCI" size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
+                  <ClubCrest code={activeMatch.awayShort || activeMatch.awayTeam} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
                   <div className="min-w-0">
                     <h2 className="font-extrabold text-xs sm:text-lg text-slate-900 dark:text-white leading-tight truncate">
-                      Man City
+                      {activeMatch.awayTeam}
                     </h2>
                     <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-0.5 block font-medium truncate">
-                      2nd in PL
+                      {activeMatch.isLiveFeed ? 'Away Team' : 'Premier League'}
                     </span>
                   </div>
                 </div>
@@ -1209,14 +1397,14 @@ export default function MatchCenterPage() {
                   </div>
                 )}
 
-              {/* xG Momentum Bar: Minimalis Unboxed */}
+              {/* xG Momentum Bar: Dinamis */}
               {currentStatus !== 'UPCOMING' && (
                 <div className="mt-4 pt-3 flex flex-col gap-2">
                   <div className="flex items-center justify-between text-[11px] font-mono">
                     <div className="flex items-center gap-1.5 font-bold text-tactiq-coral">
-                      <span>MUN</span>
+                      <span>{activeMatch.homeShort}</span>
                       <span className="text-zinc-600 font-normal">/</span>
-                      <span>4.62 xG</span>
+                      <span>{activeMatch.xgHome} xG</span>
                     </div>
 
                     <span className="text-[9.5px] font-sans font-bold uppercase tracking-wider text-zinc-500 px-2 py-0.5 rounded-full bg-white/[0.03]">
@@ -1224,56 +1412,60 @@ export default function MatchCenterPage() {
                     </span>
 
                     <div className="flex items-center gap-1.5 font-bold text-tactiq-cyan">
-                      <span>0.38 xG</span>
+                      <span>{activeMatch.xgAway} xG</span>
                       <span className="text-zinc-600 font-normal">/</span>
-                      <span>MCI</span>
+                      <span>{activeMatch.awayShort}</span>
                     </div>
                   </div>
 
                   <div className="h-1.5 sm:h-2 w-full overflow-hidden rounded-full bg-zinc-800/80 flex p-0.5 gap-0.5">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-all duration-500"
-                      style={{ width: '92%' }}
+                      style={{
+                        width: `${Math.round((activeMatch.xgHome / Math.max(0.1, activeMatch.xgHome + activeMatch.xgAway)) * 100)}%`,
+                      }}
                     />
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-500"
-                      style={{ width: '8%' }}
+                      style={{
+                        width: `${Math.round((activeMatch.xgAway / Math.max(0.1, activeMatch.xgHome + activeMatch.xgAway)) * 100)}%`,
+                      }}
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Win Probability: Simetris Rapi */}
+            {/* Win Probability: Dinamis */}
             <div className="pt-2 sm:pt-2.5 flex flex-col gap-2">
               <div className="grid grid-cols-3 items-center text-xs font-mono">
                 <div className="text-left font-bold text-tactiq-coral text-[11px] sm:text-xs">
-                  {currentStatus === 'UPCOMING' ? 'MUN 44%' : `MUN ${periodInfo.munProb}`}
+                  {activeMatch.homeShort} {periodInfo.homeProb}
                 </div>
 
                 <div className="text-center">
                   <span className="inline-block text-[10px] font-sans font-semibold text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full">
-                    {currentStatus === 'UPCOMING' ? 'Draw 26%' : `Draw ${periodInfo.drawProb}`}
+                    Draw {periodInfo.drawProb}
                   </span>
                 </div>
 
                 <div className="text-right font-bold text-tactiq-cyan text-[11px] sm:text-xs">
-                  {currentStatus === 'UPCOMING' ? 'MCI 30%' : `MCI ${periodInfo.mciProb}`}
+                  {activeMatch.awayShort} {periodInfo.awayProb}
                 </div>
               </div>
 
               <div className="w-full h-1.5 sm:h-2 bg-zinc-800/80 rounded-full flex overflow-hidden p-0.5 gap-0.5">
                 <div
                   className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full transition-all duration-300"
-                  style={{ width: currentStatus === 'UPCOMING' ? '44%' : periodInfo.munWidth }}
+                  style={{ width: periodInfo.homeWidth }}
                 />
                 <div
                   className="h-full bg-zinc-600 rounded-full transition-all duration-300"
-                  style={{ width: currentStatus === 'UPCOMING' ? '26%' : periodInfo.drawWidth }}
+                  style={{ width: periodInfo.drawWidth }}
                 />
                 <div
                   className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full transition-all duration-300"
-                  style={{ width: currentStatus === 'UPCOMING' ? '30%' : periodInfo.mciWidth }}
+                  style={{ width: periodInfo.awayWidth }}
                 />
               </div>
             </div>
@@ -2161,55 +2353,64 @@ export default function MatchCenterPage() {
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-[#27272A]">
-              {fixtures.map((fix) => (
-                <div
-                  key={fix.id}
-                  className="py-2.5 px-0.5 sm:px-1 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors flex items-center gap-2 text-xs"
-                >
-                  <div className="w-[42px] sm:w-[46px] shrink-0 flex flex-col items-start leading-none gap-1">
-                    <span
-                      className={`text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded inline-block text-center min-w-[34px] sm:min-w-[38px] ${
-                        fix.timeOrStatus === 'FT'
-                          ? 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-semibold'
-                          : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
-                      }`}
-                    >
-                      {fix.timeOrStatus.split(' ')[0]}
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 dark:text-zinc-500 pl-0.5 truncate max-w-full">
-                      {fix.xgHome !== undefined ? `xG ${fix.xgHome}` : fix.venue.split(' ')[0]}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-1 sm:gap-2 min-w-0 pr-1">
-                    <div className="flex items-center justify-end gap-1.5 min-w-0 text-right">
-                      <span className="text-[11px] sm:text-xs font-semibold text-slate-900 dark:text-white truncate">
-                        {fix.homeTeam}
+              {fixtures.map((fix) => {
+                const isActive = activeMatch.id === fix.id;
+                return (
+                  <button
+                    key={fix.id}
+                    type="button"
+                    onClick={() => handleSelectFixture(fix)}
+                    className={`w-full text-left py-2.5 px-1.5 sm:px-2 rounded-xl transition-all flex items-center gap-2 text-xs cursor-pointer ${
+                      isActive
+                        ? 'bg-lime-400/10 dark:bg-lime-400/15 border border-lime-400/40 shadow-xs'
+                        : 'border border-transparent hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                    }`}
+                  >
+                    <div className="w-[42px] sm:w-[46px] shrink-0 flex flex-col items-start leading-none gap-1">
+                      <span
+                        className={`text-[9px] sm:text-[10px] font-mono font-bold px-1 sm:px-1.5 py-0.5 rounded inline-block text-center min-w-[34px] sm:min-w-[38px] ${
+                          fix.timeOrStatus === 'FT'
+                            ? 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-semibold'
+                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                        }`}
+                      >
+                        {fix.timeOrStatus.split(' ')[0]}
                       </span>
-                      <ClubCrest code={fix.homeShort} size={16} />
-                    </div>
-
-                    <div className="w-8 sm:w-10 text-center font-mono shrink-0 select-none">
-                      {fix.homeScore !== undefined ? (
-                        <span className="font-bold text-[11px] sm:text-xs text-slate-900 dark:text-white tabular-nums">
-                          {fix.homeScore} - {fix.awayScore}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 dark:text-zinc-500">
-                          vs
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-start gap-1.5 min-w-0 text-left">
-                      <ClubCrest code={fix.awayShort} size={16} />
-                      <span className="text-[11px] sm:text-xs font-semibold text-slate-900 dark:text-white truncate">
-                        {fix.awayTeam}
+                      <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 dark:text-zinc-500 pl-0.5 truncate max-w-full">
+                        {fix.xgHome !== undefined ? `xG ${fix.xgHome}` : fix.venue.split(' ')[0]}
                       </span>
                     </div>
-                  </div>
-                </div>
-              ))}
+
+                    <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-1 sm:gap-2 min-w-0 pr-1">
+                      <div className="flex items-center justify-end gap-1.5 min-w-0 text-right">
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-900 dark:text-white truncate">
+                          {fix.homeTeam}
+                        </span>
+                        <ClubCrest code={fix.homeShort} size={16} />
+                      </div>
+
+                      <div className="w-8 sm:w-10 text-center font-mono shrink-0 select-none">
+                        {fix.homeScore !== undefined ? (
+                          <span className="font-bold text-[11px] sm:text-xs text-slate-900 dark:text-white tabular-nums">
+                            {fix.homeScore} - {fix.awayScore}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 dark:text-zinc-500">
+                            vs
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-start gap-1.5 min-w-0 text-left">
+                        <ClubCrest code={fix.awayShort} size={16} />
+                        <span className="text-[11px] sm:text-xs font-semibold text-slate-900 dark:text-white truncate">
+                          {fix.awayTeam}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </aside>
