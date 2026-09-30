@@ -167,6 +167,9 @@ export const RadarChart: React.FC<RadarChartProps> = ({
 
   return (
     <div className={`relative flex items-center justify-center p-2 bg-slate-50/60 dark:bg-[#18181C] rounded-xl border border-slate-100 dark:border-[#27272A] transition-colors ${className}`}>
+      <span className="absolute top-2 right-2 text-[9px] font-mono text-zinc-400 bg-zinc-800/80 border border-zinc-700/60 px-1.5 py-0.5 rounded shadow-xs select-none z-10">
+        rating statis (seed)
+      </span>
       <div className="w-full max-w-[340px] h-[240px] sm:h-[280px]">
         <Radar
           key={`${playerName}-${comparisonPlayerName}-${datasets.map(d => d.data.join(',')).join('-')}`}

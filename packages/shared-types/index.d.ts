@@ -100,6 +100,9 @@ export interface MatchPredictionResponse {
     winProbabilities: WinProbabilities;
     predictedScore: string;
     insights?: string[];
+    modelType?: string;
+    xGType?: string;
+    meta?: DataProvenanceMeta;
 }
 export interface MatchPredictRequest {
     fixtureId: string;
@@ -149,16 +152,25 @@ export interface TrackingStartResponse {
     message: string;
     estimated_frames: number;
 }
+export type DataMode = 'live' | 'cached' | 'demo';
+export interface DataProvenanceMeta {
+    source: string;
+    fetchedAt: string;
+    isStale: boolean;
+    mode: DataMode;
+    status?: 'available' | 'unavailable' | 'stale';
+    error?: string;
+    total?: number;
+    page?: number;
+    limit?: number;
+    [key: string]: unknown;
+}
 export interface ApiResponse<T> {
     success: boolean;
     data: T;
     message?: string;
     timestamp: string;
-    meta?: {
-        total?: number;
-        page?: number;
-        limit?: number;
-    };
+    meta?: DataProvenanceMeta;
 }
 export interface ApiErrorResponse {
     success: false;
@@ -175,6 +187,12 @@ export interface ClientToServerEvents {
     }) => void;
     leave_session: (data: {
         sessionId: string;
+    }) => void;
+    join_match: (data: {
+        matchId: string;
+    }) => void;
+    leave_match: (data: {
+        matchId: string;
     }) => void;
     ping_stream: () => void;
     simulate_match_event?: (data: {
@@ -195,7 +213,12 @@ export interface ServerToClientEvents {
     pong_stream: (data: {
         timestamp: number;
     }) => void;
-    match_score_update: (matches: any[]) => void;
+    match_snapshot: (data: {
+        match: any;
+        events: any[];
+        meta: DataProvenanceMeta;
+    }) => void;
+    match_score_update: (matches: any[], meta?: DataProvenanceMeta) => void;
     match_event: (event: {
         fixtureId: string;
         minute: number;
@@ -205,6 +228,7 @@ export interface ServerToClientEvents {
         detail?: string;
         homeScore: number;
         awayScore: number;
+        mode: 'live' | 'demo';
     }) => void;
 }
 //# sourceMappingURL=index.d.ts.map

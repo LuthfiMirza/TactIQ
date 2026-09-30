@@ -1237,9 +1237,14 @@ export default function ScoutingPage() {
 
               {/* Metric Duel Bars (6 cols) */}
               <div className="md:col-span-6 flex flex-col justify-center space-y-4 border-t md:border-t-0 md:border-l border-[#27272A] pt-4 md:pt-0 md:pl-6 font-mono">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold block">
-                  Per 90 Metrics
-                </span>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold block">
+                    Per 90 Metrics
+                  </span>
+                  <span className="text-[10px] font-mono text-amber-400 font-medium block mt-0.5">
+                    Estimasi dari rating (bukan data event)
+                  </span>
+                </div>
 
                 {duelMetrics.map((m) => {
                   const anchorPct = Math.min(100, Math.round((m.anchorVal / m.max) * 100));

@@ -42,6 +42,28 @@ export function setupSocketServer(httpServer: HttpServer): Server<ClientToServer
       console.log(`👋 Client ${socket.id} left tracking room: ${room}`);
     });
 
+    // Join room for a specific match fixture and receive immediate snapshot
+    socket.on('join_match', async ({ matchId }) => {
+      const room = `match_${matchId}`;
+      socket.join(room);
+      console.log(`⚽ Client ${socket.id} joined match room: ${room}`);
+
+      try {
+        const { LiveMatchEngineService } = await import('../services/liveMatchEngine.service.js');
+        const snapshot = LiveMatchEngineService.getMatchSnapshot(matchId);
+        socket.emit('match_snapshot', snapshot);
+      } catch (err) {
+        console.warn('⚠️ Failed to load match snapshot for room:', err);
+      }
+    });
+
+    // Leave match room
+    socket.on('leave_match', ({ matchId }) => {
+      const room = `match_${matchId}`;
+      socket.leave(room);
+      console.log(`👋 Client ${socket.id} left match room: ${room}`);
+    });
+
     // Latency benchmark ping
     socket.on('ping_stream', () => {
       socket.emit('pong_stream', { timestamp: Date.now() });

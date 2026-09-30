@@ -96,6 +96,10 @@ export class PlayerController {
         data: playerDTOs,
         timestamp: new Date().toISOString(),
         meta: {
+          source: 'database-seed (players_fbref_500.json)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
           total: playerDTOs.length,
         },
       };
@@ -177,6 +181,12 @@ export class PlayerController {
         success: true,
         data: playerDTO,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'database-seed (players_fbref_500.json)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+        },
       };
 
       res.json(response);
@@ -265,6 +275,12 @@ export class PlayerController {
         success: true,
         data: similarityResult,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'Euclidean Radar Attribute Similarity (services/ml)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+        },
       };
 
       res.json(response);

@@ -92,6 +92,7 @@ export class ApiFootballService {
    */
   public static async getLiveScores(): Promise<LiveScoreMatch[]> {
     const apiKey = process.env.API_FOOTBALL_KEY;
+    const isLiveMode = (process.env.DATA_MODE || 'demo') === 'live';
     const { LiveMatchEngineService } = await import('./liveMatchEngine.service.js');
 
     if (apiKey) {
@@ -105,6 +106,13 @@ export class ApiFootballService {
 
         if (res.ok) {
           const json = (await res.json()) as any;
+          if (json?.errors && Object.keys(json.errors).length > 0) {
+            console.warn('⚠️ [API-Football] API returned errors:', json.errors);
+            if (isLiveMode) {
+              return [];
+            }
+          }
+
           const items = (json?.response as any[]) || [];
           if (Array.isArray(items) && items.length > 0) {
             const mapped: LiveScoreMatch[] = items.map((f) => ({
@@ -130,11 +138,17 @@ export class ApiFootballService {
             }));
 
             LiveMatchEngineService.updateFromExternalApi(mapped);
+            return mapped;
           }
         }
       } catch (e) {
-        console.warn('⚠️ [API-Football] Live scores fetch failed, using LiveMatchEngine:', e);
+        console.warn('⚠️ [API-Football] Live scores fetch failed:', e);
       }
+    }
+
+    if (isLiveMode) {
+      // In live mode, never return scripted demo matches
+      return [];
     }
 
     return LiveMatchEngineService.getLiveMatches();
@@ -205,8 +219,17 @@ export class ApiFootballService {
           }
         }
       } catch (err) {
-        console.warn('⚠️ [API-Football] Lineup fetch failed, using authentic roster:', err);
+        console.warn('⚠️ [API-Football] Lineup fetch failed:', err);
       }
+    }
+
+    const isLiveMode = (process.env.DATA_MODE || 'demo') === 'live';
+    if (isLiveMode) {
+      // In live mode, never return simulated squads if provider fails
+      return {
+        home: { formation: 'Unavailable', team: homeTeamName || 'Home Team', startXI: [], substitutes: [] },
+        away: { formation: 'Unavailable', team: awayTeamName || 'Away Team', startXI: [], substitutes: [] },
+      };
     }
 
     // Resolve team names from parameters or known fixture IDs
@@ -835,6 +858,16 @@ export class ApiFootballService {
       }
     }
 
+    const isLiveMode = (process.env.DATA_MODE || 'demo') === 'live';
+    if (isLiveMode) {
+      // In live mode, return empty structure rather than fake match stats
+      return {
+        ALL: { top: [], shots: [], passes: [], defence: [] },
+        '1ST': { top: [], shots: [], passes: [], defence: [] },
+        '2ND': { top: [], shots: [], passes: [], defence: [] },
+      };
+    }
+
     const isAusBra = fixtureId === "1583654" || 
       (homeTeamName.toLowerCase().includes("australia") && awayTeamName.toLowerCase().includes("brazil")) ||
       (homeTeamName.toLowerCase().includes("brazil") || awayTeamName.toLowerCase().includes("brazil"));
@@ -1022,6 +1055,17 @@ export class ApiFootballService {
       }
     }
 
+    const isLiveMode = (process.env.DATA_MODE || 'demo') === 'live';
+    if (isLiveMode) {
+      // In live mode, return empty H2H rather than fake historical encounters
+      return {
+        homeWins: 0,
+        draws: 0,
+        awayWins: 0,
+        encounters: [],
+      };
+    }
+
     const isAusBraH2H = (homeTeamName.toLowerCase().includes("australia") && awayTeamName.toLowerCase().includes("brazil")) ||
       (homeTeamName.toLowerCase().includes("brazil") && awayTeamName.toLowerCase().includes("australia"));
 
@@ -1115,3 +1159,5 @@ export class ApiFootballService {
     };
   }
 }
+
+export const apiFootballService = ApiFootballService;

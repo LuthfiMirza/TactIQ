@@ -127,6 +127,9 @@ export interface MatchPredictionResponse {
   winProbabilities: WinProbabilities;
   predictedScore: string; // e.g. "2 - 1"
   insights?: string[];
+  modelType?: string; // e.g. "DEMO MODEL (RandomForest on Synthetic Data)"
+  xGType?: string;    // e.g. "Estimated xG (model)"
+  meta?: DataProvenanceMeta;
 }
 
 export interface MatchPredictRequest {
@@ -188,19 +191,30 @@ export interface TrackingStartResponse {
 }
 
 // -----------------------------------------------------------------------------
-// 5. Standard API Response Wrapper
+// 5. Data Provenance & Standard API Response Wrapper
 // -----------------------------------------------------------------------------
+
+export type DataMode = 'live' | 'cached' | 'demo';
+
+export interface DataProvenanceMeta {
+  source: string;
+  fetchedAt: string;
+  isStale: boolean;
+  mode: DataMode;
+  status?: 'available' | 'unavailable' | 'stale';
+  error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+  [key: string]: unknown;
+}
 
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
   timestamp: string;
-  meta?: {
-    total?: number;
-    page?: number;
-    limit?: number;
-  };
+  meta?: DataProvenanceMeta;
 }
 
 export interface ApiErrorResponse {
@@ -220,6 +234,8 @@ export interface ApiErrorResponse {
 export interface ClientToServerEvents {
   join_session: (data: { sessionId: string }) => void;
   leave_session: (data: { sessionId: string }) => void;
+  join_match: (data: { matchId: string }) => void;
+  leave_match: (data: { matchId: string }) => void;
   ping_stream: () => void;
   simulate_match_event?: (data: { fixtureId: string; type?: string }) => void;
 }
@@ -229,7 +245,8 @@ export interface ServerToClientEvents {
   session_status: (data: { sessionId: string; status: TrackingSessionStatus }) => void;
   stream_error: (data: { sessionId: string; message: string }) => void;
   pong_stream: (data: { timestamp: number }) => void;
-  match_score_update: (matches: any[]) => void;
+  match_snapshot: (data: { match: any; events: any[]; meta: DataProvenanceMeta }) => void;
+  match_score_update: (matches: any[], meta?: DataProvenanceMeta) => void;
   match_event: (event: {
     fixtureId: string;
     minute: number;
@@ -239,6 +256,7 @@ export interface ServerToClientEvents {
     detail?: string;
     homeScore: number;
     awayScore: number;
+    mode: 'live' | 'demo';
   }) => void;
 }
 

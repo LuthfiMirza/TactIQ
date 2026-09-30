@@ -8,7 +8,9 @@ import { Activity, Radio, Play, Pause, RotateCcw, Video, Eye, Flag, Target, Awar
 interface VideoOverlayCanvasProps {
   sessionId?: string;
   youtubeUrl?: string;
+  videoSrc?: string;
   className?: string;
+  initialVideoMode?: boolean;
   onFrameUpdate?: (frame: TrackingFramePayload) => void;
 }
 
@@ -30,7 +32,9 @@ const MATCH_TIMELINE_EVENTS: MatchEventMoment[] = [
 export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   sessionId = 'demo-session-tactical-001',
   youtubeUrl = 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
+  videoSrc,
   className = '',
+  initialVideoMode = false,
   onFrameUpdate,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -39,7 +43,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   const [currentFrame, setCurrentFrame] = useState<TrackingFramePayload | null>(null);
   const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isSimulatingLocal, setIsSimulatingLocal] = useState<boolean>(false);
-  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(false);
+  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(initialVideoMode || Boolean(videoSrc));
   const [activeMoment, setActiveMoment] = useState<MatchEventMoment | null>(null);
   const [entityStats, setEntityStats] = useState<{ homeCount: number; awayCount: number; ballSpeed: number }>({
     homeCount: 0,
@@ -378,10 +382,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200/80 dark:border-[#27272A] gap-2">
         {/* Matchup & Status */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 text-[10px] font-mono shadow-xs shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span className="font-semibold hidden sm:inline">LIVE CV STREAM</span>
-            <span className="font-semibold sm:hidden">LIVE</span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-mono shadow-xs shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span className="font-semibold hidden sm:inline">DEMO SIMULATION</span>
+            <span className="font-semibold sm:hidden">DEMO SIM</span>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white font-mono shrink-0">
@@ -406,8 +410,14 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             }`}
           >
             {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
-            <span className="hidden sm:inline">{showVideoBackground ? 'High-Cam Broadcast' : '2D Pitch Plane'}</span>
-            <span className="sm:hidden">{showVideoBackground ? 'High-Cam' : '2D Plane'}</span>
+            <span className="hidden sm:inline">
+              {showVideoBackground
+                ? videoSrc
+                  ? 'Local Video MP4'
+                  : 'High-Cam Broadcast'
+                : '2D Pitch Plane'}
+            </span>
+            <span className="sm:hidden">{showVideoBackground ? 'Cam Video' : '2D Plane'}</span>
           </button>
 
           {/* Entity Telemetry Counters */}
@@ -422,7 +432,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             </div>
             <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400">
               <span className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>Ball: {entityStats.ballSpeed} km/h</span>
+              <span>Est. Ball: {entityStats.ballSpeed} km/h (sim)</span>
             </div>
           </div>
         </div>
@@ -430,16 +440,27 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
 
       {/* 16:9 Aspect Ratio Container with Clean Pitch Display */}
       <div ref={containerRef} className="relative w-full aspect-video bg-[#0F2C1F] flex items-center justify-center overflow-hidden rounded-b-none">
-        {/* Underlying YouTube Embed Video Player (if enabled) */}
+        {/* Underlying Video Player (HTML5 Video or YouTube Embed) */}
         {showVideoBackground && (
           <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <iframe
-              className="w-full h-full scale-[1.05] opacity-80"
-              src={youtubeUrl}
-              title="Tactical Match Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            {videoSrc ? (
+              <video
+                src={videoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover opacity-85"
+              />
+            ) : (
+              <iframe
+                className="w-full h-full scale-[1.05] opacity-80"
+                src={youtubeUrl}
+                title="Tactical Match Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
           </div>
         )}
 
@@ -452,10 +473,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* Clean Live Status Pill in Viewport */}
         <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/75 border border-white/10 text-[11px] font-mono text-white backdrop-blur-xs shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
             <span>2D Radar</span>
             <span className="text-slate-400">·</span>
-            <span className="text-slate-300">Live</span>
+            <span className="text-amber-400 font-bold">DEMO SIMULATION</span>
           </span>
         </div>
 
@@ -522,8 +543,8 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         </div>
 
         <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 font-mono text-[11px] hidden sm:flex">
-          <Activity size={14} className="text-slate-500 dark:text-zinc-400" />
-          <span>TactIQ Live Tracking Engine</span>
+          <Activity size={14} className="text-amber-500" />
+          <span>TactIQ Tracking (DEMO SIMULATION)</span>
         </div>
       </div>
     </div>

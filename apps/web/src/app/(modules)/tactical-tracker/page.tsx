@@ -5,8 +5,9 @@ import { VideoOverlayCanvas } from '@/components/video-overlay-canvas';
 import { TacticalMinimap } from '@/components/tactical-minimap';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import type { TrackingFramePayload, TrackingEntity } from '@tactiq/shared-types';
-import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair } from 'lucide-react';
+import { Radio, Activity, Gauge, Cpu, AlertCircle, Crosshair, Film, Sparkles, Video } from 'lucide-react';
 import { api } from '@/lib/api';
+import { VideoImporterModal, type CustomVideoSessionConfig } from '@/components/video-importer-modal';
 
 // keyed by `{team}_{jerseyNumber}` to avoid cross-team collisions
 const ROSTER_MAP: Record<string, { name: string; pos: string; dist: string }> = {
@@ -37,7 +38,7 @@ const TACTICAL_SESSIONS = [
     awayCode: 'ARS',
     youtubeUrl: 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
     score: '1 — 1',
-    statusBadge: "88' LIVE",
+    statusBadge: "88' DEMO SIM",
   },
   {
     id: 'demo-session-tactical-002',
@@ -90,8 +91,12 @@ const TACTICAL_SESSIONS = [
 ];
 
 export default function TacticalTrackerPage() {
+  const [customSessions, setCustomSessions] = useState<typeof TACTICAL_SESSIONS>([]);
+  const [isImporterOpen, setIsImporterOpen] = useState<boolean>(false);
   const [activeSessionId, setActiveSessionId] = useState<string>('demo-session-tactical-001');
-  const currentSession = TACTICAL_SESSIONS.find((s) => s.id === activeSessionId) || TACTICAL_SESSIONS[0];
+
+  const allSessions = [...customSessions, ...TACTICAL_SESSIONS];
+  const currentSession = allSessions.find((s) => s.id === activeSessionId) || allSessions[0];
 
   const [latestFrame, setLatestFrame] = useState<TrackingFramePayload | null>(null);
   const [isStartingPipeline, setIsStartingPipeline] = useState<boolean>(false);
@@ -102,6 +107,35 @@ export default function TacticalTrackerPage() {
   const handleFrameUpdate = useCallback((frame: TrackingFramePayload) => {
     setLatestFrame(frame);
   }, []);
+
+  // Apply custom YouTube URL or Local MP4 file from modal
+  const handleApplyCustomVideo = (config: CustomVideoSessionConfig) => {
+    const newSession = {
+      id: config.id,
+      title: config.title,
+      phase: config.sourceType === 'local_file' ? 'Local MP4 Custom Stream' : 'YouTube High-Cam Broadcast',
+      competition: config.competition,
+      venue: config.venue,
+      homeCode: config.homeCode,
+      awayCode: config.awayCode,
+      youtubeUrl: config.youtubeUrl || '',
+      videoSrc: config.videoSrc,
+      score: config.score,
+      statusBadge: config.statusBadge,
+    };
+
+    setCustomSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+    setPipelineMessage(
+      `Video aktif diganti: ${newSession.title} (${
+        config.sourceType === 'youtube' ? 'YouTube Embed' : 'Local Video MP4'
+      }). Tracking & Cam FOV Box diaktifkan.`
+    );
+
+    if (config.youtubeUrl) {
+      api.startTracking({ session_id: newSession.id, youtube_url: config.youtubeUrl }).catch(() => {});
+    }
+  };
 
   // Trigger ML background pipeline
   const handleStartPipeline = async () => {
@@ -154,7 +188,10 @@ export default function TacticalTrackerPage() {
 
             <div className="sm:border-l sm:border-[#27272A] sm:pl-5">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold">
+                  DEMO SIMULATION
+                </span>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 font-bold">
                   2D Optical Radar · {currentSession.phase}
                 </span>
@@ -176,37 +213,21 @@ export default function TacticalTrackerPage() {
               onChange={(e) => setActiveSessionId(e.target.value)}
               className="bg-[#18181C] border border-[#27272A] text-zinc-200 text-xs font-mono rounded-xl px-3 py-2 outline-none focus:border-[#CEFF00] transition-colors"
             >
-              {TACTICAL_SESSIONS.map((sess) => (
+              {allSessions.map((sess) => (
                 <option key={sess.id} value={sess.id}>
                   {sess.title} ({sess.competition})
                 </option>
               ))}
             </select>
 
+            {/* Clean Modal Launcher for YouTube or Local Video */}
             <button
-              onClick={() => {
-                const url = window.prompt('Paste YouTube Match Highlight URL to analyze with YOLOv8 + Homography:', 'https://www.youtube.com/watch?v=z4B7hN5sE_s');
-                if (url) {
-                  let embedUrl = url;
-                  if (url.includes('watch?v=')) {
-                    const videoId = url.split('watch?v=')[1]?.split('&')[0];
-                    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1`;
-                  }
-                  setIsStartingPipeline(true);
-                  api.startTracking({ session_id: 'custom-yolo-session', youtube_url: embedUrl })
-                    .then(() => {
-                      setPipelineMessage(`YOLOv8 + Homography pipeline launched on: ${url}`);
-                    })
-                    .catch(() => {
-                      setPipelineMessage(`Launched custom tracking pipeline on: ${url}`);
-                    })
-                    .finally(() => setIsStartingPipeline(false));
-                }
-              }}
-              className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-zinc-200 text-xs font-mono rounded-xl border border-zinc-700 transition-colors cursor-pointer"
+              onClick={() => setIsImporterOpen(true)}
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#18181C] hover:bg-[#222228] text-white text-xs font-mono font-bold rounded-xl border border-[#27272A] hover:border-[#CEFF00] transition-colors cursor-pointer"
+              title="Input URL YouTube atau Pilih File Video MP4"
             >
-              <Crosshair size={13} className="text-[#CEFF00]" />
-              <span>+ Custom Match (YOLOv8)</span>
+              <Film size={14} className="text-[#CEFF00]" />
+              <span>+ Input Video / YouTube</span>
             </button>
 
             <button
@@ -215,10 +236,26 @@ export default function TacticalTrackerPage() {
               className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-xl shadow-xs shadow-[#CEFF00]/20 transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
-              <span>{isStartingPipeline ? 'Connecting...' : 'Connect CV Pipeline'}</span>
+              <span>{isStartingPipeline ? 'Connecting...' : 'Connect Stream (Demo)'}</span>
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Tactical Guidance Banner (Highlighting difference between Broadcast Video & Full 2D Radar) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] text-xs font-mono text-slate-800 dark:text-zinc-300 gap-2.5 shadow-xs">
+        <div className="flex items-start sm:items-center gap-2.5">
+          <span className="w-2 h-2 rounded-full bg-[#CEFF00] shrink-0 mt-1 sm:mt-0" />
+          <p className="text-[11px] leading-relaxed">
+            <span className="font-bold text-white">Prinsip Broadcast Tracking:</span> Video siaran TV/YouTube menyorot bola (~30×20m). Radar 2D menampilkan seluruh 105×68m lapangan secara utuh dengan kotak <span className="text-[#CEFF00] font-bold">[CAM FOV]</span> dinamis yang melacak sorotan kamera.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsImporterOpen(true)}
+          className="text-[11px] font-bold text-[#CEFF00] hover:underline shrink-0 whitespace-nowrap self-end sm:self-auto"
+        >
+          Ganti Video &rarr;
+        </button>
       </div>
 
       {pipelineMessage && (
@@ -237,6 +274,8 @@ export default function TacticalTrackerPage() {
             key={activeSessionId}
             sessionId={activeSessionId}
             youtubeUrl={currentSession.youtubeUrl}
+            videoSrc={(currentSession as any).videoSrc}
+            initialVideoMode={Boolean((currentSession as any).videoSrc || currentSession.youtubeUrl)}
             onFrameUpdate={handleFrameUpdate}
           />
         </div>
@@ -261,10 +300,17 @@ export default function TacticalTrackerPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   Tracked Entity Stream
                 </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                  DEMO SIMULATION
+                </span>
               </div>
               <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2.5 py-0.5 rounded">
                 {rawEntities.length || 23} Entities Active
               </span>
+            </div>
+
+            <div className="text-[10px] font-mono text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
+              Catatan: Kecepatan (km/h) dan jarak jelajah merupakan estimasi matematis simulasi (bukan sensor telemetri riil).
             </div>
 
             {/* Filter Tabs */}
@@ -424,6 +470,13 @@ export default function TacticalTrackerPage() {
         </div>
 
       </div>
+
+      {/* Video Importer Modal (YouTube URL & Local MP4 File) */}
+      <VideoImporterModal
+        isOpen={isImporterOpen}
+        onClose={() => setIsImporterOpen(false)}
+        onApplyVideo={handleApplyCustomVideo}
+      />
 
     </div>
   );

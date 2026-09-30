@@ -35,6 +35,13 @@ export class TrackingController {
         success: true,
         data: sessionDTOs,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'database-seed (Prisma tracking sessions)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+          total: sessionDTOs.length,
+        },
       };
 
       res.json(response);
@@ -106,6 +113,12 @@ export class TrackingController {
           coordinates: formattedCoordinates,
         },
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'Precomputed 2D Planar Coordinates (database-seed)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+        },
       });
     } catch (error) {
       console.error('Error fetching session details:', error);
@@ -146,6 +159,12 @@ export class TrackingController {
         success: true,
         data: result,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'TactIQ ML Tracking Pipeline (FastAPI / Redis)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+        },
       };
 
       res.json(response);

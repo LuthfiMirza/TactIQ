@@ -14,28 +14,45 @@ export interface TickerMatch {
   status: 'LIVE' | 'HT' | 'FT' | 'UPCOMING';
   minute?: string;
   startTime?: string;
+  mode?: 'live' | 'demo';
 }
 
 interface MatchdayMarqueeProps {
   matches: TickerMatch[];
   className?: string;
+  mode?: 'live' | 'demo';
 }
 
-export function MatchdayMarquee({ matches, className = '' }: MatchdayMarqueeProps) {
+export function MatchdayMarquee({ matches, className = '', mode = 'demo' }: MatchdayMarqueeProps) {
+  const isDemo = mode === 'demo';
+
   return (
     <div
       className={`relative w-full bg-[#121215] border border-[#27272A] rounded-xl overflow-hidden flex items-center h-10 shadow-xs ${className}`}
-      aria-label="Live Matchday Scores Ticker"
+      aria-label="Matchday Scores Ticker"
     >
       {/* ── Left Badge (Responsive) ── */}
       <div className="shrink-0 flex items-center gap-2 pl-3 sm:pl-3.5 pr-2.5 sm:pr-3.5 py-1 sm:border-r border-[#27272A] z-20 bg-[#121215]">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-tactiq-coral" />
-        </span>
-        <span className="hidden sm:inline text-[11px] font-mono font-black uppercase tracking-wider text-white whitespace-nowrap">
-          Live Scores
-        </span>
+        {isDemo ? (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+            </span>
+            <span className="text-[10px] font-mono font-black uppercase tracking-wider text-amber-400 whitespace-nowrap bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
+              DEMO FEED
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-tactiq-coral" />
+            </span>
+            <span className="hidden sm:inline text-[11px] font-mono font-black uppercase tracking-wider text-white whitespace-nowrap">
+              Live Scores
+            </span>
+          </>
+        )}
       </div>
 
       {/* ── Soft Edge Vignette Fades ── */}
@@ -57,8 +74,10 @@ export function MatchdayMarquee({ matches, className = '' }: MatchdayMarqueeProp
               {/* Match State */}
               <span className="shrink-0 font-mono text-[10px] font-bold">
                 {isLive ? (
-                  <span className="text-tactiq-coral font-black flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-tactiq-coral animate-pulse" />
+                  <span className="text-amber-400 font-black flex items-center gap-1">
+                    <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                      DEMO
+                    </span>
                     {m.minute}
                   </span>
                 ) : m.status === 'FT' ? (

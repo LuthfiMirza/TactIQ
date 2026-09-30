@@ -46,11 +46,17 @@ export class MatchController {
         points: s.points,
       }));
 
+      const currentMode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       const response: ApiResponse<StandingDTO[]> = {
         success: true,
         data: dtos,
         timestamp: new Date().toISOString(),
         meta: {
+          source: 'database-seed / Football-Data.org',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: currentMode,
           total: dtos.length,
         },
       };
@@ -98,11 +104,17 @@ export class MatchController {
         venue: f.venue,
       }));
 
+      const currentMode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       const response: ApiResponse<FixtureDTO[]> = {
         success: true,
         data: fixtureDTOs,
         timestamp: new Date().toISOString(),
         meta: {
+          source: 'database-seed / Football-Data.org',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: currentMode,
           total: fixtureDTOs.length,
         },
       };
@@ -165,10 +177,18 @@ export class MatchController {
             draws: 3,
           };
 
+      const isLiveMode = (process.env.DATA_MODE || 'demo') === 'live';
+
       const response: ApiResponse<H2HDTO> = {
         success: true,
         data: h2hDTO,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: h2h ? 'database-seed' : 'TactIQ Demo Engine',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: isLiveMode && h2h ? 'live' : 'demo',
+        },
       };
 
       res.json(response);
@@ -207,10 +227,22 @@ export class MatchController {
 
       const prediction = await MLService.predictMatch(payload);
 
+      const predictionData: MatchPredictionResponse = {
+        ...prediction,
+        modelType: 'DEMO MODEL (RandomForest on Synthetic Data)',
+        xGType: 'Estimated xG (model)',
+      };
+
       const response: ApiResponse<MatchPredictionResponse> = {
         success: true,
-        data: prediction,
+        data: predictionData,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'RandomForest (services/ml synthetic)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'demo',
+        },
       };
 
       res.json(response);
@@ -235,10 +267,19 @@ export class MatchController {
     try {
       const { ApiFootballService } = await import('../services/apiFootball.service.js');
       const liveMatches = await ApiFootballService.getLiveScores();
+      const currentMode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       res.json({
         success: true,
         data: liveMatches,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: currentMode === 'live' ? 'API-Football Live API' : 'TactIQ LiveMatchEngine',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: currentMode,
+          total: liveMatches.length,
+        },
       });
     } catch (error) {
       res.status(500).json({
@@ -337,10 +378,18 @@ export class MatchController {
       const homeName = (req.query.home as string) || '';
       const awayName = (req.query.away as string) || '';
       const lineup = await ApiFootballService.getMatchLineup(req.params.id, homeName, awayName);
+      const mode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       res.json({
         success: true,
         data: lineup,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: mode === 'live' ? 'API-Football Lineups API' : 'TactIQ Confirmed Roster Seed',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode,
+        },
       });
     } catch (error) {
       res.status(500).json({
@@ -365,6 +414,12 @@ export class MatchController {
         success: true,
         data: absentees,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: 'Transfermarkt Verified Reports (Static Seed)',
+          fetchedAt: new Date().toISOString(),
+          isStale: true,
+          mode: 'demo',
+        },
       });
     } catch (error) {
       res.status(500).json({
@@ -385,10 +440,18 @@ export class MatchController {
       const homeName = (req.query.home as string) || '';
       const awayName = (req.query.away as string) || '';
       const stats = await ApiFootballService.getMatchStatistics(req.params.id, homeName, awayName);
+      const mode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       res.json({
         success: true,
         data: stats,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: mode === 'live' ? 'API-Football Statistics API' : 'TactIQ Stats Engine',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode,
+        },
       });
     } catch (error) {
       res.status(500).json({
@@ -410,10 +473,18 @@ export class MatchController {
       const homeName = (req.query.home as string) || 'Home Team';
       const awayName = (req.query.away as string) || 'Away Team';
       const h2h = await ApiFootballService.getMatchH2H(h2hCode, homeName, awayName);
+      const mode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+
       res.json({
         success: true,
         data: h2h,
         timestamp: new Date().toISOString(),
+        meta: {
+          source: mode === 'live' ? 'API-Football H2H API' : 'TactIQ H2H Archive',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode,
+        },
       });
     } catch (error) {
       res.status(500).json({

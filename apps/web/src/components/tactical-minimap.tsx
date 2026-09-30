@@ -53,6 +53,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
   const [showPassingLanes, setShowPassingLanes] = useState(true);
   const [showConvexHull, setShowConvexHull] = useState(false);
   const [showTacticalZones, setShowTacticalZones] = useState(false);
+  const [showCameraFOV, setShowCameraFOV] = useState(true);
 
   // Fall back to default formation entities if none streamed yet
   const activeEntities = entities && entities.length > 0 ? entities : DEFAULT_FORMATION_ENTITIES;
@@ -240,6 +241,30 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       }
     }
 
+    // 5.5 Optional: Broadcast Camera Field of View (FOV) Box
+    if (showCameraFOV && ball) {
+      const camW = pW * 0.36;
+      const camH = pH * 0.44;
+      const targetX = pad + ball.x * pW;
+      const targetY = pad + ball.y * pH;
+      const camX = Math.max(pad, Math.min(pad + pW - camW, targetX - camW / 2));
+      const camY = Math.max(pad, Math.min(pad + pH - camH, targetY - camH / 2));
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(206, 255, 0, 0.08)';
+      ctx.fillRect(camX, camY, camW, camH);
+      ctx.strokeStyle = '#CEFF00';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(camX, camY, camW, camH);
+
+      // Label inside camera bounding frustum
+      ctx.fillStyle = '#CEFF00';
+      ctx.font = 'bold 8px JetBrains Mono, monospace';
+      ctx.fillText('CAM FOV (YOUTUBE)', camX + 4, camY + 11);
+      ctx.restore();
+    }
+
     // 6. Render Players & Ball
     activeEntities.forEach((ent) => {
       const px = pad + ent.x * pW;
@@ -292,7 +317,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         }
       }
     });
-  }, [entities, showPassingLanes, showConvexHull, showTacticalZones, selectedEntityId]);
+  }, [entities, showPassingLanes, showConvexHull, showTacticalZones, showCameraFOV, selectedEntityId]);
 
   return (
     <div className={`p-4 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl space-y-3 shadow-xs transition-colors ${className}`}>
@@ -302,6 +327,9 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           <Compass size={15} className="text-slate-900 dark:text-zinc-100" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
             2D Tactical Radar
+          </span>
+          <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold">
+            DEMO SIMULATION
           </span>
         </div>
         <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2 py-0.5 rounded">
@@ -350,10 +378,23 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       </div>
 
       {/* Visual Layer Toggles */}
-      <div className="flex items-center justify-between gap-1.5 pt-1">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+        <button
+          onClick={() => setShowCameraFOV(!showCameraFOV)}
+          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+            showCameraFOV
+              ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+              : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
+          }`}
+          title="Toggle Broadcast Camera Viewport Box (FOV)"
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${showCameraFOV ? 'bg-black' : 'bg-zinc-500'}`} />
+          <span>Cam FOV</span>
+        </button>
+
         <button
           onClick={() => setShowPassingLanes(!showPassingLanes)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showPassingLanes
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
@@ -366,7 +407,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
 
         <button
           onClick={() => setShowConvexHull(!showConvexHull)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showConvexHull
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
@@ -379,7 +420,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
 
         <button
           onClick={() => setShowTacticalZones(!showTacticalZones)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
             showTacticalZones
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
@@ -403,7 +444,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" />
-          <span>Live Ball</span>
+          <span>Ball (sim)</span>
         </div>
       </div>
     </div>

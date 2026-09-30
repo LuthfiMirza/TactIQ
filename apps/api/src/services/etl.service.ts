@@ -4,21 +4,27 @@ import { FootballDataService } from './footballData.service.js';
 
 export interface ETLSyncResult {
   success: boolean;
+  status: 'available' | 'unavailable' | 'demo';
   timestamp: string;
   syncedFixtures: number;
   syncedStandings: number;
   syncedPlayers: number;
   source: string;
   durationMs: number;
+  lastError?: string | null;
 }
 
 /**
- * Service to orchestrate ingestion from API-Football, Football-Data.org or fallback providers
+ * Service to orchestrate ingestion from external football data providers
  */
 export class ETLService {
   private static instance: ETLService;
   private cronTimer: NodeJS.Timeout | null = null;
   private isSyncing = false;
+  private lastStatus: 'available' | 'unavailable' | 'demo' = 'demo';
+  private lastSync: string | null = null;
+  private lastError: string | null = null;
+  private lastSource: string = 'database-seed';
 
   private constructor() {}
 
@@ -29,6 +35,22 @@ export class ETLService {
     return ETLService.instance;
   }
 
+  public getLastStatus(): 'available' | 'unavailable' | 'demo' {
+    return this.lastStatus;
+  }
+
+  public getLastSync(): string | null {
+    return this.lastSync;
+  }
+
+  public getLastError(): string | null {
+    return this.lastError;
+  }
+
+  public getLastSource(): string {
+    return this.lastSource;
+  }
+
   /**
    * Run full ETL data extraction, transformation, and load
    */
@@ -37,12 +59,14 @@ export class ETLService {
       console.warn('⚠️ ETL Ingestion already running, skipping overlapping execution.');
       return {
         success: false,
+        status: this.lastStatus,
         timestamp: new Date().toISOString(),
         syncedFixtures: 0,
         syncedStandings: 0,
         syncedPlayers: 0,
         source: 'BUSY',
         durationMs: 0,
+        lastError: 'ETL sync already in progress',
       };
     }
 
@@ -52,41 +76,95 @@ export class ETLService {
 
     let syncedFixtures = 0;
     let syncedStandings = 0;
-    let syncedPlayers = 0;
 
     try {
       // 1. Ensure reference teams exist
       await this.ensureReferenceTeams();
 
-      // 2. Sync Match Fixtures & Recent Results (Football-Data.org with resilient fallback)
-      const fdoFixtures = await FootballDataService.syncFixtures('PL');
-      syncedFixtures = fdoFixtures > 0 ? fdoFixtures : await this.syncFixtures();
+      // Determine provider to call
+      const hasFdoToken = Boolean(process.env.FOOTBALL_DATA_TOKEN);
+      const actualSource = hasFdoToken ? 'Football-Data.org API' : 'none (no provider key configured)';
 
-      // 3. Sync League Standings (Football-Data.org with resilient fallback)
-      const fdoStandings = await FootballDataService.syncStandings('PL');
-      syncedStandings = fdoStandings > 0 ? fdoStandings : await this.syncStandings();
+      if (!hasFdoToken) {
+        this.lastStatus = 'unavailable';
+        this.lastError = 'No FOOTBALL_DATA_TOKEN provided in environment';
+        this.lastSource = actualSource;
+        const durationMs = Date.now() - startTime;
+        console.warn('⚠️ [ETL Pipeline] No provider key available. Skipping live sync without mock fallback.');
+        return {
+          success: false,
+          status: 'unavailable',
+          timestamp: new Date().toISOString(),
+          syncedFixtures: 0,
+          syncedStandings: 0,
+          syncedPlayers: 0,
+          source: actualSource,
+          durationMs,
+          lastError: this.lastError,
+        };
+      }
 
-      // 4. Sync Player Profiles & Radar Attributes
-      syncedPlayers = await this.syncPlayerProfiles();
+      // 2. Sync Match Fixtures & Recent Results
+      syncedFixtures = await FootballDataService.syncFixtures('PL');
+
+      // 3. Sync League Standings
+      syncedStandings = await FootballDataService.syncStandings('PL');
 
       const durationMs = Date.now() - startTime;
+
+      if (syncedFixtures === 0 && syncedStandings === 0) {
+        this.lastStatus = 'unavailable';
+        this.lastError = 'Provider API returned 0 records or authentication failed';
+        this.lastSource = actualSource;
+        console.warn('⚠️ [ETL Pipeline] Provider returned 0 records. Storing unavailable status without writing fake fixtures.');
+        return {
+          success: false,
+          status: 'unavailable',
+          timestamp: new Date().toISOString(),
+          syncedFixtures: 0,
+          syncedStandings: 0,
+          syncedPlayers: 0,
+          source: actualSource,
+          durationMs,
+          lastError: this.lastError,
+        };
+      }
+
+      this.lastStatus = 'available';
+      this.lastSync = new Date().toISOString();
+      this.lastError = null;
+      this.lastSource = actualSource;
+
       console.log(`✅ [ETL Pipeline] Sync completed in ${durationMs}ms:`);
       console.log(`   - Fixtures/Results : ${syncedFixtures}`);
       console.log(`   - Standings Table  : ${syncedStandings}`);
-      console.log(`   - Player Profiles  : ${syncedPlayers}`);
 
       return {
         success: true,
-        timestamp: new Date().toISOString(),
+        status: 'available',
+        timestamp: this.lastSync,
         syncedFixtures,
         syncedStandings,
-        syncedPlayers,
-        source: process.env.API_FOOTBALL_KEY ? 'API-Football Live API' : 'TactIQ Synthetic Ingestion Engine',
+        syncedPlayers: 0,
+        source: actualSource,
         durationMs,
       };
     } catch (error) {
+      const errMessage = (error as Error).message;
+      this.lastStatus = 'unavailable';
+      this.lastError = errMessage;
       console.error('❌ [ETL Pipeline] Execution failed:', error);
-      throw error;
+      return {
+        success: false,
+        status: 'unavailable',
+        timestamp: new Date().toISOString(),
+        syncedFixtures: 0,
+        syncedStandings: 0,
+        syncedPlayers: 0,
+        source: 'error',
+        durationMs: Date.now() - startTime,
+        lastError: errMessage,
+      };
     } finally {
       this.isSyncing = false;
     }
@@ -113,9 +191,9 @@ export class ETLService {
   }
 
   /**
-   * Synchronize fixtures and results
+   * Seed demo fixtures and results (Explicit Demo/Testing use only - never called during live ETL sync)
    */
-  private async syncFixtures(): Promise<number> {
+  public async seedDemoFixtures(): Promise<number> {
     const rawFixtures = [
       {
         id: 'fixture-mci-ars',
@@ -179,9 +257,9 @@ export class ETLService {
   }
 
   /**
-   * Synchronize league standings
+   * Seed demo standings (Explicit Demo/Testing use only - never called during live ETL sync)
    */
-  private async syncStandings(): Promise<number> {
+  public async seedDemoStandings(): Promise<number> {
     const rawStandings = [
       { id: 'std-mci', teamId: 'team-mci', position: 1, played: 28, won: 20, drawn: 5, lost: 3, goalsFor: 68, goalsAgainst: 26, goalDifference: 42, points: 65 },
       { id: 'std-ars', teamId: 'team-ars', position: 2, played: 28, won: 20, drawn: 4, lost: 4, goalsFor: 70, goalsAgainst: 24, goalDifference: 46, points: 64 },
@@ -213,9 +291,9 @@ export class ETLService {
   }
 
   /**
-   * Synchronize player stats & radar attributes
+   * Seed demo player stats & radar attributes (Explicit Demo/Testing use only - never called during live ETL sync)
    */
-  private async syncPlayerProfiles(): Promise<number> {
+  public async seedDemoPlayerProfiles(): Promise<number> {
     const rawPlayers = [
       {
         id: 'player-rodri',

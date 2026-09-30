@@ -11,6 +11,7 @@ export interface SimulatedEventPayload {
   detail?: string;
   homeScore: number;
   awayScore: number;
+  mode: 'live' | 'demo';
 }
 
 export class LiveMatchEngineService {
@@ -238,6 +239,10 @@ export class LiveMatchEngineService {
    * Programmed dynamic match events triggered at specific in-play minutes
    */
   private static checkStorylineEvents(match: LiveScoreMatch): void {
+    // Only execute scripted storyline events when DATA_MODE is demo
+    const isDemo = (process.env.DATA_MODE || 'demo') === 'demo';
+    if (!isDemo) return;
+
     // Australia vs Brazil storylines
     if (match.fixtureId === '1583654') {
       if (match.minute === 24 && !match.events.some((e) => e.minute === 24)) {
@@ -322,7 +327,7 @@ export class LiveMatchEngineService {
       `⚡ [LiveMatchEngine EVENT] ${event.type.toUpperCase()}: ${event.player} (${event.team} ${event.minute}') | Score: ${match.homeTeam} ${match.homeScore} - ${match.awayScore} ${match.awayTeam}`
     );
 
-    // Broadcast individual event
+    // Broadcast individual event with explicit mode: 'demo'
     const eventPayload: SimulatedEventPayload = {
       fixtureId: match.fixtureId,
       minute: event.minute,
@@ -332,13 +337,17 @@ export class LiveMatchEngineService {
       detail: event.detail,
       homeScore: match.homeScore,
       awayScore: match.awayScore,
+      mode: 'demo',
     };
 
     if (io) {
+      // Room-based event broadcast
+      io.to(`match_${match.fixtureId}`).emit('match_event', eventPayload);
+      // General broadcast
       io.emit('match_event', eventPayload);
     }
 
-    this.broadcastUpdate();
+    this.broadcastUpdate(match.fixtureId);
   }
 
   /**
@@ -388,6 +397,7 @@ export class LiveMatchEngineService {
         detail: goalDetail,
         homeScore: match.homeScore,
         awayScore: match.awayScore,
+        mode: 'demo',
       },
     };
   }
@@ -402,7 +412,7 @@ export class LiveMatchEngineService {
     else if (match.minute >= 45 && match.minute <= 46) match.status = 'HT';
     else match.status = 'LIVE';
 
-    this.broadcastUpdate();
+    this.broadcastUpdate(match.fixtureId);
     return match;
   }
 
@@ -420,16 +430,46 @@ export class LiveMatchEngineService {
       { minute: 14, team: 'Australia', player: 'Jackson Irvine', type: 'Card', detail: 'Yellow Card' },
     ];
 
-    this.broadcastUpdate();
+    this.broadcastUpdate(match.fixtureId);
     return match;
   }
 
   /**
-   * Broadcast all live scores to connected WebSocket clients
+   * Broadcast all live scores to connected WebSocket clients (room-based and global)
    */
-  public static broadcastUpdate(): void {
-    if (io) {
-      io.emit('match_score_update', this.liveMatches);
+  public static broadcastUpdate(targetFixtureId?: string): void {
+    if (!io) return;
+    const meta = {
+      source: 'TactIQ LiveMatchEngine',
+      fetchedAt: new Date().toISOString(),
+      isStale: false,
+      mode: 'demo' as const,
+    };
+
+    if (targetFixtureId) {
+      const match = this.liveMatches.find((m) => m.fixtureId === targetFixtureId);
+      if (match) {
+        io.to(`match_${targetFixtureId}`).emit('match_score_update', [match], meta);
+      }
     }
+
+    io.emit('match_score_update', this.liveMatches, meta);
+  }
+
+  /**
+   * Snapshot provider for match room subscription
+   */
+  public static getMatchSnapshot(matchId: string) {
+    const match = this.liveMatches.find((m) => m.fixtureId === matchId) || null;
+    return {
+      match,
+      events: match?.events || [],
+      meta: {
+        source: 'TactIQ LiveMatchEngine',
+        fetchedAt: new Date().toISOString(),
+        isStale: false,
+        mode: 'demo' as const,
+      },
+    };
   }
 }

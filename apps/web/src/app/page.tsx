@@ -248,6 +248,7 @@ export default function HomePage() {
         
         {/* ── Top Matchday Broadcast Ticker ── */}
         <MatchdayMarquee
+          mode="demo"
           matches={MATCHES.map((m) => ({
             id: m.id,
             homeCode: m.homeCode,
@@ -257,6 +258,7 @@ export default function HomePage() {
             status: m.status,
             minute: m.minute,
             startTime: m.startTime,
+            mode: 'demo',
           }))}
           className="mb-4 sm:mb-5"
         />
@@ -303,11 +305,11 @@ export default function HomePage() {
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-tactiq-coral" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     Live Matches
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200">
-                    2 LIVE
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    2 DEMO
                   </span>
                 </button>
 
@@ -482,6 +484,9 @@ export default function HomePage() {
                     <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                       {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
                     </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold">
+                      DEMO MATCH
+                    </span>
                   </div>
                   <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
                 </div>
@@ -512,11 +517,10 @@ export default function HomePage() {
                         <span>{liveFeaturedMatch.awayScore}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-tactiq-coral" />
+                        <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold">
+                          DEMO
                         </span>
-                        <span className="text-[11px] sm:text-xs font-semibold text-tactiq-coral whitespace-nowrap">
+                        <span className="text-[11px] sm:text-xs font-semibold text-amber-400 whitespace-nowrap">
                           {liveFeaturedMatch.minute}
                         </span>
                       </div>
@@ -636,7 +640,10 @@ export default function HomePage() {
                             {/* Status Column */}
                             <div className="text-center font-mono">
                               {match.status === 'LIVE' ? (
-                                <span className="font-bold text-xs sm:text-[13px] text-rose-600 dark:text-rose-400 tracking-tight">
+                                <span className="inline-flex items-center gap-1 font-bold text-xs sm:text-[13px] text-amber-500 dark:text-amber-400 tracking-tight">
+                                  <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                                    DEMO
+                                  </span>
                                   {match.minute}
                                 </span>
                               ) : match.status === 'HT' ? (
