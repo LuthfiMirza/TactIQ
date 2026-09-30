@@ -21,7 +21,12 @@ apiRouter.get('/health', (_req, res) => {
 // Data Health & Mode provenance endpoint (TSK Phase 1A)
 apiRouter.get('/health/data', async (_req, res) => {
   const currentMode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
-  const provider = process.env.DATA_PROVIDER || (process.env.FOOTBALL_DATA_TOKEN ? 'football-data.org' : (process.env.API_FOOTBALL_KEY ? 'api-football' : 'none'));
+  const { providerChainManager } = await import('../providers/providerChain.manager.js');
+  const { scheduleAwareScheduler } = await import('../services/scheduleAwareScheduler.service.js');
+
+  const activeProvider = providerChainManager.getActiveProvider();
+  const allProvidersHealth = providerChainManager.getAllProvidersHealth();
+  const schedulerStatus = scheduleAwareScheduler.getSchedulerStatus();
 
   const playersCount = await prisma.player.count().catch(() => 0);
   const teamsCount = await prisma.team.count().catch(() => 0);
@@ -32,10 +37,14 @@ apiRouter.get('/health/data', async (_req, res) => {
     success: true,
     data: {
       mode: currentMode,
-      provider,
-      providerStatus: etlService.getLastStatus(),
+      provider: activeProvider.name,
+      providerStatus: activeProvider.getHealthStatus().status,
+      activeProvider: activeProvider.name,
+      providers: allProvidersHealth,
+      switchHistory: providerChainManager.getSwitchHistory(),
+      scheduler: schedulerStatus,
       lastSync: etlService.getLastSync(),
-      lastError: etlService.getLastError(),
+      lastError: activeProvider.getHealthStatus().lastError,
       source: etlService.getLastSource(),
       databaseCounts: {
         players: playersCount,

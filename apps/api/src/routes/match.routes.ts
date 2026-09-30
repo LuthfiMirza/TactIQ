@@ -3,6 +3,9 @@ import { MatchController } from '../controllers/match.controller.js';
 
 export const matchRoutes = Router();
 
+// GET /api/v1/matches/home-ticker (Fase 2 ticker feed)
+matchRoutes.get('/home-ticker', MatchController.getHomeTicker);
+
 // GET /api/v1/matches/fixtures (scheduled fixtures)
 matchRoutes.get('/fixtures', MatchController.getFixtures);
 
@@ -18,8 +21,12 @@ matchRoutes.post('/live/advance-minute', MatchController.advanceLiveMinute);
 // POST /api/v1/matches/live/reset (Reset live match to baseline)
 matchRoutes.post('/live/reset', MatchController.resetLiveMatch);
 
-// GET /api/v1/matches/preview/absentees (Transfermarkt injury & ban intelligence)
+// GET /api/v1/matches/preview/absentees & /:id/absentees
 matchRoutes.get('/preview/absentees', MatchController.getAbsentees);
+matchRoutes.get('/:id/absentees', MatchController.getAbsentees);
+
+// GET /api/v1/matches/:id/events (Fase 2 match timeline events)
+matchRoutes.get('/:id/events', MatchController.getEvents);
 
 // GET /api/v1/matches/:id/lineup (API-Football tactical lineup)
 matchRoutes.get('/:id/lineup', MatchController.getLineup);

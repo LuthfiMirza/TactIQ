@@ -196,12 +196,36 @@ export interface TrackingStartResponse {
 
 export type DataMode = 'live' | 'cached' | 'demo';
 
+export interface ProviderCapabilities {
+  live: boolean;
+  lineup: boolean;
+  events: boolean;
+  stats: boolean;
+  injuries: boolean;
+  delayed: boolean;
+}
+
+export interface ProviderHealthInfo {
+  provider: string;
+  status: 'available' | 'unavailable' | 'exhausted' | 'demo';
+  capabilities: ProviderCapabilities;
+  remainingQuota: number | null;
+  dailyQuota: number | null;
+  resetAt: string | null;
+  lastError: string | null;
+  lastSync: string | null;
+}
+
 export interface DataProvenanceMeta {
   source: string;
   fetchedAt: string;
   isStale: boolean;
   mode: DataMode;
-  status?: 'available' | 'unavailable' | 'stale';
+  status?: 'available' | 'unavailable' | 'exhausted' | 'stale';
+  isDelayed?: boolean;
+  missingCapabilities?: string[];
+  provider?: string;
+  reason?: string;
   error?: string;
   total?: number;
   page?: number;
@@ -258,5 +282,89 @@ export interface ServerToClientEvents {
     awayScore: number;
     mode: 'live' | 'demo';
   }) => void;
+}
+
+// -----------------------------------------------------------------------------
+// 7. FASE 2: Live Ingestion Domain Contracts
+// -----------------------------------------------------------------------------
+
+export interface MatchEventDTO {
+  id: string;
+  fixtureId: string;
+  minute: number;
+  extraMinute?: number | null;
+  teamName: string;
+  playerName: string;
+  assistName?: string | null;
+  type: string;
+  detail?: string | null;
+  source: string;
+}
+
+export interface MatchLineupPlayerDTO {
+  id?: number;
+  number: number;
+  name: string;
+  pos: string;
+  grid?: string | null;
+  photoUrl?: string;
+}
+
+export interface MatchLineupTeamDTO {
+  formation: string;
+  teamName: string;
+  coachName?: string | null;
+  startXI: MatchLineupPlayerDTO[];
+  substitutes: MatchLineupPlayerDTO[];
+}
+
+export interface MatchLineupBundleDTO {
+  home: MatchLineupTeamDTO | null;
+  away: MatchLineupTeamDTO | null;
+}
+
+export interface MatchStatItemDTO {
+  label: string;
+  homeVal: string | number;
+  awayVal: string | number;
+  homeNum: number;
+  awayNum: number;
+}
+
+export interface MatchStatsBundleDTO {
+  period: string; // 'ALL' | '1ST' | '2ND'
+  top: MatchStatItemDTO[];
+  shots: MatchStatItemDTO[];
+  passes: MatchStatItemDTO[];
+  defence: MatchStatItemDTO[];
+  xG?: {
+    home: number | null;
+    away: number | null;
+    available: boolean;
+    reason?: string;
+  };
+}
+
+export interface MatchInjuryDTO {
+  teamName: string;
+  playerName: string;
+  type?: string | null;
+  reason?: string | null;
+  source?: string;
+}
+
+export interface HomeTickerItemDTO {
+  fixtureId: string;
+  league: string;
+  homeTeam: string;
+  homeScore: number | null;
+  homeLogo?: string;
+  awayTeam: string;
+  awayScore: number | null;
+  awayLogo?: string;
+  status: MatchStatus | 'HT' | 'FT' | 'LIVE';
+  minute: number;
+  matchDate: string;
+  mode: DataMode;
 }
 

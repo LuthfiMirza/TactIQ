@@ -37,6 +37,8 @@ model Team {
   code         String    @unique
   logoUrl      String
   league       String
+  externalId   String?
+  provider     String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -49,6 +51,7 @@ model Team {
 
   @@index([name])
   @@index([league])
+  @@index([externalId])
   @@map("teams")
 }
 
@@ -100,15 +103,27 @@ model Fixture {
   homeScore   Int?
   awayScore   Int?
   venue       String
+  externalId  String?
+  provider    String?
+  source      String      @default("database-seed")
+  fetchedAt   DateTime?
+  isStale     Boolean     @default(false)
+  isDelayed   Boolean     @default(false)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   homeTeam    Team        @relation("HomeTeamFixtures", fields: [homeTeamId], references: [id], onDelete: Cascade)
   awayTeam    Team        @relation("AwayTeamFixtures", fields: [awayTeamId], references: [id], onDelete: Cascade)
 
+  events      MatchEvent[]
+  lineups     MatchLineup[]
+  statistics  MatchStatistic[]
+  injuries    MatchInjury[]
+
   @@index([matchDate])
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([externalId])
   @@map("fixtures")
 }
 
@@ -171,6 +186,10 @@ model Standing {
   goalsAgainst   Int      @default(0)
   goalDifference Int      @default(0)
   points         Int      @default(0)
+  externalId     String?
+  provider       String?
+  source         String   @default("database-seed")
+  fetchedAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -179,3 +198,113 @@ model Standing {
   @@index([position])
   @@map("league_standings")
 }
+
+// ---------------------------------------------------------
+// FASE 2: Live Ingestion Models & Provider Data Persistence
+// ---------------------------------------------------------
+
+model MatchEvent {
+  id          String   @id @default(uuid())
+  fixtureId   String
+  minute      Int
+  extraMinute Int?
+  teamName    String
+  playerName  String
+  assistName  String?
+  type        String   // 'Goal', 'Card', 'subst', 'Var'
+  detail      String?  // 'Normal Goal', 'Yellow Card', etc.
+  source      String   @default("api-football")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@index([fixtureId])
+  @@index([minute])
+  @@map("match_events")
+}
+
+model MatchLineup {
+  id          String   @id @default(uuid())
+  fixtureId   String
+  teamSide    String   // 'home' | 'away'
+  teamName    String
+  formation   String   // e.g. '4-3-3', '4-2-3-1'
+  coachName   String?
+  startXI     Json     // [{ id, number, name, pos, grid }]
+  substitutes Json     // [{ id, number, name, pos }]
+  source      String   @default("api-football")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@unique([fixtureId, teamSide])
+  @@map("match_lineups")
+}
+
+model MatchStatistic {
+  id          String   @id @default(uuid())
+  fixtureId   String
+  period      String   @default("ALL") // 'ALL', '1ST', '2ND'
+  homeStats   Json     // { possession, shotsTotal, shotsOnTarget, passes, passAccuracy, corners, fouls, xG }
+  awayStats   Json     // { possession, shotsTotal, shotsOnTarget, passes, passAccuracy, corners, fouls, xG }
+  source      String   @default("api-football")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@unique([fixtureId, period])
+  @@map("match_statistics")
+}
+
+model MatchInjury {
+  id          String   @id @default(uuid())
+  fixtureId   String
+  teamName    String
+  playerName  String
+  type        String?  // 'Missing Fixture' | 'Questionable'
+  reason      String?  // e.g. 'Hamstring Injury'
+  source      String   @default("api-football")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+
+  @@index([fixtureId])
+  @@map("match_injuries")
+}
+
+model ProviderMapping {
+  id          String   @id @default(uuid())
+  provider    String   // e.g. 'api-football', 'football-data'
+  entityType  String   // 'team' | 'fixture' | 'player' | 'league'
+  internalId  String
+  externalId  String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([provider, entityType, externalId])
+  @@index([internalId])
+  @@map("provider_mappings")
+}
+
+model ProviderFixtureMap {
+  id                String   @id @default(uuid())
+  provider          String   // 'api-football' | 'highlightly' | 'football-data'
+  providerFixtureId String
+  internalFixtureId String?
+  matchKey          String   // e.g. "Arsenal_Chelsea_2026-10-01"
+  status            String   @default("resolved") // "resolved" | "unresolved"
+  kickoff           DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([provider, providerFixtureId])
+  @@index([internalFixtureId])
+  @@index([matchKey])
+  @@map("provider_fixture_map")
+}
+

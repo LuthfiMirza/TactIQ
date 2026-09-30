@@ -542,6 +542,9 @@ export default function MatchCenterPage() {
     winProbAway: number;
     isLiveFeed?: boolean;
     isDemo?: boolean;
+    isDelayed?: boolean;
+    isLimited?: boolean;
+    missingCapabilities?: string[];
     mode?: 'live' | 'cached' | 'demo';
     events?: Array<{ minute: number; team: string; player: string; type: string; detail?: string }>;
   }>(DEFAULT_DEMO_MATCH);
@@ -608,6 +611,9 @@ export default function MatchCenterPage() {
       winProbDraw: pDraw,
       winProbAway: pAway,
       isLiveFeed: true,
+      isDelayed: Boolean(m.isDelayed),
+      isLimited: Boolean(m.isLimited || (m.missingCapabilities && m.missingCapabilities.length > 0)),
+      missingCapabilities: m.missingCapabilities || [],
       events: m.events || [],
     });
 
@@ -1662,16 +1668,27 @@ export default function MatchCenterPage() {
                       
                       {currentStatus === 'LIVE' ? (
                         <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
-                          {!activeMatch.isLiveFeed && (
+                          {activeMatch.isDelayed ? (
+                            <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold tracking-wider">
+                              DELAYED
+                            </span>
+                          ) : activeMatch.isLimited ? (
+                            <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300 font-bold tracking-wider">
+                              LIMITED
+                            </span>
+                          ) : !activeMatch.isLiveFeed ? (
                             <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold">
                               DEMO
                             </span>
+                          ) : (
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                            </span>
                           )}
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-                          </span>
-                          <span className="text-[11px] sm:text-xs font-semibold text-emerald-500 dark:text-emerald-400 whitespace-nowrap">
+                          <span className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap ${
+                            activeMatch.isDelayed ? 'text-amber-400' : activeMatch.isLimited ? 'text-blue-400' : 'text-emerald-500 dark:text-emerald-400'
+                          }`}>
                             {periodInfo.statusText}
                           </span>
                         </div>
@@ -2071,6 +2088,16 @@ export default function MatchCenterPage() {
             {/* 2. TAB STATS (Saat LIVE / FINISHED) */}
             {matchTab === 'stats' && (
               <div className="rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-6 shadow-xs space-y-4 sm:space-y-6">
+                {(activeMatch.isDelayed || (activeMatch.missingCapabilities && activeMatch.missingCapabilities.includes('stats'))) && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
+                    <span className="font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40">
+                      {activeMatch.isDelayed ? 'DELAYED' : 'LIMITED'}
+                    </span>
+                    <span>
+                      Detailed match statistics (possession, shots, passes) are not available from the active provider in fallback mode.
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-center p-1 bg-slate-100/80 dark:bg-zinc-800/70 rounded-full w-full sm:w-fit mx-auto gap-1 border border-slate-200/50 dark:border-zinc-700/50">
                   {(['ALL', '1ST', '2ND'] as const).map((period) => {
                     const isActive = statsPeriod === period;
@@ -2241,6 +2268,16 @@ export default function MatchCenterPage() {
             {/* 4. TAB LINEUPS (Unwrapped Stage) */}
             {matchTab === 'lineups' && (
               <div className="flex flex-col gap-2.5 sm:gap-3">
+                {(activeMatch.isDelayed || (activeMatch.missingCapabilities && activeMatch.missingCapabilities.includes('lineup'))) && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
+                    <span className="font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40">
+                      {activeMatch.isDelayed ? 'DELAYED' : 'LIMITED'}
+                    </span>
+                    <span>
+                      Official lineups are not available from the active provider in fallback mode. Tactical pitch displays projected standard positions.
+                    </span>
+                  </div>
+                )}
                 
                 {/* Header Desktop (>= md) */}
                 <div className="hidden md:flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-100/70 dark:bg-[#16161A] border border-slate-200/60 dark:border-[#27272A] text-xs">

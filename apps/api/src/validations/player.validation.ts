@@ -16,4 +16,10 @@ export const PlayerQuerySchema = z.object({
     .min(0, 'minPace cannot be less than 0')
     .max(100, 'minPace cannot exceed 100')
     .optional(),
+  page: z.coerce.number().int().min(1).default(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20).optional(),
+  minAge: z.coerce.number().int().min(14).max(60).optional(),
+  maxAge: z.coerce.number().int().min(14).max(60).optional(),
+  minMarketValue: z.coerce.number().min(0).optional(),
+  maxMarketValue: z.coerce.number().min(0).optional(),
 });

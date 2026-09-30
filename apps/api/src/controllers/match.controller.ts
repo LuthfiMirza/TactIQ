@@ -369,27 +369,67 @@ export class MatchController {
   }
 
   /**
+   * GET /api/v1/matches/home-ticker
+   * Live in-play or scheduled fixtures for top marquee
+   */
+  public static async getHomeTicker(_req: Request, res: Response): Promise<void> {
+    try {
+      const { liveIngestionService } = await import('../services/liveIngestion.service.js');
+      const result = await liveIngestionService.getHomeTicker();
+      res.json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString(),
+        meta: result.meta,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'HOME_TICKER_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/matches/:id/events
+   * Real match timeline events (goals, cards, substitutions, VAR)
+   */
+  public static async getEvents(req: Request, res: Response): Promise<void> {
+    try {
+      const { liveIngestionService } = await import('../services/liveIngestion.service.js');
+      const result = await liveIngestionService.getMatchEvents(req.params.id);
+      res.json({
+        success: true,
+        data: result.data,
+        timestamp: new Date().toISOString(),
+        meta: result.meta,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: { code: 'EVENTS_FAILED', message: (error as Error).message },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
    * GET /api/v1/matches/:id/lineup
    * Confirmed tactical lineups (formations, startXI, subs)
    */
   public static async getLineup(req: Request, res: Response): Promise<void> {
     try {
-      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const { liveIngestionService } = await import('../services/liveIngestion.service.js');
       const homeName = (req.query.home as string) || '';
       const awayName = (req.query.away as string) || '';
-      const lineup = await ApiFootballService.getMatchLineup(req.params.id, homeName, awayName);
-      const mode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+      const result = await liveIngestionService.getMatchLineup(req.params.id, homeName, awayName);
 
       res.json({
         success: true,
-        data: lineup,
+        data: result.data,
         timestamp: new Date().toISOString(),
-        meta: {
-          source: mode === 'live' ? 'API-Football Lineups API' : 'TactIQ Confirmed Roster Seed',
-          fetchedAt: new Date().toISOString(),
-          isStale: false,
-          mode,
-        },
+        meta: result.meta,
       });
     } catch (error) {
       res.status(500).json({
@@ -401,24 +441,37 @@ export class MatchController {
   }
 
   /**
-   * GET /api/v1/matches/preview/absentees
-   * Transfermarkt injury and suspension intelligence
+   * GET /api/v1/matches/preview/absentees & GET /api/v1/matches/:id/absentees
+   * Real provider injury and suspension intelligence (no static mock array)
    */
   public static async getAbsentees(req: Request, res: Response): Promise<void> {
     try {
-      const { TransfermarktService } = await import('../services/transfermarkt.service.js');
-      const homeCode = (req.query.home as string) || 'MCI';
-      const awayCode = (req.query.away as string) || 'ARS';
-      const absentees = await TransfermarktService.getMatchPreviewAbsentees(homeCode, awayCode);
+      const { liveIngestionService } = await import('../services/liveIngestion.service.js');
+      const fixtureId = (req.query.fixtureId as string) || (req.query.id as string) || req.params.id;
+
+      if (fixtureId) {
+        const result = await liveIngestionService.getMatchInjuries(fixtureId);
+        res.json({
+          success: true,
+          data: result.data,
+          timestamp: new Date().toISOString(),
+          meta: result.meta,
+        });
+        return;
+      }
+
+      // No fixture provided: honestly state unavailable without static mock
       res.json({
         success: true,
-        data: absentees,
+        data: [],
         timestamp: new Date().toISOString(),
         meta: {
-          source: 'Transfermarkt Verified Reports (Static Seed)',
+          source: 'api-football',
           fetchedAt: new Date().toISOString(),
-          isStale: true,
-          mode: 'demo',
+          isStale: false,
+          mode: (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo',
+          status: 'unavailable',
+          reason: 'Specify fixtureId parameter to query live injury data. Static Transfermarkt mock data has been deprecated.',
         },
       });
     } catch (error) {
@@ -436,22 +489,16 @@ export class MatchController {
    */
   public static async getStatistics(req: Request, res: Response): Promise<void> {
     try {
-      const { ApiFootballService } = await import('../services/apiFootball.service.js');
+      const { liveIngestionService } = await import('../services/liveIngestion.service.js');
       const homeName = (req.query.home as string) || '';
       const awayName = (req.query.away as string) || '';
-      const stats = await ApiFootballService.getMatchStatistics(req.params.id, homeName, awayName);
-      const mode = (process.env.DATA_MODE || 'demo') === 'live' ? 'live' : 'demo';
+      const result = await liveIngestionService.getMatchStatistics(req.params.id, homeName, awayName);
 
       res.json({
         success: true,
-        data: stats,
+        data: result.data,
         timestamp: new Date().toISOString(),
-        meta: {
-          source: mode === 'live' ? 'API-Football Statistics API' : 'TactIQ Stats Engine',
-          fetchedAt: new Date().toISOString(),
-          isStale: false,
-          mode,
-        },
+        meta: result.meta,
       });
     } catch (error) {
       res.status(500).json({

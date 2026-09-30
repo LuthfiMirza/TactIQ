@@ -236,3 +236,68 @@ Sebelum melangkah ke **FASE 1 (Riset Provider)** dan **FASE 2 (Implementasi Inge
 
 ---
 *Laporan Fase 0 selesai dan disahkan. Eksekusi ditahan sesuai aturan hingga user memberikan instruksi dan jawaban atas pertanyaan di atas.*
+
+---
+
+## 7. Implementasi & Audit Fase 2: Multi-Provider Ingestion Architecture
+
+Sesuai arahan arsitektur Fase 2, sistem data live TactIQ telah ditingkatkan dari polling statis menjadi **Multi-Provider Ingestion Chain dengan Circuit Breaker dan Schedule-Aware Adaptive Scheduler**.
+
+### 7.1 Eksekusi GERBANG 0 (Verifikasi Kredensial Nyata)
+Panggilan langsung ke endpoint status API-Football (`https://v3.football.api-sports.io/status`) dengan key di `.env`:
+- **Hasil**: HTTP 200 dengan payload `errors: {"requests": "You have reached the request limit for the day, Go to https://dashboard.api-football.com to upgrade your plan."}`.
+- **Konfirmasi**: Key terdaftar tetapi kuota harian (100 req/hari) telah habis. Ini membuktikan secara empiris pentingnya **Circuit Breaker** otomatis yang langsung mengalihkan beban ke provider cadangan tanpa merusak ketersediaan sistem.
+
+### 7.2 Verifikasi Provider & Capability Matrix
+Setiap provider diimplementasikan di balik kontrak interface `FootballDataProvider` dengan capability flags yang jujur:
+
+| Provider | Peran | Kuota Free Tier | Capabilities | Status Header Kuota | Catatan Resmi |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **API-Football** (`api-sports.io`) | Primary | 100 req/hari (10 req/menit) | `live: true`, `lineup: true`, `events: true`, `stats: true`, `injuries: true`, `delayed: false` | `x-ratelimit-requests-remaining` | Provider terlengkap; trip ke EXHAUSTED jika 429 atau kuota 0 s/d 00:00 UTC. |
+| **Highlightly** (`highlightly.net` / RapidAPI) | Backup 1 | 100 req/hari | `live: true`, `lineup: true`, `events: true`, `stats: false`, `injuries: false`, `delayed: false` | `x-ratelimit-requests-remaining` | Menyediakan skor live, lineup, dan event. Tidak menyediakan statistik agregat/injuries (ditandai `missingCapabilities: ['stats', 'injuries']`). |
+| **football-data.org** | Backup 2 | 10 req/menit | `live: false`, `lineup: false`, `events: false`, `stats: false`, `injuries: false`, `delayed: true` | `x-requests-available-minute` | Khusus jadwal, klasemen, dan skor tertunda (delayed). Lineup/stats mengembalikan `null` dengan alasan jujur. UI menampilkan badge `DELAYED`. |
+
+### 7.3 Scheduler Sadar Jadwal & Polling Adaptif
+1. **Sinkronisasi Harian**: 1 request harian mengambil jadwal semua liga yang dipantau (`tracked_leagues: [39 (EPL), 140 (La Liga), 2 (UCL)]`) ke database.
+2. **Jendela Live**: Dihitung dari `kickoff - 10m` sampai dengan `kickoff + 125m`.
+   - Di luar jendela live: **0 polling** (menghemat kuota 100%).
+   - Jika status pertandingan `FT` (Full Time) atau tidak ada klien web/socket yang terhubung: polling otomatis dihentikan.
+3. **Single-Flight Coalescing**: Semua panggilan bersamaan ke endpoint skor live menggunakan satu promise bersama (`fetchLiveScoresSingleFlight`), mencegah pemborosan kuota oleh multi-klien.
+4. **Formula Interval Adaptif**:
+   $$\text{Interval} = \max\left(\text{minInterval}, \left\lfloor\frac{\text{sisaDetikJendela}}{\text{sisaKuota} - \text{cadanganSafety}}\right\rfloor\right)$$
+   Contoh: Sisa jendela 90 menit (5400s) dengan sisa kuota 15 req $\rightarrow \max(60, \lfloor 5400 / 10 \rfloor) = 540$ detik (9 menit). Sistem otomatis menghemat sisa kuota agar tidak habis sebelum laga tuntas.
+
+### 7.4 Tabel `provider_fixture_map` & Resolusi Fuzzy
+- Dibuat tabel `provider_fixture_map` (migrasi reversibel `02_live_ingestion_schema.up.sql` dan `02_live_ingestion_schema.down.sql`).
+- Memetakan `providerFixtureId` ke `internalFixtureId` berdasarkan normalisasi nama tim dan jendela kickoff $\pm 2$ jam.
+- Jika terdapat ambiguitas (lebih dari 1 kandidat yang mirip), sistem **tidak menggabungkan secara sembrono**, melainkan menandai status sebagai `'unresolved'`.
+
+### 7.5 Kejujuran Data & UI Badging
+- Respons payload membawa `source`, `mode` (`live`/`cached`/`demo`), `isDelayed`, `isStale`, dan `missingCapabilities`.
+- Jika provider aktif tidak memiliki kemampuan tertentu (misal fallback ke football-data.org tanpa lineup/stats), API mengembalikan `data: null` atau array kosong dengan alasan eksplisit (bukan data karangan).
+- Di UI Match Center:
+  - Mode Delay $\rightarrow$ badge **`DELAYED`** (kuning/amber) dengan catatan waktu delay.
+  - Mode Terbatas $\rightarrow$ badge **`LIMITED`** (biru) dengan penjelasan kapabilitas yang tidak didukung.
+  - Mode Demo $\rightarrow$ badge **`DEMO`** (oranye).
+  - Mode Real-time Live $\rightarrow$ badge **`LIVE`** (hijau dengan animasi pulsing).
+
+### 7.6 Endpoint Observabilitas (`/api/v1/health/data`)
+Menampilkan status per provider secara transparan:
+- `activeProvider`: Provider yang saat ini melayani request.
+- `providers`: Array status ketiga provider (status, remaining quota, daily quota, reset time, capabilities).
+- `switchHistory`: Catatan histori perpindahan provider beserta alasan pergantian.
+- `scheduler`: Status jendela live, jumlah listener aktif, dan status single-flight.
+
+### 7.7 Hasil Pengujian Otomatis
+Seluruh 22 tes unit pada 4 test suite berhasil lulus 100%:
+1. `src/__tests__/circuitBreakerFallback.test.ts` (6 tes): Lulus
+   - Simulasi 429 & kuota habis pada Primary $\rightarrow$ otomatis beralih ke Highlightly.
+   - Simulasi kegagalan Backup 1 $\rightarrow$ otomatis beralih ke football-data.org.
+   - Pembuktian kejujuran data (delayed: true, missingCapabilities, no fake data).
+   - Penyesuaian interval adaptif terhadap sisa kuota.
+   - Endpoint `/api/v1/health/data` mengekspos ketiga provider.
+   - Resolusi dan persistensi `provider_fixture_map`.
+2. `src/__tests__/liveIngestion.test.ts` (7 tes): Lulus
+   - Home ticker feed, events, lineup, statistics, absentees, pagination & filter usia/market value, dan token bucket health.
+3. `src/__tests__/honesty.test.ts` (5 tes): Lulus
+4. `src/__tests__/app.test.ts` (4 tes): Lulus

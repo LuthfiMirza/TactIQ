@@ -49,8 +49,42 @@ export class PlayerController {
         };
       }
 
+      // Pagination
+      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
+      const skip = (page - 1) * limit;
+
+      // Numeric filters on real columns (age, marketValue)
+      const parsedMinAge = req.query.minAge !== undefined ? Number(req.query.minAge) : undefined;
+      const parsedMaxAge = req.query.maxAge !== undefined ? Number(req.query.maxAge) : undefined;
+      const parsedMinVal = req.query.minMarketValue !== undefined ? Number(req.query.minMarketValue) : undefined;
+      const parsedMaxVal = req.query.maxMarketValue !== undefined ? Number(req.query.maxMarketValue) : undefined;
+
+      const minAge = parsedMinAge !== undefined && !Number.isNaN(parsedMinAge) ? Math.floor(parsedMinAge) : undefined;
+      const maxAge = parsedMaxAge !== undefined && !Number.isNaN(parsedMaxAge) ? Math.floor(parsedMaxAge) : undefined;
+      const minMarketValue = parsedMinVal !== undefined && !Number.isNaN(parsedMinVal) ? parsedMinVal : undefined;
+      const maxMarketValue = parsedMaxVal !== undefined && !Number.isNaN(parsedMaxVal) ? parsedMaxVal : undefined;
+
+      if (minAge !== undefined || maxAge !== undefined) {
+        whereClause.age = {
+          ...(minAge !== undefined ? { gte: minAge } : {}),
+          ...(maxAge !== undefined ? { lte: maxAge } : {}),
+        };
+      }
+
+      if (minMarketValue !== undefined || maxMarketValue !== undefined) {
+        whereClause.marketValue = {
+          ...(minMarketValue !== undefined ? { gte: minMarketValue } : {}),
+          ...(maxMarketValue !== undefined ? { lte: maxMarketValue } : {}),
+        };
+      }
+
+      const totalCount = await prisma.player.count({ where: whereClause });
+
       const players = await prisma.player.findMany({
         where: whereClause,
+        skip,
+        take: limit,
         include: {
           team: true,
           attributes: true,
@@ -100,7 +134,10 @@ export class PlayerController {
           fetchedAt: new Date().toISOString(),
           isStale: false,
           mode: 'demo',
-          total: playerDTOs.length,
+          total: totalCount,
+          page,
+          limit,
+          totalPages: Math.ceil(totalCount / limit),
         },
       };
 
