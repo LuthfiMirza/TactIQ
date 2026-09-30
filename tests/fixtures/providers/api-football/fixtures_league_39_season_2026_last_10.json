@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-10-01T07:14:57.717Z",
+  "endpoint": "/fixtures?league=39&season=2026&last=10",
+  "status": 200,
+  "headers": {
+    "x-ratelimit-requests-remaining": null,
+    "x-ratelimit-requests-limit": null,
+    "x-ratelimit-remaining": null
+  },
+  "body": {
+    "get": "fixtures",
+    "parameters": {
+      "league": "39",
+      "season": "2026",
+      "last": "10"
+    },
+    "errors": {
+      "plan": "Free plans do not have access to this season, try from 2022 to 2024."
+    },
+    "results": 0,
+    "paging": {
+      "current": 1,
+      "total": 1
+    },
+    "response": []
+  }
+}

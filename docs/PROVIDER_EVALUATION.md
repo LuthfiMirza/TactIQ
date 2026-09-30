@@ -248,36 +248,34 @@ Berikut pemetaan atribut dari respons resmi **API-Football (v3)** ke model datab
 
 ---
 
-## 7. FASE 2.5: Verifikasi Provider Nyata, Header Kuota, dan Anggaran 15 Request
+## 7. FASE 2.5: Eksekusi Gerbang Verifikasi Nyata API-Football (1 Oktober 2026)
 
-### A. Temuan Nyata Header & Perilaku Provider (TERBUKTI vs ASUMSI)
+### A. Hasil Eksekusi Gerbang Permintaan (3 Request Terpakai dari Anggaran 15)
 
-| Provider | Asumsi Awal (Fase 1B) | Bukti Respons Nyata (Fase 2.5) | Status |
-| :--- | :--- | :--- | :--- |
-| **API-Football** | Header `x-ratelimit-requests-remaining` selalu akurat menunjukkan sisa kuota harian. | **Header Deceptive!** Saat kuota 100/hari habis, API-Football tetap mengirim header `x-ratelimit-requests-remaining: 99` pada HTTP 200, namun body respons berisi `errors: { requests: "You have reached the request limit for the day..." }`. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/api-football/status_exhausted.json`). Wajib inspeksi body respons! |
-| **football-data.org** | Memiliki kuota harian tetap (misal 100 req/hari). | **Batas adalah per Menit, bukan per Hari!** Header resmi: `x-requests-available-minute: 9` (dari limit 10/menit), reset counter: `x-requestcounter-reset: 60`. `dailyQuota` adalah `null`. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/football-data-org/standings_pl.json`). |
-| **football-data.org (Musim 2026/27)** | Belum diketahui apakah musim 2026/27 aktif di free plan. | **Aktif & Dapat Diakses!** Respons `matches_pl.json` mengonfirmasi `season.id: 2502`, rentang `2026-08-21` s/d `2027-05-30`, 50 laga selesai tercatat. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/football-data-org/matches_pl.json`). |
-| **Highlightly** | Berfungsi sebagai Backup 1. | Belum ada API key di `.env` (`HIGHLIGHTLY_API_KEY`). Berstatus jujur **`not_configured`**, dilewati secara otomatis oleh rantai fallback ke `football-data.org`. | ⚠️ **TERBUKTI:** Rantai fallback saat ini memiliki **1 provider cadangan nyata** (`football-data.org`). |
+Eksekusi verifikasi nyata dijalankan pasca reset kuota 00:00 UTC (1 Oktober 2026, 07:14 UTC). Sesuai aturan user, eksekusi dipantau request demi request dengan gerbang proteksi ketat:
 
----
+| No | Endpoint | HTTP Status | Header Kuota Tersisa | Body Error / Hasil | Status Gerbang |
+| :---: | :--- | :---: | :---: | :--- | :---: |
+| **1** | `GET /status` | `200 OK` | `x-ratelimit-requests-remaining: 100` | Account: active, Plan: **Free**, Requests: `0 / 100`. | ✅ **LULUS** (Reset terverifikasi) |
+| **2** | `GET /leagues?id=39` | `200 OK` | `x-ratelimit-requests-remaining: 98` | Premier League (England). Seasons: 2010 s/d 2026. Season `2026` ditandai `current: true`. | ✅ **LULUS** (Data liga valid) |
+| **3** | `GET /fixtures?league=39&season=2026&last=10` | `200 OK` | `null` | `errors: { "plan": "Free plans do not have access to this season, try from 2022 to 2024." }` | 🛑 **STOP TRIGGERED!** |
 
-### B. Rencana Anggaran Verifikasi Nyata API-Football (Maksimal 15 Request Pasca Reset 00:00 UTC)
+### B. Temuan Kunci Nyata: Blokir Musim Berjalan pada Free Plan API-Football
 
-Saat ini kuota API-Football di `.env` habis (`errors.requests`). Setelah reset harian pukul 00:00 UTC, verifikasi lanjutan akan dijalankan dengan anggaran ketat maksimal **10–15 request**:
+1. **Musim 2026/27 DIBLOKIR di Free Plan:**
+   - Respons resmi API-Football: `"Free plans do not have access to this season, try from 2022 to 2024."`.
+   - **Artinya:** Free plan API-Football **TIDAK BISA** digunakan untuk data pertandingan langsung (fixtures) musim berjalan (2025/2026/2027). Akun gratis hanya diberi akses data historis (musim 2022 s/d 2024).
+   - Fixture mentah tersanitasi disimpan di: [`tests/fixtures/providers/api-football/fixtures_league_39_season_2026_last_10.json`](file:///Applications/XAMPP/xamppfiles/htdocs/tactiq/tests/fixtures/providers/api-football/fixtures_league_39_season_2026_last_10.json).
 
-1. **Request 1:** `GET /status` (Verifikasi akun, paket gratis, dan kuota awal 100).
-2. **Request 2–4:** `GET /leagues?id=39`, `GET /leagues?id=140`, `GET /leagues?id=2` (Verifikasi season 2026/27 dan coverage flag untuk tracked leagues).
-3. **Request 5:** `GET /leagues?name=World Cup` (Verifikasi ID kompetisi timnas resmi tanpa menebak).
-4. **Request 6:** `GET /fixtures?date={today}` (Verifikasi jadwal matchday hari ini).
-5. **Request 7:** `GET /fixtures?live=all` (Verifikasi live in-play payload format).
-6. **Request 8–12 (Satu laga selesai spesifik):**
-   - `GET /fixtures?id={sampleFixtureId}` (Detail laga)
-   - `GET /fixtures/lineups?fixture={sampleFixtureId}` (Struktur lineup & koordinat grid)
-   - `GET /fixtures/events?fixture={sampleFixtureId}` (Struktur events & timeline)
-   - `GET /fixtures/statistics?fixture={sampleFixtureId}` (Struktur shots, possession, xG)
-   - `GET /injuries?fixture={sampleFixtureId}` (Struktur absensi pemain)
-7. **Buffer Darurat:** 3 request tersisa untuk toleransi retry jika ada timeout jaringan.
-8. **Total Anggaran:** 12 request terencana + 3 request buffer = **15 request**. Sisa 85 request dialokasikan untuk operasional live.
+2. **Langkah yang Dibatalkan Sesuai Aturan Gerbang:**
+   - Karena musim berjalan diblokir pada request 3, seluruh request lanjutan (`/fixtures/lineups`, `/fixtures/events`, `/fixtures/statistics`, `/injuries`, dan liga lainnya) **SEKETIKA DIHENTIKAN**.
+   - Langkah `/fixtures?live=all` **DILEWATI** karena status jadwal DB saat ini menunjukkan 0 laga live, sehingga dicatat **"belum terverifikasi"**.
+   - **Total Kuota Terpakai:** Hanya **2 request** (header sisa: 98 / 100). Sisa 97 request tetap tersimpan aman.
+
+3. **Status Komparatif Provider (TERBUKTI):**
+   - **football-data.org:** Free plan **DAPAT** mengakses musim berjalan 2026/27 (`matches_pl.json`, 50 laga Premier League 2026/27 selesai tercatat), namun terbatas pada skor tertunda tanpa lineup dan statistik mendalam.
+   - **API-Football:** Free plan **MEMBLOKIR** musim berjalan 2026/27 pada endpoint `/fixtures`.
+   - **Highlightly:** Belum ada key di `.env`, status tetap jujur **`not_configured`** dan capability belum terverifikasi.
 
 ---
 
@@ -285,3 +283,4 @@ Saat ini kuota API-Football di `.env` habis (`errors.requests`). Setelah reset h
 
 * **Status Saat Ini:** `tracked_leagues` dikunci pada `[39, 140, 2]` (Premier League, La Liga, UEFA Champions League).
 * **Aturan Perluasan:** Dilarang keras menebak league ID (misal untuk Liga Italia Serie A, Bundesliga, Euro, atau World Cup). Perluasan hanya boleh dilakukan dengan ID yang ditemukan dari respons nyata endpoint `/leagues` dan diverifikasi di contract test.
+

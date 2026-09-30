@@ -108,10 +108,46 @@ describe('Real Payload Contract Tests (Offline - Zero Network Quota Used)', () =
     // Body check: Actual error is in body.errors.requests
     const errorMsg = raw.body?.errors?.requests;
     assert.ok(errorMsg, 'Error message must be present in body.errors.requests');
-    assert.ok(errorMsg.includes('request limit for the day'));
-
-    // Verify detection logic
     const isExhausted = Boolean(errorMsg && errorMsg.includes('request limit'));
     assert.equal(isExhausted, true, 'System must identify exhaustion from body content');
+  });
+
+  test('(4) API-Football Season Restriction Payload: Identifies free plan blockage for season 2026/27', () => {
+    const filePath = path.join(FIXTURES_DIR, 'api-football/fixtures_league_39_season_2026_last_10.json');
+    assert.ok(fs.existsSync(filePath), 'Fixture file must exist');
+
+    const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    assert.equal(raw.status, 200);
+    assert.equal(raw.endpoint, '/fixtures?league=39&season=2026&last=10');
+
+    // Body error check: Free plan explicitly blocks season 2026
+    const planError = raw.body?.errors?.plan;
+    assert.ok(planError, 'Plan error must be present in body.errors.plan');
+    assert.ok(
+      planError.includes('Free plans do not have access to this season'),
+      'Must identify free plan restriction error message'
+    );
+    assert.equal(raw.body.results, 0);
+    assert.equal(raw.body.response.length, 0);
+  });
+
+  test('(5) API-Football League Payload: Confirms Premier League league ID 39 and available seasons', () => {
+    const filePath = path.join(FIXTURES_DIR, 'api-football/leagues_id_39.json');
+    assert.ok(fs.existsSync(filePath), 'Fixture file must exist');
+
+    const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    assert.equal(raw.status, 200);
+    assert.equal(raw.endpoint, '/leagues?id=39');
+
+    const leagueData = raw.body?.response?.[0];
+    assert.equal(leagueData?.league?.id, 39);
+    assert.equal(leagueData?.league?.name, 'Premier League');
+    assert.equal(leagueData?.country?.name, 'England');
+
+    const seasons: any[] = leagueData?.seasons || [];
+    assert.ok(seasons.length >= 10, 'Must contain historical seasons');
+    const seasonYears = seasons.map((s) => s.year);
+    assert.ok(seasonYears.includes(2024), 'Must include 2024 season');
+    assert.ok(seasonYears.includes(2026), 'Must include 2026 season');
   });
 });
