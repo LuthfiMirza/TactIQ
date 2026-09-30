@@ -6,12 +6,14 @@ import {
 import {
   ProviderCapabilities,
   ProviderHealthInfo,
+  ProviderStatus,
   MatchEventDTO,
   MatchLineupBundleDTO,
   MatchStatsBundleDTO,
   MatchInjuryDTO,
 } from '@tactiq/shared-types';
 import { LiveScoreMatch } from '../services/apiFootball.service.js';
+import { providerStateStore } from './providerStateStore.js';
 
 export class HighlightlyProvider implements FootballDataProvider {
   public readonly name = 'highlightly';
@@ -25,10 +27,13 @@ export class HighlightlyProvider implements FootballDataProvider {
   };
 
   private static readonly BASE_URL = process.env.HIGHLIGHTLY_API_URL || 'https://sports.highlightly.net/football';
-  private remainingQuota: number = 100;
-  private dailyQuota: number = 100;
+  private remainingQuota: number | 'unknown' = 'unknown';
+  private dailyQuota: number | 'unknown' = 'unknown';
+  private lastVerifiedAt: string | null = null;
+  private quotaHeaderName: string | null = null;
   private lastError: string | null = null;
   private lastSync: string | null = null;
+  private status: ProviderStatus = 'not_configured';
 
   private circuitBreaker: CircuitBreakerState = {
     status: 'CLOSED',
@@ -37,6 +42,36 @@ export class HighlightlyProvider implements FootballDataProvider {
     lastError: null,
     lastAttemptAt: null,
   };
+
+  constructor() {
+    const hasKey = Boolean(process.env.HIGHLIGHTLY_API_KEY || process.env.RAPIDAPI_KEY || process.env.HIGHLIGHTLY_KEY);
+    providerStateStore.getState(this.name, hasKey).then((s) => {
+      this.remainingQuota = s.remainingQuota;
+      this.dailyQuota = s.dailyQuota !== null ? s.dailyQuota : 'unknown';
+      this.lastVerifiedAt = s.lastVerifiedAt;
+      this.lastError = s.lastError;
+      this.lastSync = s.lastSync;
+      this.status = s.status;
+      this.circuitBreaker = {
+        ...this.circuitBreaker,
+        ...s.circuitBreaker,
+      };
+    }).catch(() => {});
+  }
+
+  private persistState(): void {
+    providerStateStore.updateMemoryState(this.name, {
+      status: this.status,
+      remainingQuota: this.remainingQuota,
+      dailyQuota: this.dailyQuota,
+      quotaHeaderName: this.quotaHeaderName,
+      lastVerifiedAt: this.lastVerifiedAt,
+      resetAt: this.circuitBreaker.exhaustedUntil || this.getNextUtcMidnight(),
+      lastError: this.lastError,
+      lastSync: this.lastSync,
+      circuitBreaker: this.circuitBreaker,
+    });
+  }
 
   public getCircuitBreakerState(): CircuitBreakerState {
     this.checkCircuitBreakerReset();
@@ -48,7 +83,9 @@ export class HighlightlyProvider implements FootballDataProvider {
     this.circuitBreaker.status = 'EXHAUSTED';
     this.circuitBreaker.lastError = reason;
     this.circuitBreaker.exhaustedUntil = until;
+    this.status = 'exhausted';
     this.lastError = reason;
+    this.persistState();
     console.warn(`⚡ [HighlightlyProvider] Circuit breaker TRIPPED (EXHAUSTED). Reason: ${reason}. Reset at: ${until}`);
   }
 
@@ -58,6 +95,9 @@ export class HighlightlyProvider implements FootballDataProvider {
     this.circuitBreaker.exhaustedUntil = null;
     this.circuitBreaker.lastError = null;
     this.lastError = null;
+    const hasKey = Boolean(process.env.HIGHLIGHTLY_API_KEY || process.env.RAPIDAPI_KEY || process.env.HIGHLIGHTLY_KEY);
+    this.status = !hasKey ? 'not_configured' : (this.lastVerifiedAt ? 'available' : 'unknown');
+    this.persistState();
     console.log(`🔌 [HighlightlyProvider] Circuit breaker RESET to CLOSED.`);
   }
 
@@ -77,8 +117,25 @@ export class HighlightlyProvider implements FootballDataProvider {
 
   public getHealthStatus(): ProviderHealthInfo {
     this.checkCircuitBreakerReset();
-    const apiKey = process.env.HIGHLIGHTLY_API_KEY;
+    const apiKey = process.env.HIGHLIGHTLY_API_KEY || process.env.RAPIDAPI_KEY || process.env.HIGHLIGHTLY_KEY;
     const isLive = (process.env.DATA_MODE || 'demo') === 'live';
+
+    if (!apiKey) {
+      return {
+        provider: this.name,
+        status: 'not_configured',
+        capabilities: this.capabilities,
+        remainingQuota: 'unknown',
+        dailyQuota: 'unknown',
+        perMinuteLimit: null,
+        remainingPerMinute: null,
+        quotaHeaderName: null,
+        lastVerifiedAt: null,
+        resetAt: null,
+        lastError: 'HIGHLIGHTLY_API_KEY not configured in environment',
+        lastSync: this.lastSync,
+      };
+    }
 
     if (!isLive) {
       return {
@@ -87,31 +144,33 @@ export class HighlightlyProvider implements FootballDataProvider {
         capabilities: this.capabilities,
         remainingQuota: this.remainingQuota,
         dailyQuota: this.dailyQuota,
+        perMinuteLimit: null,
+        remainingPerMinute: null,
+        quotaHeaderName: this.quotaHeaderName,
+        lastVerifiedAt: this.lastVerifiedAt,
         resetAt: this.getNextUtcMidnight(),
         lastError: null,
         lastSync: this.lastSync,
       };
     }
 
-    if (!apiKey) {
-      return {
-        provider: this.name,
-        status: 'unavailable',
-        capabilities: this.capabilities,
-        remainingQuota: 0,
-        dailyQuota: this.dailyQuota,
-        resetAt: null,
-        lastError: 'HIGHLIGHTLY_API_KEY is not configured',
-        lastSync: this.lastSync,
-      };
-    }
+    const currentStatus: ProviderStatus =
+      this.circuitBreaker.status === 'EXHAUSTED'
+        ? 'exhausted'
+        : this.lastVerifiedAt
+        ? 'available'
+        : 'unknown';
 
     return {
       provider: this.name,
-      status: this.circuitBreaker.status === 'EXHAUSTED' ? 'exhausted' : 'available',
+      status: currentStatus,
       capabilities: this.capabilities,
       remainingQuota: this.remainingQuota,
       dailyQuota: this.dailyQuota,
+      perMinuteLimit: null,
+      remainingPerMinute: null,
+      quotaHeaderName: this.quotaHeaderName,
+      lastVerifiedAt: this.lastVerifiedAt,
       resetAt: this.circuitBreaker.exhaustedUntil || this.getNextUtcMidnight(),
       lastError: this.lastError,
       lastSync: this.lastSync,

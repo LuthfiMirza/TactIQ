@@ -13,6 +13,13 @@ export interface SchedulerStatus {
     kickoff: string;
     remainingWindowSeconds: number;
   }>;
+  totalRemainingLiveSecondsToday: number;
+  remainingQuota: number | 'unknown';
+  usableQuota: number;
+  fixedBudget: number;
+  safetyBuffer: number;
+  isPollingLimited: boolean;
+  isDataStale: boolean;
   currentIntervalSeconds: number;
   activeListenersCount: number;
   lastSyncDate: string | null;
@@ -25,7 +32,14 @@ export class ScheduleAwareSchedulerService {
   public trackedLeagues: number[] = [39, 140, 2]; // Premier League, La Liga, UCL
   private currentIntervalSeconds = 60;
   private minIntervalSeconds = 60;
-  private safetyBuffer = 5;
+  public readonly fixedBudget = 15; // 5 schedule + 10 match details (lineups/events/stats)
+  public readonly safetyBuffer = 5;
+  public get totalReservedBudget(): number {
+    return this.fixedBudget + this.safetyBuffer;
+  }
+
+  public isPollingLimited = false;
+  public isDataStale = false;
 
   private pollTimer: NodeJS.Timeout | null = null;
   private dailySyncTimer: NodeJS.Timeout | null = null;
@@ -188,7 +202,82 @@ export class ScheduleAwareSchedulerService {
   }
 
   /**
-   * Adaptive Live Tick
+   * Calculates total remaining live seconds across all matches today (UTC).
+   * Live window for any match is [kickoff - 10m, kickoff + 125m].
+   * If matches overlap, intervals are merged because a single /fixtures?live call
+   * covers all active games simultaneously.
+   */
+  public async getRemainingLiveSecondsTodayUTC(): Promise<number> {
+    const now = new Date();
+    const endOfTodayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const minLookupDate = new Date(now.getTime() - 125 * 60 * 1000);
+
+    try {
+      const fixtures = await prisma.fixture.findMany({
+        where: {
+          matchDate: {
+            gte: minLookupDate,
+            lte: endOfTodayUTC,
+          },
+          status: {
+            not: 'FINISHED',
+          },
+        },
+        select: {
+          id: true,
+          matchDate: true,
+        },
+      });
+
+      if (fixtures.length === 0) {
+        return 0;
+      }
+
+      const rawIntervals: Array<[number, number]> = [];
+      const nowMs = now.getTime();
+      const endOfTodayMs = endOfTodayUTC.getTime();
+
+      for (const f of fixtures) {
+        const kickoffMs = f.matchDate.getTime();
+        const windowStartMs = kickoffMs - 10 * 60 * 1000;
+        const windowEndMs = kickoffMs + 125 * 60 * 1000;
+
+        const startMs = Math.max(nowMs, windowStartMs);
+        const endMs = Math.min(endOfTodayMs, windowEndMs);
+
+        if (endMs > startMs) {
+          rawIntervals.push([startMs, endMs]);
+        }
+      }
+
+      if (rawIntervals.length === 0) {
+        return 0;
+      }
+
+      // Merge overlapping intervals
+      rawIntervals.sort((a, b) => a[0] - b[0]);
+      const merged: Array<[number, number]> = [rawIntervals[0]];
+
+      for (let i = 1; i < rawIntervals.length; i++) {
+        const prev = merged[merged.length - 1];
+        const curr = rawIntervals[i];
+
+        if (curr[0] <= prev[1]) {
+          prev[1] = Math.max(prev[1], curr[1]);
+        } else {
+          merged.push(curr);
+        }
+      }
+
+      const totalMs = merged.reduce((sum, [start, end]) => sum + (end - start), 0);
+      return Math.floor(totalMs / 1000);
+    } catch (e: any) {
+      return 0;
+    }
+  }
+
+  /**
+   * Adaptive Live Tick (Requirement C)
    */
   public async tickAdaptiveCycle(): Promise<void> {
     if (this.isRunning) return;
@@ -207,14 +296,47 @@ export class ScheduleAwareSchedulerService {
       return;
     }
 
-    // 3. Compute adaptive interval based on minimum remaining window
-    const minRemainingSeconds = Math.min(...windows.map((w) => w.remainingWindowSeconds), 5400);
     const provider = getFootballDataProvider('live');
-    this.currentIntervalSeconds = this.calculateAdaptiveInterval(minRemainingSeconds, provider.name);
+    const health = provider.getHealthStatus();
+    const rawQuota = health.remainingQuota;
+    const numericQuota = typeof rawQuota === 'number' ? rawQuota : 0;
+    const usableQuota = numericQuota - this.totalReservedBudget;
+
+    // 3. Tangani sisaKuota - cadangan <= 0 (jangan bagi nol):
+    // Saat itu hentikan polling live dan tandai isStale/limited.
+    if (usableQuota <= 0) {
+      this.isPollingLimited = true;
+      this.isDataStale = true;
+      this.currentIntervalSeconds = 3600;
+      console.warn(
+        `🛑 [Scheduler] Live polling stopped: Quota depleted or reserved (${numericQuota} remaining <= ${this.totalReservedBudget} reserved). Data marked as stale/limited.`
+      );
+
+      if (io) {
+        io.emit('match_score_update', [], {
+          source: provider.name,
+          fetchedAt: new Date().toISOString(),
+          isStale: true,
+          status: 'exhausted',
+          reason: `Remaining quota (${numericQuota}) insufficient for reserved budget (${this.totalReservedBudget}). Polling halted.`,
+          mode: isLive ? 'live' : 'demo',
+        });
+      }
+      return;
+    }
+
+    this.isPollingLimited = false;
+    this.isDataStale = false;
+
+    // 4. Alokasikan kuota ke SEMUA jendela live yang tersisa hari ini (UTC)
+    const totalRemainingLiveSeconds = await this.getRemainingLiveSecondsTodayUTC();
+    const effectiveSeconds = totalRemainingLiveSeconds > 0 ? totalRemainingLiveSeconds : 5400;
+
+    this.currentIntervalSeconds = this.calculateAdaptiveInterval(effectiveSeconds, usableQuota);
 
     this.isRunning = true;
     try {
-      // 4. Single-flight polling
+      // 5. Single-flight polling
       const result = await this.fetchLiveScoresSingleFlight();
 
       if (result && result.data.length > 0) {
@@ -234,18 +356,15 @@ export class ScheduleAwareSchedulerService {
 
   /**
    * Adaptive Interval Formula:
-   * interval = max(minInterval, remainingWindowSeconds / (remainingQuota - safetyBuffer))
+   * interval = max(minInterval, remainingLiveSecondsToday / (remainingQuota - reservedBudget))
+   * Prevents division by zero when usableQuota <= 0.
    */
-  public calculateAdaptiveInterval(remainingWindowSeconds: number, _providerName: string): number {
-    const provider = getFootballDataProvider('live');
-    const health = provider.getHealthStatus();
-    const remainingQuota = health.remainingQuota !== null ? health.remainingQuota : 50;
-
-    const effectiveQuota = Math.max(1, remainingQuota - this.safetyBuffer);
-    const calculatedInterval = Math.floor(remainingWindowSeconds / effectiveQuota);
-
-    const interval = Math.max(this.minIntervalSeconds, calculatedInterval);
-    return interval;
+  public calculateAdaptiveInterval(remainingLiveSeconds: number, usableQuota: number): number {
+    if (usableQuota <= 0) {
+      return 3600;
+    }
+    const calculatedInterval = Math.floor(remainingLiveSeconds / usableQuota);
+    return Math.max(this.minIntervalSeconds, calculatedInterval);
   }
 
   /**
@@ -317,10 +436,23 @@ export class ScheduleAwareSchedulerService {
 
   public getSchedulerStatus(): SchedulerStatus {
     const isLive = (process.env.DATA_MODE || 'demo') === 'live';
+    const provider = getFootballDataProvider('live');
+    const health = provider.getHealthStatus();
+    const rawQuota = health.remainingQuota;
+    const numericQuota = typeof rawQuota === 'number' ? rawQuota : 0;
+    const usableQuota = Math.max(0, numericQuota - this.totalReservedBudget);
+
     return {
       trackedLeagues: this.trackedLeagues,
       inLiveWindow: !isLive || false,
       activeMatchWindows: [],
+      totalRemainingLiveSecondsToday: 0,
+      remainingQuota: rawQuota,
+      usableQuota,
+      fixedBudget: this.fixedBudget,
+      safetyBuffer: this.safetyBuffer,
+      isPollingLimited: this.isPollingLimited,
+      isDataStale: this.isDataStale,
       currentIntervalSeconds: this.currentIntervalSeconds,
       activeListenersCount: this.getActiveListenersCount(),
       lastSyncDate: this.lastSyncDate,

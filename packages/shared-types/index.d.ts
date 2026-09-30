@@ -161,12 +161,17 @@ export interface ProviderCapabilities {
     injuries: boolean;
     delayed: boolean;
 }
+export type ProviderStatus = 'available' | 'unavailable' | 'exhausted' | 'not_configured' | 'demo' | 'unknown';
 export interface ProviderHealthInfo {
     provider: string;
-    status: 'available' | 'unavailable' | 'exhausted' | 'demo';
+    status: ProviderStatus;
     capabilities: ProviderCapabilities;
-    remainingQuota: number | null;
-    dailyQuota: number | null;
+    remainingQuota: number | 'unknown';
+    dailyQuota: number | 'unknown' | null;
+    perMinuteLimit?: number | 'unknown' | null;
+    remainingPerMinute?: number | 'unknown' | null;
+    quotaHeaderName?: string | null;
+    lastVerifiedAt: string | null;
     resetAt: string | null;
     lastError: string | null;
     lastSync: string | null;

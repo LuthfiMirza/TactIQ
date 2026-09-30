@@ -54,16 +54,29 @@ describe('Data Honesty & Provenance Verification (FASE 1A)', () => {
   test('(b) Provider failure returns empty / unavailable, NO silent fallback to fake seed data', async () => {
     // In live mode with invalid or unconfigured key, getLiveScores must return [] without fabricating goals
     const previousMode = process.env.DATA_MODE;
+    const oldFetch = global.fetch;
     process.env.DATA_MODE = 'live';
+
+    // Mock provider response with error/failure offline without consuming real API quota (Requirement E)
+    global.fetch = (async () => {
+      return new Response(
+        JSON.stringify({
+          errors: { requests: 'Simulated rate limit or network failure' },
+          response: [],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }) as any;
 
     try {
       const liveScores = await apiFootballService.getLiveScores();
-      // In live mode without valid external connection, live scores must be an array (typically empty or real),
+      // In live mode without valid external connection, live scores must be an array (typically empty),
       // NEVER silently fabricated goals from LiveMatchEngine
       assert.ok(Array.isArray(liveScores));
-      // Must not generate mock data with status LIVE unless returned from real upstream
+      assert.equal(liveScores.length, 0, 'On upstream failure, must return empty array rather than fake live scores');
     } finally {
       process.env.DATA_MODE = previousMode || 'demo';
+      global.fetch = oldFetch;
     }
   });
 

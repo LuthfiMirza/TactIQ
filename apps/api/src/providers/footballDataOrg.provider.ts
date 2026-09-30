@@ -6,12 +6,14 @@ import {
 import {
   ProviderCapabilities,
   ProviderHealthInfo,
+  ProviderStatus,
   MatchEventDTO,
   MatchLineupBundleDTO,
   MatchStatsBundleDTO,
   MatchInjuryDTO,
 } from '@tactiq/shared-types';
 import { LiveScoreMatch } from '../services/apiFootball.service.js';
+import { providerStateStore } from './providerStateStore.js';
 
 export class FootballDataOrgProvider implements FootballDataProvider {
   public readonly name = 'football-data.org';
@@ -25,9 +27,13 @@ export class FootballDataOrgProvider implements FootballDataProvider {
   };
 
   private static readonly BASE_URL = 'https://api.football-data.org/v4';
-  private remainingQuotaMinute: number = 10;
+  private remainingQuotaMinute: number | 'unknown' = 'unknown';
+  private perMinuteLimit = 10;
+  private lastVerifiedAt: string | null = null;
+  private quotaHeaderName = 'x-requests-available-minute';
   private lastError: string | null = null;
   private lastSync: string | null = null;
+  private status: ProviderStatus = 'not_configured';
 
   private circuitBreaker: CircuitBreakerState = {
     status: 'CLOSED',
@@ -36,6 +42,36 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     lastError: null,
     lastAttemptAt: null,
   };
+
+  constructor() {
+    providerStateStore.getState(this.name, Boolean(process.env.FOOTBALL_DATA_TOKEN), 10).then((s) => {
+      this.remainingQuotaMinute = (s.remainingPerMinute !== undefined ? s.remainingPerMinute : s.remainingQuota) as any;
+      this.lastVerifiedAt = s.lastVerifiedAt;
+      this.lastError = s.lastError;
+      this.lastSync = s.lastSync;
+      this.status = s.status;
+      this.circuitBreaker = {
+        ...this.circuitBreaker,
+        ...s.circuitBreaker,
+      };
+    }).catch(() => {});
+  }
+
+  private persistState(): void {
+    providerStateStore.updateMemoryState(this.name, {
+      status: this.status,
+      remainingQuota: 'unknown',
+      dailyQuota: null,
+      perMinuteLimit: this.perMinuteLimit,
+      remainingPerMinute: this.remainingQuotaMinute,
+      quotaHeaderName: this.quotaHeaderName,
+      lastVerifiedAt: this.lastVerifiedAt,
+      resetAt: this.circuitBreaker.exhaustedUntil,
+      lastError: this.lastError,
+      lastSync: this.lastSync,
+      circuitBreaker: this.circuitBreaker,
+    });
+  }
 
   public getCircuitBreakerState(): CircuitBreakerState {
     this.checkCircuitBreakerReset();
@@ -73,39 +109,58 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     const token = process.env.FOOTBALL_DATA_TOKEN;
     const isLive = (process.env.DATA_MODE || 'demo') === 'live';
 
-    if (!isLive) {
-      return {
-        provider: this.name,
-        status: 'demo',
-        capabilities: this.capabilities,
-        remainingQuota: null,
-        dailyQuota: null,
-        resetAt: null,
-        lastError: null,
-        lastSync: this.lastSync,
-      };
-    }
-
     if (!token) {
       return {
         provider: this.name,
-        status: 'unavailable',
+        status: 'not_configured',
         capabilities: this.capabilities,
-        remainingQuota: 0,
+        remainingQuota: 'unknown',
         dailyQuota: null,
+        perMinuteLimit: this.perMinuteLimit,
+        remainingPerMinute: 'unknown',
+        quotaHeaderName: 'x-requests-available-minute',
+        lastVerifiedAt: null,
         resetAt: null,
         lastError: 'FOOTBALL_DATA_TOKEN is not configured',
         lastSync: this.lastSync,
       };
     }
 
+    if (!isLive) {
+      return {
+        provider: this.name,
+        status: 'demo',
+        capabilities: this.capabilities,
+        remainingQuota: 'unknown',
+        dailyQuota: null,
+        perMinuteLimit: this.perMinuteLimit,
+        remainingPerMinute: this.remainingQuotaMinute,
+        quotaHeaderName: this.quotaHeaderName,
+        lastVerifiedAt: this.lastVerifiedAt,
+        resetAt: null,
+        lastError: null,
+        lastSync: this.lastSync,
+      };
+    }
+
+    const currentStatus: ProviderStatus =
+      this.circuitBreaker.status === 'EXHAUSTED'
+        ? 'exhausted'
+        : this.lastVerifiedAt
+        ? 'available'
+        : 'unknown';
+
     return {
       provider: this.name,
-      status: this.circuitBreaker.status === 'EXHAUSTED' ? 'exhausted' : 'available',
+      status: currentStatus,
       capabilities: this.capabilities,
-      remainingQuota: this.remainingQuotaMinute,
-      dailyQuota: null, // No explicit daily cap, minute rate limited
-      resetAt: null,
+      remainingQuota: 'unknown',
+      dailyQuota: null, // Verified: Free tier does not use daily limit, restricted to 10 req/min
+      perMinuteLimit: this.perMinuteLimit,
+      remainingPerMinute: this.remainingQuotaMinute,
+      quotaHeaderName: this.quotaHeaderName,
+      lastVerifiedAt: this.lastVerifiedAt,
+      resetAt: this.circuitBreaker.exhaustedUntil,
       lastError: this.lastError,
       lastSync: this.lastSync,
     };
@@ -133,21 +188,31 @@ export class FootballDataOrgProvider implements FootballDataProvider {
 
       const quotaMinute = res.headers.get('x-requests-available-minute');
       if (quotaMinute) {
-        this.remainingQuotaMinute = parseInt(quotaMinute, 10);
+        const parsed = parseInt(quotaMinute, 10);
+        if (!isNaN(parsed)) {
+          this.remainingQuotaMinute = parsed;
+        }
       }
+      this.lastVerifiedAt = new Date().toISOString();
 
       if (res.status === 429) {
         this.tripCircuitBreaker('Football-data.org 429 Rate Limit Exceeded');
+        this.persistState();
         return null;
       }
 
       if (!res.ok) {
+        this.status = 'unavailable';
+        this.persistState();
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
 
       const json = await res.json() as any;
+      this.status = 'available';
+      this.lastError = null;
       this.lastSync = new Date().toISOString();
       this.circuitBreaker.consecutiveFailures = 0;
+      this.persistState();
       return json;
     } catch (err: any) {
       this.circuitBreaker.consecutiveFailures++;

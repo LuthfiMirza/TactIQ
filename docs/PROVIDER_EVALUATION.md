@@ -248,12 +248,40 @@ Berikut pemetaan atribut dari respons resmi **API-Football (v3)** ke model datab
 
 ---
 
-## 6. STOP POINT & Konfirmasi User
+## 7. FASE 2.5: Verifikasi Provider Nyata, Header Kuota, dan Anggaran 15 Request
 
-Sesuai instruksi audit, proses dihentikan di akhir **FASE 1B**.  
-Silakan berikan konfirmasi apakah Anda setuju dengan:
-1. Pemilihan **API-Football** sebagai provider tunggal.
-2. Strategi **Adaptive Smart Polling** untuk menjaga konsumsi di bawah 100 request/hari.
-3. Liga awal yang diprioritaskan: **Premier League (ID: 39)**.
+### A. Temuan Nyata Header & Perilaku Provider (TERBUKTI vs ASUMSI)
 
-Setelah Anda mengonfirmasi dan memasukkan API key baru ke `.env`, kami akan melanjutkan ke **FASE 2 (Live Ingestion Pipeline & Database Migration)**.
+| Provider | Asumsi Awal (Fase 1B) | Bukti Respons Nyata (Fase 2.5) | Status |
+| :--- | :--- | :--- | :--- |
+| **API-Football** | Header `x-ratelimit-requests-remaining` selalu akurat menunjukkan sisa kuota harian. | **Header Deceptive!** Saat kuota 100/hari habis, API-Football tetap mengirim header `x-ratelimit-requests-remaining: 99` pada HTTP 200, namun body respons berisi `errors: { requests: "You have reached the request limit for the day..." }`. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/api-football/status_exhausted.json`). Wajib inspeksi body respons! |
+| **football-data.org** | Memiliki kuota harian tetap (misal 100 req/hari). | **Batas adalah per Menit, bukan per Hari!** Header resmi: `x-requests-available-minute: 9` (dari limit 10/menit), reset counter: `x-requestcounter-reset: 60`. `dailyQuota` adalah `null`. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/football-data-org/standings_pl.json`). |
+| **football-data.org (Musim 2026/27)** | Belum diketahui apakah musim 2026/27 aktif di free plan. | **Aktif & Dapat Diakses!** Respons `matches_pl.json` mengonfirmasi `season.id: 2502`, rentang `2026-08-21` s/d `2027-05-30`, 50 laga selesai tercatat. | 🔬 **TERBUKTI DENGAN BUKTI PAYLOAD** (`tests/fixtures/providers/football-data-org/matches_pl.json`). |
+| **Highlightly** | Berfungsi sebagai Backup 1. | Belum ada API key di `.env` (`HIGHLIGHTLY_API_KEY`). Berstatus jujur **`not_configured`**, dilewati secara otomatis oleh rantai fallback ke `football-data.org`. | ⚠️ **TERBUKTI:** Rantai fallback saat ini memiliki **1 provider cadangan nyata** (`football-data.org`). |
+
+---
+
+### B. Rencana Anggaran Verifikasi Nyata API-Football (Maksimal 15 Request Pasca Reset 00:00 UTC)
+
+Saat ini kuota API-Football di `.env` habis (`errors.requests`). Setelah reset harian pukul 00:00 UTC, verifikasi lanjutan akan dijalankan dengan anggaran ketat maksimal **10–15 request**:
+
+1. **Request 1:** `GET /status` (Verifikasi akun, paket gratis, dan kuota awal 100).
+2. **Request 2–4:** `GET /leagues?id=39`, `GET /leagues?id=140`, `GET /leagues?id=2` (Verifikasi season 2026/27 dan coverage flag untuk tracked leagues).
+3. **Request 5:** `GET /leagues?name=World Cup` (Verifikasi ID kompetisi timnas resmi tanpa menebak).
+4. **Request 6:** `GET /fixtures?date={today}` (Verifikasi jadwal matchday hari ini).
+5. **Request 7:** `GET /fixtures?live=all` (Verifikasi live in-play payload format).
+6. **Request 8–12 (Satu laga selesai spesifik):**
+   - `GET /fixtures?id={sampleFixtureId}` (Detail laga)
+   - `GET /fixtures/lineups?fixture={sampleFixtureId}` (Struktur lineup & koordinat grid)
+   - `GET /fixtures/events?fixture={sampleFixtureId}` (Struktur events & timeline)
+   - `GET /fixtures/statistics?fixture={sampleFixtureId}` (Struktur shots, possession, xG)
+   - `GET /injuries?fixture={sampleFixtureId}` (Struktur absensi pemain)
+7. **Buffer Darurat:** 3 request tersisa untuk toleransi retry jika ada timeout jaringan.
+8. **Total Anggaran:** 12 request terencana + 3 request buffer = **15 request**. Sisa 85 request dialokasikan untuk operasional live.
+
+---
+
+### C. Catatan Utang Teknis: Cakupan Liga (League Coverage Debt)
+
+* **Status Saat Ini:** `tracked_leagues` dikunci pada `[39, 140, 2]` (Premier League, La Liga, UEFA Champions League).
+* **Aturan Perluasan:** Dilarang keras menebak league ID (misal untuk Liga Italia Serie A, Bundesliga, Euro, atau World Cup). Perluasan hanya boleh dilakukan dengan ID yang ditemukan dari respons nyata endpoint `/leagues` dan diverifikasi di contract test.

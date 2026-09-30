@@ -44,9 +44,10 @@ export class ProviderChainManager {
     // Try providers in priority order
     for (let i = 0; i < this.providers.length; i++) {
       const provider = this.providers[i];
+      const health = provider.getHealthStatus();
       const cbState = provider.getCircuitBreakerState();
 
-      if (cbState.status === 'EXHAUSTED') {
+      if (health.status === 'not_configured' || cbState.status === 'EXHAUSTED') {
         continue;
       }
 
@@ -68,7 +69,8 @@ export class ProviderChainManager {
 
     // If no provider satisfies the specific capability, return the first available fallback
     for (const provider of this.providers) {
-      if (provider.getCircuitBreakerState().status !== 'EXHAUSTED') {
+      const health = provider.getHealthStatus();
+      if (health.status !== 'not_configured' && provider.getCircuitBreakerState().status !== 'EXHAUSTED') {
         return provider;
       }
     }

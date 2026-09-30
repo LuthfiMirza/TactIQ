@@ -37,40 +37,57 @@ describe('Provider Chain, Circuit Breaker & Adaptive Scheduler Verification (FAS
     providerChainManager.resetAllCircuitBreakers();
   });
 
-  test('(1) Circuit Breaker: Trips on 429 / Quota Exhaustion and falls back to Backup 1 (Highlightly)', () => {
+  test('(1) Circuit Breaker: When Backup 1 is configured, trips on 429 and falls back to Backup 1 (Highlightly)', () => {
     process.env.DATA_MODE = 'live';
+    const oldKey = process.env.HIGHLIGHTLY_API_KEY;
+    process.env.HIGHLIGHTLY_API_KEY = 'test_highlightly_key';
 
-    // Verify initial state
-    const initial = providerChainManager.getActiveProvider();
-    assert.equal(initial.name, 'api-football');
+    try {
+      // Verify initial state
+      const initial = providerChainManager.getActiveProvider();
+      assert.equal(initial.name, 'api-football');
 
-    // Simulate 429 on Primary
-    apiFootballProvider.tripCircuitBreaker('429 Rate Limit Exceeded: Daily Quota 100 reached');
+      // Simulate 429 on Primary
+      apiFootballProvider.tripCircuitBreaker('429 Rate Limit Exceeded: Daily Quota 100 reached');
 
-    const cbState = apiFootballProvider.getCircuitBreakerState();
-    assert.equal(cbState.status, 'EXHAUSTED');
-    assert.ok(cbState.exhaustedUntil !== null, 'Exhausted until must be set');
+      const cbState = apiFootballProvider.getCircuitBreakerState();
+      assert.equal(cbState.status, 'EXHAUSTED');
+      assert.ok(cbState.exhaustedUntil !== null, 'Exhausted until must be set');
 
-    // Active provider switches to highlightly
-    const fallback1 = providerChainManager.getActiveProvider();
-    assert.equal(fallback1.name, 'highlightly', 'Should fall back to highlightly');
+      // Active provider switches to highlightly
+      const fallback1 = providerChainManager.getActiveProvider();
+      assert.equal(fallback1.name, 'highlightly', 'Should fall back to highlightly');
 
-    // Check transition history log
-    const history = providerChainManager.getSwitchHistory();
-    assert.ok(history.length > 0, 'Switch event must be recorded');
-    assert.equal(history[0].fromProvider, 'api-football');
-    assert.equal(history[0].toProvider, 'highlightly');
+      // Check transition history log
+      const history = providerChainManager.getSwitchHistory();
+      assert.ok(history.length > 0, 'Switch event must be recorded');
+      assert.equal(history[0].fromProvider, 'api-football');
+      assert.equal(history[0].toProvider, 'highlightly');
+    } finally {
+      if (oldKey !== undefined) {
+        process.env.HIGHLIGHTLY_API_KEY = oldKey;
+      } else {
+        delete process.env.HIGHLIGHTLY_API_KEY;
+      }
+    }
   });
 
-  test('(2) Fallback to Backup 2 (football-data.org) when Backup 1 is also exhausted', () => {
+  test('(2) Fallback skips not_configured providers and falls back to available Backup 2 (football-data.org)', () => {
     process.env.DATA_MODE = 'live';
+    delete process.env.HIGHLIGHTLY_API_KEY;
+    delete process.env.RAPIDAPI_KEY;
+    delete process.env.HIGHLIGHTLY_KEY;
 
-    // Trip both primary and backup 1
+    // Trip primary
     apiFootballProvider.tripCircuitBreaker('API-Football quota exhausted');
-    highlightlyProvider.tripCircuitBreaker('Highlightly 429 quota exhausted');
 
-    const fallback2 = providerChainManager.getActiveProvider();
-    assert.equal(fallback2.name, 'football-data.org', 'Should fall back to football-data.org');
+    // Highlightly has no key -> status is not_configured
+    const highHealth = highlightlyProvider.getHealthStatus();
+    assert.equal(highHealth.status, 'not_configured');
+
+    // Active provider skips highlightly and selects football-data.org
+    const fallback = providerChainManager.getActiveProvider();
+    assert.equal(fallback.name, 'football-data.org', 'Should fall back directly to football-data.org');
 
     const history = providerChainManager.getSwitchHistory();
     assert.ok(history.some((h) => h.toProvider === 'football-data.org'));
