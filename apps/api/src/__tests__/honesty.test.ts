@@ -2,7 +2,6 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'http';
 import { createApp } from '../app.js';
-import { etlService } from '../services/etl.service.js';
 import { apiFootballService } from '../services/apiFootball.service.js';
 
 describe('Data Honesty & Provenance Verification (FASE 1A)', () => {
@@ -58,7 +57,7 @@ describe('Data Honesty & Provenance Verification (FASE 1A)', () => {
     process.env.DATA_MODE = 'live';
 
     try {
-      const liveScores = await apiFootballService.getLiveScores(39);
+      const liveScores = await apiFootballService.getLiveScores();
       // In live mode without valid external connection, live scores must be an array (typically empty or real),
       // NEVER silently fabricated goals from LiveMatchEngine
       assert.ok(Array.isArray(liveScores));
