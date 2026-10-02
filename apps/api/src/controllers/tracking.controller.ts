@@ -103,6 +103,7 @@ export class TrackingController {
         return {
           ...coord,
           playersData: normalizedEntities,
+          entities: normalizedEntities, // [DEF-11] Full compatibility with TrackingFramePayload
         };
       });
 
