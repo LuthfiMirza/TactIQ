@@ -21,8 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.api.endpoints import tracking
+
 # Include API Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(tracking.router, prefix="/api/v1/tracking", tags=["cv-tracking-v1"])
 
 
 @app.get("/", tags=["health"])

@@ -2,10 +2,15 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
 import { apiRouter } from './routes/index.js';
 
 export function createApp(): Application {
   const app: Application = express();
+
+  // Serve uploaded video assets statically
+  const uploadDir = path.resolve(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadDir));
 
   // Security Middleware
   app.use(

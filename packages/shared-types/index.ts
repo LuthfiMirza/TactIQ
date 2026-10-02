@@ -193,8 +193,12 @@ export interface VideoTrackingSessionDTO {
 }
 
 export interface TrackingStartRequest {
-  youtube_url: string;
+  youtube_url?: string;
+  video_path?: string;
   session_id: string;
+  fps_sample_rate?: number;
+  max_frames?: number;
+  save_annotated_video?: boolean;
 }
 
 export interface TrackingStartResponse {

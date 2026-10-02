@@ -181,4 +181,67 @@ export class TrackingController {
       });
     }
   }
+
+  /**
+   * POST /api/v1/tracking/upload-video
+   * Handles multipart/form-data video upload, saves MP4 to disk,
+   * dispatches YOLOv8+ByteTrack tracking on ML service, and returns tracking session.
+   */
+  public static async uploadVideo(req: Request, res: Response): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'FILE_REQUIRED',
+            message: 'No video file provided in multipart/form-data upload.',
+          },
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const file = req.file;
+      const sessionId = (req.body.session_id as string) || `upload-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const title = (req.body.title as string) || file.originalname.replace(/\.[^/.]+$/, '');
+      const relativeVideoUrl = `/uploads/${file.filename}`;
+
+      // Dispatch to ML service startTracking in background
+      try {
+        await MLService.startTracking({
+          session_id: sessionId,
+          video_path: file.path,
+          fps_sample_rate: 10,
+        });
+      } catch (mlErr) {
+        console.warn('⚠️ ML tracking notification error for uploaded video:', mlErr);
+      }
+
+      res.json({
+        success: true,
+        data: {
+          sessionId,
+          title,
+          videoUrl: relativeVideoUrl,
+          filename: file.originalname,
+          sizeBytes: file.size,
+          mimetype: file.mimetype,
+          status: 'PROCESSING',
+          tracker: 'yolov8_bytetrack',
+          message: 'Video MP4 uploaded successfully. YOLOv8 tactical vision tracking running in background.',
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error handling video upload:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPLOAD_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 }

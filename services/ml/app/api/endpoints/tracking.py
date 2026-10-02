@@ -1,10 +1,11 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
 import asyncio
 import json
 import math
 import os
+import shutil
 try:
     import redis.asyncio as aioredis
 except ImportError:
@@ -235,6 +236,56 @@ async def start_tracking_pipeline(payload: TrackingStartRequest, background_task
         tracker="simulation",
         mode="simulation",
     )
+
+
+@router.post("/upload-video")
+@router.post("/tracking/upload-video")
+async def upload_video_endpoint(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    session_id: Optional[str] = Form(None),
+    fps_sample_rate: Optional[int] = Form(10),
+    max_frames: Optional[int] = Form(None),
+    save_annotated_video: Optional[bool] = Form(False),
+):
+    """
+    Direct multipart/form-data MP4 video upload endpoint.
+    Saves uploaded file to disk and runs YOLOv8 + ByteTrack computer vision tracking in background.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No video file provided.")
+
+    clean_session_id = session_id or f"upload-{int(asyncio.get_event_loop().time() * 1000)}"
+    uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "uploads"))
+    os.makedirs(uploads_dir, exist_ok=True)
+
+    safe_filename = f"{clean_session_id}_{os.path.basename(file.filename)}"
+    destination = os.path.join(uploads_dir, safe_filename)
+
+    with open(destination, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    file_size = os.path.getsize(destination)
+
+    # Dispatch YOLOv8 tracking in background
+    background_tasks.add_task(
+        run_video_tracking_worker,
+        video_path=destination,
+        session_id=clean_session_id,
+        fps_sample_rate=fps_sample_rate or 10,
+        max_frames=max_frames,
+        save_annotated_video=save_annotated_video or False,
+    )
+
+    return {
+        "status": "PROCESSING",
+        "session_id": clean_session_id,
+        "video_path": destination,
+        "filename": file.filename,
+        "size_bytes": file_size,
+        "tracker": "yolov8_bytetrack",
+        "message": f"Video {file.filename} uploaded successfully. YOLOv8 + ByteTrack tracking running in background.",
+    }
 
 
 class DirectTrackVideoResponse(BaseModel):
