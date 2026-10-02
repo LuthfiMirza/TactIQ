@@ -395,32 +395,36 @@ export class ScheduleAwareSchedulerService {
     const minStart = new Date(now - 125 * 60 * 1000);
     const maxEnd = new Date(now + 10 * 60 * 1000);
 
-    const fixtures = await prisma.fixture.findMany({
-      where: {
-        matchDate: {
-          gte: minStart,
-          lte: maxEnd,
+    try {
+      const fixtures = await prisma.fixture.findMany({
+        where: {
+          matchDate: {
+            gte: minStart,
+            lte: maxEnd,
+          },
+          status: {
+            not: 'FINISHED',
+          },
         },
-        status: {
-          not: 'FINISHED',
+        include: {
+          homeTeam: true,
+          awayTeam: true,
         },
-      },
-      include: {
-        homeTeam: true,
-        awayTeam: true,
-      },
-    });
+      });
 
-    return fixtures.map((f) => {
-      const endMs = f.matchDate.getTime() + 125 * 60 * 1000;
-      const remainingSeconds = Math.max(0, Math.floor((endMs - now) / 1000));
-      return {
-        fixtureId: f.id,
-        match: `${f.homeTeam.name} vs ${f.awayTeam.name}`,
-        kickoff: f.matchDate.toISOString(),
-        remainingWindowSeconds: remainingSeconds,
-      };
-    });
+      return fixtures.map((f) => {
+        const endMs = f.matchDate.getTime() + 125 * 60 * 1000;
+        const remainingSeconds = Math.max(0, Math.floor((endMs - now) / 1000));
+        return {
+          fixtureId: f.id,
+          match: `${f.homeTeam.name} vs ${f.awayTeam.name}`,
+          kickoff: f.matchDate.toISOString(),
+          remainingWindowSeconds: remainingSeconds,
+        };
+      });
+    } catch {
+      return [];
+    }
   }
 
   public getActiveListenersCount(): number {

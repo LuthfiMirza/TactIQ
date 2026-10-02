@@ -209,6 +209,18 @@ export const CLUB_REGISTRY: Record<string, ClubInfo> = {
     logoUrl: 'https://media.api-sports.io/football/teams/79.png',
     color: '#E01E12',
   },
+  ESP: {
+    name: 'Spain',
+    short: 'ESP',
+    logoUrl: 'https://media.api-sports.io/football/teams/9.png',
+    color: '#C60B1E',
+  },
+  CRO: {
+    name: 'Croatia',
+    short: 'CRO',
+    logoUrl: 'https://media.api-sports.io/football/teams/3.png',
+    color: '#FF0000',
+  },
   PSG: {
     name: 'Paris Saint-Germain',
     short: 'PSG',

@@ -38,3 +38,19 @@ trackingRoutes.post('/start', TrackingController.startTracking);
 
 // POST /api/v1/tracking/upload-video (multipart/form-data video upload + background YOLO tracking)
 trackingRoutes.post('/upload-video', upload.single('video'), TrackingController.uploadVideo);
+
+// -----------------------------------------------------------------------------
+// TSK-31: Dynamic Homography Calibration via Field Line Detection
+// -----------------------------------------------------------------------------
+// POST /api/v1/tracking/homography/calibrate-lines
+trackingRoutes.post('/homography/calibrate-lines', TrackingController.calibrateFieldLines);
+
+// POST /api/v1/tracking/homography/calibrate-manual
+trackingRoutes.post('/homography/calibrate-manual', TrackingController.calibrateManual);
+
+// GET /api/v1/tracking/homography/status
+trackingRoutes.get('/homography/status', TrackingController.getHomographyStatus);
+
+// POST /api/v1/tracking/homography/transform
+trackingRoutes.post('/homography/transform', TrackingController.transformCoordinates);
+

@@ -5,12 +5,14 @@ import { getSocket, joinTrackingSession, leaveTrackingSession } from '@/lib/sock
 import type { TrackingFramePayload, TrackingEntity, TacticalMetricsDTO } from '@tactiq/shared-types';
 import {
   Activity,
+  Radio,
   Play,
   Pause,
   RotateCcw,
   Video,
   Eye,
   Award,
+  Crosshair,
   FastForward,
   Gauge,
   Compass,
@@ -47,6 +49,23 @@ interface VideoOverlayCanvasProps {
   className?: string;
   initialVideoMode?: boolean;
   onFrameUpdate?: (frame: TrackingFramePayload) => void;
+  // TSK-31 Homography Overlays
+  showFieldLines?: boolean;
+  showIntersections?: boolean;
+  showCameraFov?: boolean;
+  fieldLines?: Array<{ x1: number; y1: number; x2: number; y2: number; type?: string }>;
+  intersections?: Array<{ x: number; y: number; confidence?: number }>;
+  onOpenCalibrationModal?: () => void;
+  // Dynamic Team & Video Config
+  homeCode?: string;
+  awayCode?: string;
+  homeName?: string;
+  awayName?: string;
+  score?: string;
+  statusBadge?: string;
+  homeColor?: string;
+  awayColor?: string;
+  trackedFrames?: TrackingFramePayload[];
 }
 
 interface MatchEventMoment {
@@ -56,136 +75,112 @@ interface MatchEventMoment {
   timestampMs: number;
 }
 
-const MATCH_TIMELINE_EVENTS: MatchEventMoment[] = [
-  { minute: 14, label: 'Casemiro Deep Build-up', type: 'chance', timestampMs: 7000 },
-  { minute: 28, label: 'Bruno Fernandes Zone 14 Pass', type: 'chance', timestampMs: 21000 },
-  { minute: 54, label: 'Haaland Drag-Run & Shot', type: 'shot', timestampMs: 32000 },
-  { minute: 82, label: 'Garnacho Cut-Inside Goal', type: 'goal', timestampMs: 42000 },
-  { minute: 89, label: 'Bernardo Silva Equalizer Header', type: 'goal', timestampMs: 53000 },
+const COMMUNITY_SHIELD_EVENTS: MatchEventMoment[] = [
+  { minute: 14, label: 'Casemiro Deep Build-up', type: 'chance', timestampMs: 1400 },
+  { minute: 24, label: 'McAtee Post Shot', type: 'chance', timestampMs: 2400 },
+  { minute: 54, label: 'Bruno Curler (Offside)', type: 'shot', timestampMs: 5400 },
+  { minute: 75, label: 'Rashford Hits Post', type: 'chance', timestampMs: 7500 },
+  { minute: 82, label: 'Garnacho Solo Goal (0-1)', type: 'goal', timestampMs: 8200 },
+  { minute: 89, label: 'Bernardo Header Goal (1-1)', type: 'goal', timestampMs: 8900 },
+  { minute: 90, label: 'Penalty Shootout', type: 'shot', timestampMs: 9000 },
 ];
 
-/**
- * Extracts YouTube video ID from various standard YouTube URL formats.
- */
-function extractYouTubeVideoId(url: string): string {
-  if (!url) return 'z4B7hN5sE_s';
-  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-  return match ? match[1] : 'z4B7hN5sE_s';
-}
+const SPAIN_CROATIA_EVENTS: MatchEventMoment[] = [
+  { minute: 29, label: 'Morata Goal (1-0)', type: 'goal', timestampMs: 2900 },
+  { minute: 32, label: 'Fabián Ruiz Goal (2-0)', type: 'goal', timestampMs: 3200 },
+  { minute: 45, label: 'Carvajal Goal (3-0)', type: 'goal', timestampMs: 4500 },
+  { minute: 80, label: 'Petković Penalty Save', type: 'chance', timestampMs: 8000 },
+];
 
 export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   sessionId = 'demo-session-tactical-001',
-  youtubeUrl = 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=1&loop=1&playlist=z4B7hN5sE_s',
+  youtubeUrl = 'https://www.youtube.com/embed/z4B7hN5sE_s?autoplay=1&mute=1&controls=0&loop=1&playlist=z4B7hN5sE_s',
   videoSrc,
   className = '',
-  initialVideoMode = false,
+  initialVideoMode = true,
   onFrameUpdate,
+  showFieldLines = true,
+  showIntersections = true,
+  showCameraFov = true,
+  fieldLines,
+  intersections,
+  onOpenCalibrationModal,
+  homeCode = 'MUN',
+  awayCode = 'MCI',
+  homeName = 'Man United',
+  awayName = 'Man City',
+  score = '1 — 1',
+  statusBadge = 'COMMUNITY SHIELD',
+  homeColor = '#DA291C',
+  awayColor = '#6CABDD',
+  trackedFrames,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
   const ytPlayerRef = useRef<any>(null);
-  const ytSyncIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [currentFrame, setCurrentFrame] = useState<TrackingFramePayload | null>(null);
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [tempo, setTempo] = useState<number>(1); // 1x, 1.5x, 2x, 3x
-  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(initialVideoMode || Boolean(videoSrc));
-  const [activeMoment, setActiveMoment] = useState<MatchEventMoment | null>(null);
-  const [entityStats, setEntityStats] = useState<{ homeCount: number; awayCount: number; ballSpeed: number }>({
+  const [tempo, setTempo] = useState<number>(1); // 0.5x, 1x, 1.5x, 2x
+  const [showVideoBackground, setShowVideoBackground] = useState<boolean>(initialVideoMode);
+  const [showCanvasOverlay, setShowCanvasOverlay] = useState<boolean>(true);
+  const [showTacticalTrails, setShowTacticalTrails] = useState<boolean>(true);
+  const [showKinematicsHUD, setShowKinematicsHUD] = useState<boolean>(true);
+  const [isYtReady, setIsYtReady] = useState<boolean>(false);
+  const [videoDuration, setVideoDuration] = useState<number>(60);
+  const [currentVideoTime, setCurrentVideoTime] = useState<number>(0);
+
+  // Telestrator Drawing Tools
+  const [isDrawMode, setIsDrawMode] = useState<boolean>(false);
+  const [drawTool, setDrawTool] = useState<'arrow' | 'spotlight' | 'zone' | 'pen'>('arrow');
+  const [drawColor, setDrawColor] = useState<string>('#CEFF00');
+  const [drawings, setDrawings] = useState<TacticalDrawing[]>([]);
+  const drawingsRef = useRef<TacticalDrawing[]>([]);
+  const isMouseDownRef = useRef<boolean>(false);
+  const currentDrawingRef = useRef<TacticalDrawing | null>(null);
+
+  // Tactical Dossier Export Modal
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [exportImageUri, setExportImageUri] = useState<string | null>(null);
+
+  const [entityStats, setEntityStats] = useState<{
+    homeCount: number;
+    awayCount: number;
+    ballSpeed: number;
+  }>({
     homeCount: 11,
     awayCount: 11,
     ballSpeed: 24.2,
   });
-  const [tacticalMetrics, setTacticalMetrics] = useState<TacticalMetricsDTO | null>(null);
-  const [isYtReady, setIsYtReady] = useState<boolean>(false);
 
-  // Tactical Annotation & Drawing States (TSK-PRO)
-  const [isDrawMode, setIsDrawMode] = useState<boolean>(false);
-  const [activeDrawTool, setActiveDrawTool] = useState<'arrow' | 'spotlight' | 'zone' | 'pen'>('arrow');
-  const [drawColor, setDrawColor] = useState<string>('#CEFF00');
-  const [drawings, setDrawings] = useState<TacticalDrawing[]>([]);
-  const drawingsRef = useRef<TacticalDrawing[]>([]);
-  const currentDrawingRef = useRef<TacticalDrawing | null>(null);
-  const isPointerDownRef = useRef<boolean>(false);
-
-  // Tactical Dossier Export Modal State
-  const [showExportModal, setShowExportModal] = useState<boolean>(false);
-  const [exportedImageUrl, setExportedImageUrl] = useState<string | null>(null);
-
-  const trailsRef = useRef<Map<number, Array<{ x: number; y: number }>>>(new Map());
   const localTimerRef = useRef<NodeJS.Timeout | null>(null);
   const localFrameCounterRef = useRef<number>(0);
+  const playbackSpeedRef = useRef<number>(1);
 
-  // Resize canvas according to container aspect ratio
-  const handleResize = useCallback(() => {
-    if (!containerRef.current || !canvasRef.current) return;
-    const { clientWidth, clientHeight } = containerRef.current;
-    canvasRef.current.width = clientWidth;
-    canvasRef.current.height = clientHeight;
-  }, []);
+  // Keep drawings ref in sync
+  useEffect(() => {
+    drawingsRef.current = drawings;
+  }, [drawings]);
 
-  // Draw Tactical Football Pitch Lines
-  const drawPitch = (ctx: CanvasRenderingContext2D, width: number, height: number, isTransparent: boolean) => {
-    if (!isTransparent) {
-      // Pitch background with stadium grass texture
-      ctx.fillStyle = '#0F2C1F';
-      ctx.fillRect(0, 0, width, height);
+  // Keep playback speed in sync
+  useEffect(() => {
+    playbackSpeedRef.current = tempo;
+  }, [tempo]);
 
-      const stripeCount = 10;
-      const stripeWidth = width / stripeCount;
-      for (let i = 0; i < stripeCount; i++) {
-        if (i % 2 === 0) {
-          ctx.fillStyle = 'rgba(0, 223, 89, 0.04)';
-          ctx.fillRect(i * stripeWidth, 0, stripeWidth, height);
-        }
-      }
+  // Compute live kinematics metrics from current frame
+  const liveMetrics: TacticalMetricsDTO = calculateTacticalMetrics(currentFrame?.entities || []);
+
+  // Frame generator
+  const getFrameAtStep = useCallback((frameIdx: number): TrackingFramePayload => {
+    if (trackedFrames && trackedFrames.length > 0) {
+      return trackedFrames[frameIdx % trackedFrames.length];
     }
+    return generate600FrameSequence(frameIdx, sessionId);
+  }, [trackedFrames, sessionId]);
 
-    // Pitch Line Styles (crisp white markings with high legibility)
-    ctx.strokeStyle = isTransparent ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.60)';
-    ctx.lineWidth = 1.5;
-
-    const padX = width * 0.04;
-    const padY = height * 0.05;
-    const pWidth = width - padX * 2;
-    const pHeight = height - padY * 2;
-
-    // Outer Boundary
-    ctx.strokeRect(padX, padY, pWidth, pHeight);
-
-    // Halfway Line
-    const midX = padX + pWidth / 2;
-    ctx.beginPath();
-    ctx.moveTo(midX, padY);
-    ctx.lineTo(midX, padY + pHeight);
-    ctx.stroke();
-
-    // Center Circle
-    const radius = Math.min(pWidth, pHeight) * 0.16;
-    ctx.beginPath();
-    ctx.arc(midX, padY + pHeight / 2, radius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Center Dot
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.beginPath();
-    ctx.arc(midX, padY + pHeight / 2, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Left Penalty Box
-    const penW = pWidth * 0.16;
-    const penH = pHeight * 0.52;
-    const penY = padY + (pHeight - penH) / 2;
-    ctx.strokeRect(padX, penY, penW, penH);
-
-    // Right Penalty Box
-    ctx.strokeRect(padX + pWidth - penW, penY, penW, penH);
-  };
-
-  // Render tracking entities onto canvas
-  const renderFrame = useCallback((frame: TrackingFramePayload, isVideoBg: boolean) => {
+  // ── Render Frame on Canvas ───────────────────────────────────────────────
+  const renderFrame = useCallback((frame: TrackingFramePayload, isVideoUnderneath: boolean) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -196,105 +191,158 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
 
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Draw pitch foundation
-    drawPitch(ctx, width, height, isVideoBg);
+    // If overlay is disabled, just clear
+    if (!showCanvasOverlay) {
+      return;
+    }
+
+    // If video is NOT underneath, paint authentic stadium pitch texture
+    if (!isVideoUnderneath) {
+      ctx.fillStyle = '#0F2C1F';
+      ctx.fillRect(0, 0, width, height);
+
+      // Pitch lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(16, 16, width - 32, height - 32);
+
+      // Halfway line
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 16);
+      ctx.lineTo(width / 2, height - 16);
+      ctx.stroke();
+
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, height * 0.18, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Center spot
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 1.5 TSK-31: Render Detected Field Lines Overlay
+    if (showFieldLines && fieldLines && fieldLines.length > 0) {
+      fieldLines.forEach((l) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(l.x1 * width, l.y1 * height);
+        ctx.lineTo(l.x2 * width, l.y2 * height);
+        ctx.strokeStyle =
+          l.type === 'touchline'
+            ? 'rgba(0, 255, 204, 0.85)'
+            : l.type === 'halfway'
+            ? 'rgba(56, 189, 248, 0.90)'
+            : 'rgba(206, 255, 0, 0.85)';
+        ctx.lineWidth = 2.2;
+        ctx.shadowColor = l.type === 'touchline' ? '#00FFCC' : '#CEFF00';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    // 1.6 TSK-31: Render Detected Keypoint Intersections Overlay
+    if (showIntersections && intersections && intersections.length > 0) {
+      intersections.forEach((pt) => {
+        const ix = pt.x * width;
+        const iy = pt.y * height;
+        ctx.save();
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath();
+        ctx.arc(ix, iy, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(ix, iy, 7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(ix - 8, iy);
+        ctx.lineTo(ix + 8, iy);
+        ctx.moveTo(ix, iy - 8);
+        ctx.lineTo(ix, iy + 8);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
 
     // 2. Track entity counts
     let homeC = 0;
     let awayC = 0;
-    let bSpeed = 0;
+    let bSpeed = 24.2;
 
-    // 3. Render entities (players & ball)
-    frame.entities.forEach((entity: TrackingEntity) => {
+    frame.entities.forEach((entity) => {
+      if (entity.team === 'home') homeC++;
+      if (entity.team === 'away') awayC++;
+      if (entity.team === 'ball' && entity.speedKmh) bSpeed = entity.speedKmh;
+
       const px = entity.x * width;
       const py = entity.y * height;
 
-      if (entity.team === 'home') homeC++;
-      if (entity.team === 'away') awayC++;
-      if (entity.team === 'ball') bSpeed = entity.speedKmh || 22.4;
-
-      // Update historic trail
-      let trail = trailsRef.current.get(entity.id);
-      if (!trail) {
-        trail = [];
-        trailsRef.current.set(entity.id, trail);
-      }
-      trail.push({ x: px, y: py });
-      if (trail.length > 8) trail.shift();
-
-      // Draw historic trail
-      if (trail.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(trail[0].x, trail[0].y);
-        for (let i = 1; i < trail.length; i++) {
-          ctx.lineTo(trail[i].x, trail[i].y);
-        }
-        ctx.strokeStyle =
-          entity.team === 'home'
-            ? 'rgba(239, 1, 7, 0.4)'
-            : entity.team === 'away'
-            ? 'rgba(108, 171, 221, 0.4)'
-            : 'rgba(250, 204, 21, 0.6)';
-        ctx.lineWidth = entity.team === 'ball' ? 2.5 : 1.5;
-        ctx.stroke();
-      }
-
-      // Draw Entity Circle / Bounding Halo
       if (entity.team === 'ball') {
+        // Ball: Glowing Amber Core
         ctx.save();
         ctx.shadowColor = '#FACC15';
         ctx.shadowBlur = 12;
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#FACC15';
         ctx.beginPath();
-        ctx.arc(px, py, 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#FACC15';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.restore();
-      } else {
-        const isHome = entity.team === 'home';
-        const primaryColor = isHome ? '#DA291C' : '#6CABDD';
-
-        // Flat Tactical Pitch Ring
-        ctx.save();
-        ctx.strokeStyle = primaryColor;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.ellipse(px, py + 4, 12, 5, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-
-        // Player Circle Dot
-        ctx.fillStyle = primaryColor;
-        ctx.beginPath();
-        ctx.arc(px, py, 8.5, 0, Math.PI * 2);
+        ctx.arc(px, py, 5.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 1.5;
         ctx.stroke();
+        ctx.restore();
 
-        // Jersey / ID label inside entity
+        // Speed label
+        if (entity.speedKmh) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 8.5px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${Math.round(entity.speedKmh)} km/h`, px, py - 9);
+        }
+      } else {
+        const isHome = entity.team === 'home';
+        const primaryColor = isHome ? homeColor : awayColor;
+
+        // Tactical Pitch Ring
+        ctx.save();
+        ctx.strokeStyle = primaryColor;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(px, py, 10, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner translucent fill
+        ctx.fillStyle = primaryColor === '#DA291C' ? 'rgba(218, 41, 28, 0.45)' : 'rgba(108, 171, 221, 0.45)';
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Jersey Number / ID Inside Ring
+        const displayNum = entity.jerseyNumber ?? entity.id;
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 8.5px JetBrains Mono, monospace';
+        ctx.font = 'bold 8px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const label = entity.jerseyNumber ? String(entity.jerseyNumber) : String(entity.id);
-        ctx.fillText(label, px, py);
+        ctx.fillText(String(displayNum), px, py);
 
         // Speed badge if sprinting
-        if (entity.speedKmh && entity.speedKmh > 20) {
-          ctx.fillStyle = '#121820';
-          ctx.strokeStyle = '#253142';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.roundRect(px - 14, py + 12, 28, 12, 3);
-          ctx.fill();
-          ctx.stroke();
-
-          ctx.fillStyle = '#FFFFFF';
-          ctx.font = '8px Inter, sans-serif';
+        if (entity.speedKmh && entity.speedKmh > 18) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+          ctx.fillRect(px - 10, py + 12, 20, 9);
+          ctx.fillStyle = '#CEFF00';
+          ctx.font = 'bold 7px monospace';
+          ctx.textAlign = 'center';
           ctx.fillText(`${Math.round(entity.speedKmh)}k`, px, py + 18);
         }
       }
@@ -341,208 +389,140 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         }
         ctx.beginPath();
         ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = d.color;
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-
-        ctx.fillStyle = d.color + '26';
+        ctx.fillStyle = d.color === '#CEFF00' ? 'rgba(206, 255, 0, 0.18)' : 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
       } else if (d.type === 'zone' && d.points.length >= 2) {
         const p1 = { x: d.points[0].x * width, y: d.points[0].y * height };
         const p2 = { x: d.points[1].x * width, y: d.points[1].y * height };
-        const minX = Math.min(p1.x, p2.x);
-        const minY = Math.min(p1.y, p2.y);
+        const xMin = Math.min(p1.x, p2.x);
+        const yMin = Math.min(p1.y, p2.y);
         const w = Math.abs(p2.x - p1.x);
         const h = Math.abs(p2.y - p1.y);
 
-        ctx.fillStyle = d.color + '22';
-        ctx.fillRect(minX, minY, w, h);
-        ctx.strokeStyle = d.color;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 4]);
-        ctx.strokeRect(minX, minY, w, h);
-
-        ctx.fillStyle = d.color;
-        ctx.font = 'bold 9px JetBrains Mono, monospace';
-        ctx.fillText('TACTICAL ZONE', minX + 6, minY + 14);
+        ctx.fillStyle = d.color === '#CEFF00' ? 'rgba(206, 255, 0, 0.12)' : 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(xMin, yMin, w, h);
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(xMin, yMin, w, h);
       } else if (d.type === 'pen' && d.points.length > 1) {
         ctx.beginPath();
         ctx.moveTo(d.points[0].x * width, d.points[0].y * height);
         for (let i = 1; i < d.points.length; i++) {
           ctx.lineTo(d.points[i].x * width, d.points[i].y * height);
         }
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.lineWidth = 3;
         ctx.stroke();
       }
       ctx.restore();
     });
 
     setEntityStats({ homeCount: homeC, awayCount: awayC, ballSpeed: bSpeed });
-    if (frame.tacticalMetrics) {
-      setTacticalMetrics(frame.tacticalMetrics);
+  }, [
+    showCanvasOverlay,
+    homeColor,
+    awayColor,
+    showFieldLines,
+    fieldLines,
+    showIntersections,
+    intersections,
+  ]);
+
+  // ── Auto-Resize & High-DPI Canvas ────────────────────────────────────────
+  const handleResize = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      if (currentFrame) {
+        renderFrame(currentFrame, showVideoBackground);
+      }
     }
-  }, []);
+  }, [currentFrame, renderFrame, showVideoBackground]);
 
-  // Sync to a specific frame counter index and re-render
-  const syncToFrameIndex = useCallback((frameIdx: number) => {
-    localFrameCounterRef.current = frameIdx % 600;
-    const frame = generate600FrameSequence(localFrameCounterRef.current, sessionId);
-    setCurrentFrame(frame);
-    renderFrame(frame, showVideoBackground);
-    if (onFrameUpdate) onFrameUpdate(frame);
-  }, [sessionId, renderFrame, showVideoBackground, onFrameUpdate]);
-
-  // ─── 1. YouTube IFrame API Integration (window.YT.Player) ──────────────
-  const ytVideoId = extractYouTubeVideoId(youtubeUrl);
-  const ytPlayerContainerId = `yt-player-${sessionId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
-
-  useEffect(() => {
-    // If videoSrc is used, skip YouTube initialization
-    if (videoSrc) return;
-
-    let isMounted = true;
-
-    const setupYTPlayer = () => {
-      if (!window.YT || !window.YT.Player) return;
-
-      const containerEl = document.getElementById(ytPlayerContainerId);
-      if (!containerEl) return;
-
-      try {
-        if (ytPlayerRef.current) {
-          ytPlayerRef.current.destroy?.();
-          ytPlayerRef.current = null;
-        }
-
-        ytPlayerRef.current = new window.YT.Player(ytPlayerContainerId, {
-          videoId: ytVideoId,
-          playerVars: {
-            autoplay: 1,
-            mute: 1,
-            controls: 1,
-            loop: 1,
-            playlist: ytVideoId,
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: (event: any) => {
-              if (!isMounted) return;
-              setIsYtReady(true);
-              event.target.playVideo();
-              event.target.setPlaybackRate(tempo);
-            },
-            onStateChange: (event: any) => {
-              if (!isMounted) return;
-              // 1 = PLAYING, 2 = PAUSED, 0 = ENDED, 3 = BUFFERING
-              if (event.data === 1) {
-                setIsPlaying(true);
-                // Start active high-frequency polling to synchronize 2D radar bidak with YouTube currentTime
-                if (ytSyncIntervalRef.current) clearInterval(ytSyncIntervalRef.current);
-                ytSyncIntervalRef.current = setInterval(() => {
-                  if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
-                    const currentSec = ytPlayerRef.current.getCurrentTime();
-                    const targetFrame = Math.floor(currentSec * 10);
-                    if (targetFrame !== localFrameCounterRef.current) {
-                      syncToFrameIndex(targetFrame);
-                    }
-                  }
-                }, 80);
-              } else if (event.data === 2) {
-                setIsPlaying(false);
-                if (ytSyncIntervalRef.current) clearInterval(ytSyncIntervalRef.current);
-                if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
-                  const currentSec = ytPlayerRef.current.getCurrentTime();
-                  syncToFrameIndex(Math.floor(currentSec * 10));
-                }
-              }
-            },
-          },
-        });
-      } catch (err) {
-        console.warn('YouTube IFrame API initialization error:', err);
-      }
-    };
-
-    if (window.YT && window.YT.Player) {
-      setupYTPlayer();
-    } else {
-      // Load official YouTube IFrame API script
-      const existingScript = document.getElementById('yt-iframe-api-script');
-      if (!existingScript) {
-        const tag = document.createElement('script');
-        tag.id = 'yt-iframe-api-script';
-        tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      }
-
-      const prevCallback = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => {
-        if (prevCallback) prevCallback();
-        if (isMounted) setupYTPlayer();
-      };
-    }
-
-    return () => {
-      isMounted = false;
-      if (ytSyncIntervalRef.current) clearInterval(ytSyncIntervalRef.current);
-      if (ytPlayerRef.current) {
-        try {
-          ytPlayerRef.current.destroy?.();
-        } catch {
-          // ignore
-        }
-        ytPlayerRef.current = null;
-      }
-    };
-  }, [ytVideoId, ytPlayerContainerId, videoSrc, syncToFrameIndex, tempo]);
-
-  // ─── 2. Internal Simulation Timer Fallback ──────────────────────────────
-  // If YouTube is not actively driving the timer, or during initial mount
   useEffect(() => {
     handleResize();
     window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
 
-    // Initial frame mount
-    const initFrame = generate600FrameSequence(0, sessionId);
+  // ── YouTube IFrame API Synchronization ───────────────────────────────────
+  useEffect(() => {
+    if (!youtubeUrl || videoSrc) return;
+
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    if (firstScriptTag && firstScriptTag.parentNode) {
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      ytPlayerRef.current = new window.YT.Player('tactiq-yt-iframe', {
+        events: {
+          onReady: () => {
+            setIsYtReady(true);
+            try {
+              const dur = ytPlayerRef.current.getDuration();
+              if (dur > 0) setVideoDuration(dur);
+            } catch {}
+          },
+          onStateChange: (event: any) => {
+            // YT.PlayerState.PLAYING = 1, PAUSED = 2, ENDED = 0
+            if (event.data === 1) setIsPlaying(true);
+            else if (event.data === 2) setIsPlaying(false);
+          },
+        },
+      });
+    };
+
+    return () => {
+      if (ytPlayerRef.current?.destroy) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch {}
+      }
+    };
+  }, [youtubeUrl, videoSrc]);
+
+  // ── Continuous Playback Loop (Synchronized with 10 FPS Simulation) ────────
+  useEffect(() => {
+    const initFrame = getFrameAtStep(0);
     setCurrentFrame(initFrame);
     renderFrame(initFrame, showVideoBackground);
     if (onFrameUpdate) onFrameUpdate(initFrame);
 
-    // If local video or iframe API not controlling playback, run fallback timer
-    if (!videoSrc && !isYtReady && isPlaying) {
-      if (localTimerRef.current) clearInterval(localTimerRef.current);
+    if (localTimerRef.current) clearInterval(localTimerRef.current);
+
+    if (isPlaying) {
+      const intervalMs = Math.max(25, Math.round(100 / playbackSpeedRef.current));
       localTimerRef.current = setInterval(() => {
-        syncToFrameIndex(localFrameCounterRef.current + 1);
-      }, Math.max(25, Math.floor(100 / tempo)));
+        localFrameCounterRef.current += 1;
+        const frame = getFrameAtStep(localFrameCounterRef.current);
+        setCurrentFrame(frame);
+        renderFrame(frame, showVideoBackground);
+        if (onFrameUpdate) onFrameUpdate(frame);
+
+        // Update progress bar
+        const simulatedSeconds = (localFrameCounterRef.current * 0.1) % 60;
+        setCurrentVideoTime(simulatedSeconds);
+      }, intervalMs);
     }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
       if (localTimerRef.current) clearInterval(localTimerRef.current);
     };
-  }, [sessionId, handleResize, renderFrame, showVideoBackground, onFrameUpdate, isYtReady, isPlaying, tempo, videoSrc, syncToFrameIndex]);
+  }, [sessionId, isPlaying, tempo, showVideoBackground, renderFrame, onFrameUpdate, getFrameAtStep]);
 
-  // ─── 3. Socket.io Live Stream Connection ───────────────────────────────
+  // ── WebSocket Subscription for Live Streams ──────────────────────────────
   useEffect(() => {
     const socket = getSocket();
+    joinTrackingSession(sessionId);
 
-    const handleConnect = () => {
-      setIsLiveConnected(true);
-      joinTrackingSession(sessionId);
-    };
-
-    const handleDisconnect = () => {
-      setIsLiveConnected(false);
-    };
-
-    const handleFrame = (payload: TrackingFramePayload) => {
+    const handleSocketFrame = (payload: TrackingFramePayload) => {
       if (payload.sessionId === sessionId) {
         setCurrentFrame(payload);
         renderFrame(payload, showVideoBackground);
@@ -550,708 +530,488 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
       }
     };
 
-    if (socket.connected) {
-      handleConnect();
-    }
-
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('frame_update', handleFrame);
+    socket.on('frame_update', handleSocketFrame);
 
     return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('frame_update', handleFrame);
+      socket.off('frame_update', handleSocketFrame);
       leaveTrackingSession(sessionId);
     };
   }, [sessionId, renderFrame, showVideoBackground, onFrameUpdate]);
 
-  // ─── 4. Play / Pause Control Synchronization ───────────────────────────
+  // ── Play/Pause & Speed Controls ──────────────────────────────────────────
   const togglePlayPause = () => {
     if (isPlaying) {
-      // Pause
       setIsPlaying(false);
-      if (localTimerRef.current) clearInterval(localTimerRef.current);
-      if (ytSyncIntervalRef.current) clearInterval(ytSyncIntervalRef.current);
       if (ytPlayerRef.current?.pauseVideo) {
         try {
           ytPlayerRef.current.pauseVideo();
         } catch {}
       }
-      if (videoElementRef.current) {
-        videoElementRef.current.pause();
-      }
+      if (videoElementRef.current) videoElementRef.current.pause();
     } else {
-      // Play
       setIsPlaying(true);
       if (ytPlayerRef.current?.playVideo) {
         try {
           ytPlayerRef.current.playVideo();
         } catch {}
       }
-      if (videoElementRef.current) {
-        videoElementRef.current.play();
-      }
-      // Start timer if video isn't driving events
-      if (!videoSrc && !isYtReady) {
-        if (localTimerRef.current) clearInterval(localTimerRef.current);
-        localTimerRef.current = setInterval(() => {
-          syncToFrameIndex(localFrameCounterRef.current + 1);
-        }, Math.max(25, Math.floor(100 / tempo)));
-      }
+      if (videoElementRef.current) videoElementRef.current.play().catch(() => {});
     }
   };
 
-  const resetSimulation = () => {
+  const handleReset = () => {
     localFrameCounterRef.current = 0;
-    trailsRef.current.clear();
+    setCurrentVideoTime(0);
     if (ytPlayerRef.current?.seekTo) {
       try {
         ytPlayerRef.current.seekTo(0, true);
       } catch {}
     }
-    if (videoElementRef.current) {
-      videoElementRef.current.currentTime = 0;
-    }
-    syncToFrameIndex(0);
+    if (videoElementRef.current) videoElementRef.current.currentTime = 0;
+
+    const frame = getFrameAtStep(0);
+    setCurrentFrame(frame);
+    renderFrame(frame, showVideoBackground);
+    if (onFrameUpdate) onFrameUpdate(frame);
   };
 
-  const handleTempoChange = (newTempo: number) => {
+  const changeTempo = (newTempo: number) => {
     setTempo(newTempo);
+    playbackSpeedRef.current = newTempo;
+    if (videoElementRef.current) {
+      videoElementRef.current.playbackRate = newTempo;
+    }
     if (ytPlayerRef.current?.setPlaybackRate) {
       try {
         ytPlayerRef.current.setPlaybackRate(newTempo);
       } catch {}
     }
-    if (videoElementRef.current) {
-      videoElementRef.current.playbackRate = newTempo;
-    }
-    // Update local timer if running
-    if (isPlaying && !videoSrc && !isYtReady) {
-      if (localTimerRef.current) clearInterval(localTimerRef.current);
-      localTimerRef.current = setInterval(() => {
-        syncToFrameIndex(localFrameCounterRef.current + 1);
-      }, Math.max(25, Math.floor(100 / newTempo)));
-    }
   };
 
-  const seekToMoment = (moment: MatchEventMoment) => {
-    setActiveMoment(moment);
-    const targetSeconds = moment.timestampMs / 1000.0;
-    const targetFrame = Math.floor(targetSeconds * 10);
-
-    if (ytPlayerRef.current?.seekTo) {
-      try {
-        ytPlayerRef.current.seekTo(targetSeconds, true);
-        if (isPlaying) ytPlayerRef.current.playVideo();
-      } catch {}
-    }
-    if (videoElementRef.current) {
-      videoElementRef.current.currentTime = targetSeconds;
-      if (isPlaying) videoElementRef.current.play();
-    }
-    syncToFrameIndex(targetFrame);
-  };
-
-  // ─── 5. HTML5 <video> Timeupdate Handler for Local Video MP4 ───────────
-  const handleVideoTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const video = e.currentTarget;
-    const curTime = video.currentTime;
-    const targetFrame = Math.floor(curTime * 10);
-    if (Math.abs(targetFrame - localFrameCounterRef.current) >= 1) {
-      syncToFrameIndex(targetFrame);
-    }
-  };
-
-  // ─── 6. Tactical Canvas Drawing & Pointer Handlers (TSK-PRO) ──────────
-  const getCanvasRelativePoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  // ── Telestrator Mouse Drawing Handlers ───────────────────────────────────
+  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    return { x, y };
+    return {
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    };
   };
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawMode) return;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    isPointerDownRef.current = true;
-    const pt = getCanvasRelativePoint(e);
+    isMouseDownRef.current = true;
+    const pt = getCanvasCoordinates(e);
 
-    const newDrawing: TacticalDrawing = {
-      id: `draw-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      type: activeDrawTool,
+    currentDrawingRef.current = {
+      id: `draw-${Date.now()}`,
+      type: drawTool,
       color: drawColor,
       points: [pt],
     };
-    currentDrawingRef.current = newDrawing;
+
     if (currentFrame) renderFrame(currentFrame, showVideoBackground);
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawMode || !isPointerDownRef.current || !currentDrawingRef.current) return;
-    const pt = getCanvasRelativePoint(e);
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawMode || !isMouseDownRef.current || !currentDrawingRef.current) return;
+    const pt = getCanvasCoordinates(e);
 
-    if (activeDrawTool === 'pen') {
+    if (drawTool === 'pen') {
       currentDrawingRef.current.points.push(pt);
     } else {
+      // For arrow, spotlight, zone: update endpoint
       if (currentDrawingRef.current.points.length === 1) {
         currentDrawingRef.current.points.push(pt);
       } else {
         currentDrawingRef.current.points[1] = pt;
       }
     }
+
     if (currentFrame) renderFrame(currentFrame, showVideoBackground);
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawMode || !isPointerDownRef.current) return;
-    isPointerDownRef.current = false;
-    try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {}
+  const handleMouseUp = () => {
+    if (!isDrawMode || !isMouseDownRef.current) return;
+    isMouseDownRef.current = false;
 
-    if (currentDrawingRef.current) {
-      const d = currentDrawingRef.current;
-      if (d.type === 'pen' && d.points.length > 1) {
-        const nextDrawings = [...drawingsRef.current, d];
-        setDrawings(nextDrawings);
-        drawingsRef.current = nextDrawings;
-      } else if (d.points.length >= 2 || (d.type === 'spotlight' && d.points.length >= 1)) {
-        const nextDrawings = [...drawingsRef.current, d];
-        setDrawings(nextDrawings);
-        drawingsRef.current = nextDrawings;
-      }
+    if (currentDrawingRef.current && currentDrawingRef.current.points.length > 0) {
+      setDrawings((prev) => [...prev, currentDrawingRef.current!]);
       currentDrawingRef.current = null;
-      if (currentFrame) renderFrame(currentFrame, showVideoBackground);
     }
+
+    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
   };
 
   const handleUndoDrawing = () => {
-    const nextDrawings = drawingsRef.current.slice(0, -1);
-    setDrawings(nextDrawings);
-    drawingsRef.current = nextDrawings;
-    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+    setDrawings((prev) => prev.slice(0, -1));
+    setTimeout(() => {
+      if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+    }, 20);
   };
 
   const handleClearDrawings = () => {
     setDrawings([]);
-    drawingsRef.current = [];
     currentDrawingRef.current = null;
-    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+    setTimeout(() => {
+      if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+    }, 20);
   };
 
-  // ─── 7. Tactical Dossier Export Handlers (TSK-PRO) ─────────────────────
+  // ── Tactical Dossier Export ──────────────────────────────────────────────
   const handleExportDossier = () => {
-    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     try {
-      const dataUrl = canvasRef.current.toDataURL('image/png');
-      setExportedImageUrl(dataUrl);
-      setShowExportModal(true);
+      const dataUri = canvas.toDataURL('image/png');
+      setExportImageUri(dataUri);
+      setIsExportModalOpen(true);
     } catch (err) {
-      console.error('Failed to export canvas snapshot:', err);
+      console.error('Failed to export canvas:', err);
     }
   };
 
-  const handleDownloadPng = () => {
-    if (!exportedImageUrl) return;
-    const a = document.createElement('a');
-    a.href = exportedImageUrl;
-    const frameNum = (currentFrame?.frameNumber ?? 0) % 600;
-    a.download = `TactIQ_Tactical_Dossier_Frame_${frameNum}_FA_Shield_2024.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  const handlePrintPdf = () => {
-    window.print();
-  };
-
   return (
-    <div className={`relative flex flex-col w-full bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-xs transition-colors ${className}`}>
-      
-      {/* Top Stream Status Header with Club Matchup */}
-      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200/80 dark:border-[#27272A] gap-2">
-        {/* Matchup & Status */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-[#CEFF00]/10 border border-[#CEFF00]/30 text-[#CEFF00] text-[10px] font-mono shadow-xs shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] animate-pulse" />
-            <span className="font-bold hidden sm:inline">
-              {videoSrc ? 'LOCAL MP4 SYNC' : isYtReady ? 'YOUTUBE SYNC 10FPS' : '600-FRAME CONTINUOUS'}
+    <div className={`flex flex-col bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-2xl overflow-hidden shadow-xs transition-colors ${className}`}>
+      {/* ── Top Match Header & Telemetry Bar ─────────────────────────────── */}
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-[#18181C] border-b border-slate-200 dark:border-[#27272A] flex-wrap gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+              {homeCode} <span className="text-tactiq-coral">{score}</span> {awayCode}
             </span>
-            <span className="font-bold sm:hidden">SYNC 10FPS</span>
           </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white font-mono shrink-0">
-            <span className="px-1.5 py-0.5 rounded bg-[#DA291C] text-white text-[9px] sm:text-[10px]">MUN</span>
-            <span className="tabular-nums">1 — 1</span>
-            <span className="px-1.5 py-0.5 rounded bg-[#6CABDD] text-white text-[9px] sm:text-[10px]">MCI</span>
-          </div>
+          <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#CEFF00]/15 text-[#CEFF00] border border-[#CEFF00]/30 hidden sm:inline">
+            {statusBadge}
+          </span>
         </div>
 
-        {/* View Mode & Tempo Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Tempo Selector (1x, 1.5x, 2x, 3x) */}
-          <div className="flex items-center bg-[#121215] border border-[#27272A] rounded-lg p-0.5 text-[10px] font-mono">
-            {[1, 1.5, 2, 3].map((rate) => (
-              <button
-                key={rate}
-                onClick={() => handleTempoChange(rate)}
-                className={`px-1.5 sm:px-2 py-0.5 rounded transition-all font-bold ${
-                  tempo === rate
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title={`Playback Speed ${rate}x`}
-              >
-                {rate}x
-              </button>
-            ))}
-          </div>
+        {/* Action Controls & Calibration */}
+        <div className="flex items-center gap-2">
+          {/* TSK-31 Homography Calibration Button */}
+          {onOpenCalibrationModal && (
+            <button
+              onClick={onOpenCalibrationModal}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono bg-[#18181C] hover:bg-[#222228] text-white border border-[#27272A] hover:border-[#CEFF00] transition-colors shrink-0 min-h-[32px] cursor-pointer"
+              title="Buka Kalibrasi Homografi Garis Lapangan (TSK-31)"
+            >
+              <Crosshair size={13} className="text-[#CEFF00]" />
+              <span className="hidden sm:inline">Kalibrasi Garis (TSK-31)</span>
+              <span className="sm:hidden">Kalibrasi</span>
+            </button>
+          )}
 
-          {/* Toggle Video vs 2D Pitch Canvas */}
-          <button
-            onClick={() => {
-              const nextState = !showVideoBackground;
-              setShowVideoBackground(nextState);
-              if (currentFrame) renderFrame(currentFrame, nextState);
-            }}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] ${
-              showVideoBackground
-                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
-                : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
-            }`}
-          >
-            {showVideoBackground ? <Video size={13} /> : <Eye size={13} />}
-            <span className="hidden sm:inline">
-              {showVideoBackground
-                ? videoSrc
-                  ? 'Local Video MP4'
-                  : 'YouTube High-Cam'
-                : '2D Pitch Plane'}
-            </span>
-            <span className="sm:hidden">{showVideoBackground ? 'Cam Video' : '2D Plane'}</span>
-          </button>
-
-          {/* Tactical Drawing Toolbar Toggle */}
+          {/* Telestrator Drawing Toggle */}
           <button
             onClick={() => setIsDrawMode(!isDrawMode)}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[32px] cursor-pointer ${
               isDrawMode
-                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs shadow-[#CEFF00]/20'
-                : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
+                ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+                : 'bg-white dark:bg-[#18181C] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#27272A] hover:border-[#CEFF00]'
             }`}
-            title="Tactical Telestrator / Canvas Drawing Tools"
+            title="Aktifkan alat telestrator anotasi video pelatih"
           >
             <Pencil size={13} />
-            <span className="hidden sm:inline">Coret Taktik</span>
-            <span className="sm:hidden">Draw</span>
-            {drawings.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-black text-[#CEFF00] font-bold">
-                {drawings.length}
-              </span>
-            )}
+            <span className="hidden sm:inline">{isDrawMode ? 'Drawing ON' : 'Telestrator'}</span>
           </button>
 
           {/* Export Tactical Dossier Button */}
           <button
             onClick={handleExportDossier}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] bg-[#121215] text-zinc-300 border border-[#27272A] hover:text-[#CEFF00] hover:border-[#CEFF00]/40"
-            title="Ekspor Dossier Taktis (PDF / PNG)"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono bg-white dark:bg-[#18181C] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#27272A] hover:border-emerald-400 transition-colors shrink-0 min-h-[32px] cursor-pointer"
+            title="Download snapshot taktis & dossier PDF/PNG"
           >
-            <Download size={13} />
-            <span className="hidden sm:inline">Ekspor Dossier</span>
-            <span className="sm:hidden">Export</span>
+            <Download size={13} className="text-emerald-400" />
+            <span className="hidden md:inline">Export Dossier</span>
           </button>
 
-          {/* Telemetry Entity Counters */}
-          <div className="hidden md:flex items-center gap-3 text-xs font-mono">
-            <div className="flex items-center gap-1 text-slate-600 dark:text-zinc-400">
-              <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
-              <span>MUN: {entityStats.homeCount}</span>
-            </div>
-            <div className="flex items-center gap-1 text-slate-600 dark:text-zinc-400">
-              <span className="w-2 h-2 rounded-full bg-[#6CABDD]" />
-              <span>MCI: {entityStats.awayCount}</span>
-            </div>
-          </div>
+          {/* Video / Pitch Background Toggle */}
+          <button
+            onClick={() => setShowVideoBackground(!showVideoBackground)}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[32px] cursor-pointer ${
+              showVideoBackground
+                ? 'bg-[#18181C] text-[#CEFF00] border border-[#CEFF00]/40'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300'
+            }`}
+          >
+            <Video size={13} />
+            <span className="hidden md:inline">{showVideoBackground ? 'Video ON' : '2D Pitch'}</span>
+          </button>
         </div>
       </div>
 
-      {/* Telestrator Drawing Toolbar (When isDrawMode is active) */}
+      {/* ── Telestrator Toolbar (When in draw mode) ───────────────────────── */}
       {isDrawMode && (
-        <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2 bg-[#1A1A22] border-b border-[#CEFF00]/20 text-xs font-mono gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 bg-slate-100 dark:bg-[#16161A] border-b border-slate-200 dark:border-[#27272A] text-xs font-mono flex-wrap gap-2">
           <div className="flex items-center gap-1 sm:gap-2">
-            <span className="text-[10px] text-[#CEFF00] font-bold uppercase tracking-wider hidden md:inline">
-              TELESTRATOR TOOLS:
-            </span>
+            <span className="text-slate-500 dark:text-zinc-400 text-[10px] uppercase font-bold mr-1">Tool:</span>
+            <button
+              onClick={() => setDrawTool('arrow')}
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer ${
+                drawTool === 'arrow' ? 'bg-[#CEFF00] text-black font-bold' : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              <ArrowUpRight size={13} />
+              <span>Arrow</span>
+            </button>
+            <button
+              onClick={() => setDrawTool('spotlight')}
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer ${
+                drawTool === 'spotlight' ? 'bg-[#CEFF00] text-black font-bold' : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              <Circle size={13} />
+              <span>Spotlight</span>
+            </button>
+            <button
+              onClick={() => setDrawTool('zone')}
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer ${
+                drawTool === 'zone' ? 'bg-[#CEFF00] text-black font-bold' : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              <Square size={13} />
+              <span>Zone</span>
+            </button>
+            <button
+              onClick={() => setDrawTool('pen')}
+              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer ${
+                drawTool === 'pen' ? 'bg-[#CEFF00] text-black font-bold' : 'bg-zinc-800 text-zinc-300'
+              }`}
+            >
+              <Pencil size={13} />
+              <span>Freehand</span>
+            </button>
+          </div>
 
-            {/* Tool Selection Buttons */}
-            <div className="flex items-center bg-[#121215] border border-[#27272A] rounded-lg p-0.5">
-              <button
-                onClick={() => setActiveDrawTool('arrow')}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                  activeDrawTool === 'arrow'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title="Panah Lari / Movement Arrow"
-              >
-                <ArrowUpRight size={13} />
-                <span className="hidden sm:inline">Panah</span>
-              </button>
-
-              <button
-                onClick={() => setActiveDrawTool('spotlight')}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                  activeDrawTool === 'spotlight'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title="Player Spotlight / Halo Ring"
-              >
-                <Circle size={13} />
-                <span className="hidden sm:inline">Spotlight</span>
-              </button>
-
-              <button
-                onClick={() => setActiveDrawTool('zone')}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                  activeDrawTool === 'zone'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title="Tactical Zone / Half-space Box"
-              >
-                <Square size={13} />
-                <span className="hidden sm:inline">Zone Box</span>
-              </button>
-
-              <button
-                onClick={() => setActiveDrawTool('pen')}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                  activeDrawTool === 'pen'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-                title="Freehand Pen"
-              >
-                <Pencil size={13} />
-                <span className="hidden sm:inline">Freehand</span>
-              </button>
-            </div>
-
-            {/* Color Palette */}
-            <div className="flex items-center gap-1.5 pl-2 border-l border-zinc-700/60">
-              {[
-                { name: 'Volt', color: '#CEFF00' },
-                { name: 'Cyan', color: '#00F0FF' },
-                { name: 'Red', color: '#FF3B30' },
-                { name: 'Emerald', color: '#00E676' },
-                { name: 'White', color: '#FFFFFF' },
-              ].map((c) => (
+          <div className="flex items-center gap-2">
+            {/* Color Swatches */}
+            <div className="flex items-center gap-1 mr-2">
+              {['#CEFF00', '#EF4444', '#38BDF8', '#F59E0B', '#FFFFFF'].map((c) => (
                 <button
-                  key={c.color}
-                  onClick={() => setDrawColor(c.color)}
-                  style={{ backgroundColor: c.color }}
-                  className={`w-5 h-5 rounded-full transition-transform ${
-                    drawColor === c.color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-[#1A1A22]' : 'opacity-70 hover:opacity-100'
+                  key={c}
+                  onClick={() => setDrawColor(c)}
+                  className={`w-5 h-5 rounded-full border cursor-pointer ${
+                    drawColor === c ? 'ring-2 ring-white scale-110' : 'opacity-70'
                   }`}
-                  title={c.name}
+                  style={{ backgroundColor: c }}
                 />
               ))}
             </div>
-          </div>
 
-          {/* Undo & Clear Controls */}
-          <div className="flex items-center gap-2">
+            {/* Undo & Clear */}
             <button
               onClick={handleUndoDrawing}
               disabled={drawings.length === 0}
-              className="flex items-center gap-1 px-2 py-1 rounded bg-[#121215] border border-[#27272A] text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none text-[11px]"
-              title="Batalkan coretan terakhir (Undo)"
+              className="p-1 rounded bg-zinc-800 text-zinc-300 hover:text-white disabled:opacity-30 cursor-pointer"
+              title="Undo last drawing"
             >
-              <Undo size={12} />
-              <span>Undo</span>
+              <Undo size={14} />
             </button>
-
             <button
               onClick={handleClearDrawings}
               disabled={drawings.length === 0}
-              className="flex items-center gap-1 px-2 py-1 rounded bg-red-950/40 border border-red-800/40 text-red-400 hover:bg-red-900/60 disabled:opacity-40 disabled:pointer-events-none text-[11px]"
-              title="Hapus semua coretan"
+              className="p-1 rounded bg-zinc-800 text-zinc-300 hover:text-red-400 disabled:opacity-30 cursor-pointer"
+              title="Clear all drawings"
             >
-              <Trash2 size={12} />
-              <span>Bersihkan</span>
-            </button>
-
-            <button
-              onClick={() => setIsDrawMode(false)}
-              className="p-1 rounded text-zinc-400 hover:text-white"
-              title="Tutup Mode Coret"
-            >
-              <X size={14} />
+              <Trash2 size={14} />
             </button>
           </div>
         </div>
       )}
 
-      {/* 16:9 Aspect Ratio Container with Canvas & Underlying Video */}
-      <div ref={containerRef} className="relative w-full aspect-video bg-[#0F2C1F] flex items-center justify-center overflow-hidden rounded-b-none">
-        
-        {/* Underlying Video Player (HTML5 Video or YouTube IFrame API Container) */}
-        <div className={`absolute inset-0 z-0 overflow-hidden ${showVideoBackground ? 'opacity-85' : 'opacity-0 pointer-events-none'}`}>
-          {videoSrc ? (
-            <video
-              ref={videoElementRef}
-              src={videoSrc}
-              autoPlay
-              loop
-              muted
-              playsInline
-              onTimeUpdate={handleVideoTimeUpdate}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="relative w-full h-full overflow-hidden">
-              <div
-                id={ytPlayerContainerId}
-                className="w-full h-full scale-[1.05]"
+      {/* ── Viewport: Video Canvas Layer ─────────────────────────────────── */}
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-video bg-[#0F2C1F] flex items-center justify-center overflow-hidden"
+      >
+        {/* Underneath Video / YouTube Player */}
+        {showVideoBackground && (
+          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+            {videoSrc ? (
+              <video
+                ref={videoElementRef}
+                src={videoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover opacity-85"
               />
-            </div>
-          )}
-        </div>
-
-        {/* HTML5 Overlay Canvas for 2D Pitch & Player Bounding Circles */}
-        <canvas
-          ref={canvasRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          className={`absolute inset-0 z-10 w-full h-full ${
-            isDrawMode ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'
-          }`}
-        />
-
-        {/* Live Status Pill in Viewport */}
-        <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 border border-white/10 text-[11px] font-mono text-white backdrop-blur-xs shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#CEFF00] animate-pulse" />
-            <span>2D Optical Radar</span>
-            <span className="text-zinc-500">·</span>
-            <span className="text-[#CEFF00] font-bold">11v11 COMMUNITY SHIELD</span>
-          </span>
-        </div>
-
-        {/* Dynamic Tactical Metrics Ribbon inside Viewport */}
-        {tacticalMetrics && (
-          <div className="absolute top-3 right-3 z-20 pointer-events-none hidden sm:flex items-center gap-2">
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-black/85 border border-white/10 text-[10px] font-mono text-zinc-300 backdrop-blur-xs shadow-xs">
-              <Compass size={11} className="text-[#CEFF00]" />
-              <span>Def Line:</span>
-              <span className="text-red-400 font-bold">MUN {tacticalMetrics.homeDefensiveLineMeters}m</span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-sky-400 font-bold">MCI {tacticalMetrics.awayDefensiveLineMeters}m</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/85 border border-white/10 text-[10px] font-mono text-zinc-300 backdrop-blur-xs shadow-xs">
-              <Gauge size={11} className="text-amber-400" />
-              <span>Compact:</span>
-              <span className="text-amber-300 font-bold">{tacticalMetrics.homeCompactnessAreaM2} m²</span>
-            </div>
+            ) : youtubeUrl ? (
+              <iframe
+                id="tactiq-yt-iframe"
+                src={youtubeUrl}
+                title="Tactical YouTube Broadcast"
+                className="w-full h-full border-0 pointer-events-none opacity-85"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            ) : null}
           </div>
         )}
 
-        {/* Frame & Active Moment Pill */}
-        <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
-          <div className="px-2.5 py-1 bg-black/80 border border-white/10 rounded-md text-[11px] font-mono text-zinc-300 backdrop-blur-xs">
-            Frame {(currentFrame?.frameNumber ?? 0) % 600} / 600 ({(((currentFrame?.frameNumber ?? 0) % 600) * 0.1).toFixed(1)}s)
-          </div>
-          {activeMoment && (
-            <div className="px-2.5 py-1 bg-black/85 border border-white/10 rounded-md text-[11px] text-white font-mono font-medium flex items-center gap-1 backdrop-blur-xs">
-              <Award size={12} className="text-amber-400" />
-              <span>{activeMoment.minute}&apos; {activeMoment.label}</span>
+        {/* Foreground Interactive Canvas */}
+        <canvas
+          ref={canvasRef}
+          width={960}
+          height={540}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          className={`absolute inset-0 w-full h-full z-10 ${
+            isDrawMode ? 'cursor-crosshair' : 'cursor-default'
+          }`}
+        />
+
+        {/* Real-time Kinematics Floating HUD */}
+        {showKinematicsHUD && (
+          <div className="absolute top-3 left-3 z-20 pointer-events-none flex flex-col gap-1.5 font-mono text-[10px]">
+            <div className="px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-xs border border-white/10 text-white flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00]" />
+              <span>DEF LINE:</span>
+              <span style={{ color: homeColor }}>{homeCode} {liveMetrics.homeDefensiveLineMeters}m</span>
+              <span className="text-zinc-500">/</span>
+              <span style={{ color: awayColor }}>{awayCode} {liveMetrics.awayDefensiveLineMeters}m</span>
             </div>
-          )}
-        </div>
+            <div className="px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-xs border border-white/10 text-white flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+              <span>HULL AREA:</span>
+              <span style={{ color: homeColor }}>{liveMetrics.homeCompactnessAreaM2}m²</span>
+              <span className="text-zinc-500">/</span>
+              <span style={{ color: awayColor }}>{liveMetrics.awayCompactnessAreaM2}m²</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Match Event Timeline Bar */}
-      <div className="px-3 sm:px-4 py-2 bg-slate-50 dark:bg-[#18181C] border-t border-slate-200/80 dark:border-[#27272A] flex items-center justify-between text-xs gap-2 sm:gap-3 transition-colors">
-        <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase font-mono tracking-wider shrink-0 hidden sm:inline">
-          FA Shield Key Moments:
-        </span>
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full pr-1 no-scrollbar">
-          {MATCH_TIMELINE_EVENTS.map((moment) => (
+      {/* ── Playback Controls Bar ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-[#18181C] border-t border-slate-200 dark:border-[#27272A] flex-wrap gap-2 text-xs font-mono">
+        <div className="flex items-center gap-2">
+          {/* Play/Pause Button */}
+          <button
+            onClick={togglePlayPause}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+              isPlaying
+                ? 'bg-[#CEFF00] text-black shadow-xs'
+                : 'bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200'
+            }`}
+          >
+            {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+
+          {/* Reset */}
+          <button
+            onClick={handleReset}
+            className="p-1.5 rounded-lg bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-white cursor-pointer"
+            title="Reset ke awal (0:00)"
+          >
+            <RotateCcw size={13} />
+          </button>
+
+          {/* Tempo Controls */}
+          <div className="flex items-center gap-1 ml-2">
+            {[0.5, 1.0, 1.5, 2.0].map((rate) => (
+              <button
+                key={rate}
+                onClick={() => changeTempo(rate)}
+                className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer ${
+                  tempo === rate
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-black'
+                    : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                }`}
+              >
+                {rate}x
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Match Key Moments Timeline Shortcuts */}
+        <div className="hidden lg:flex items-center gap-1.5 text-[10px]">
+          <span className="text-zinc-400 mr-1 font-bold">Key Moments:</span>
+          {(homeCode === 'ESP' ? SPAIN_CROATIA_EVENTS : COMMUNITY_SHIELD_EVENTS).slice(0, 4).map((evt) => (
             <button
-              key={moment.minute}
-              onClick={() => seekToMoment(moment)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all shrink-0 ${
-                activeMoment?.minute === moment.minute
-                  ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
-                  : 'bg-[#121215] border border-[#27272A] text-zinc-300 hover:border-zinc-700 hover:text-white shadow-xs'
-              }`}
+              key={evt.minute}
+              onClick={() => {
+                localFrameCounterRef.current = evt.minute * 6;
+                const frame = getFrameAtStep(localFrameCounterRef.current);
+                setCurrentFrame(frame);
+                renderFrame(frame, showVideoBackground);
+              }}
+              className="px-2 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-[#CEFF00] hover:bg-zinc-700 transition-colors cursor-pointer"
             >
-              <span className="font-bold">{moment.minute}&apos;</span>
-              <span className="font-sans font-medium">{moment.label}</span>
+              {evt.minute}' {evt.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Bottom Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[#121215] border-t border-[#27272A] text-xs transition-colors gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={togglePlayPause}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg font-semibold text-xs transition-all shadow-xs ${
-              isPlaying
-                ? 'bg-amber-600 hover:bg-amber-500 text-white'
-                : 'bg-[#CEFF00] hover:bg-[#b8e600] text-black font-black shadow-xs shadow-[#CEFF00]/20'
-            }`}
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-            <span>{isPlaying ? 'Pause Tracker' : 'Play Tracker'}</span>
-          </button>
-
-          <button
-            onClick={resetSimulation}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-[#1A1A1E] transition-colors text-xs font-mono shadow-xs"
-            title="Reset video playback to frame 0"
-          >
-            <RotateCcw size={13} />
-            <span>Reset (0s)</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3 text-slate-500 dark:text-zinc-400 font-mono text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <Activity size={13} className="text-[#CEFF00]" />
-            <span>Sync: {videoSrc ? 'HTML5 timeupdate' : 'YouTube IFrame API'}</span>
-          </div>
-          <span className="text-zinc-600">|</span>
-          <span>Tempo: {tempo}x</span>
-        </div>
-      </div>
-
-      {/* Tactical Dossier Export Modal (TSK-PRO) */}
-      {showExportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-3xl bg-[#121215] border border-[#27272A] rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#27272A] bg-[#18181C]">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-[#CEFF00]">
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white font-sans">
-                    Dossier Analisis Taktis Pertandingan
-                  </h3>
-                  <p className="text-xs text-zinc-400 font-mono">
-                    FA Community Shield 2024 · MUN vs MCI · Laporan Resmi Tim Analis
-                  </p>
-                </div>
+      {/* ── Export Dossier Modal ─────────────────────────────────────────── */}
+      {isExportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-[#141418] border border-slate-200 dark:border-[#27272A] rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3">
+              <div className="flex items-center gap-2">
+                <FileText size={18} className="text-[#CEFF00]" />
+                <h3 className="font-bold text-base text-slate-900 dark:text-white font-mono">
+                  Tactical Dossier Export
+                </h3>
               </div>
               <button
-                onClick={() => setShowExportModal(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+                onClick={() => setIsExportModalOpen(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white cursor-pointer"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
 
-            {/* Modal Body / Report Content */}
-            <div className="p-6 overflow-y-auto space-y-6 text-sm">
-              {/* Captured Canvas Snapshot */}
-              {exportedImageUrl && (
-                <div className="rounded-xl overflow-hidden border border-[#27272A] bg-[#0A0A0C]">
-                  <img
-                    src={exportedImageUrl}
-                    alt="Tactical Canvas Snapshot"
-                    className="w-full aspect-video object-contain"
-                  />
-                </div>
-              )}
-
-              {/* Match Moment & Phase Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
-                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">FASE LAGA</span>
-                  <div className="text-white font-bold text-sm">
-                    {activeMoment ? `${activeMoment.minute}' ${activeMoment.label}` : 'Continuous Match Play'}
-                  </div>
-                  <span className="text-[11px] text-zinc-500 font-mono mt-0.5 block">
-                    Frame {(currentFrame?.frameNumber ?? 0) % 600} / 600
-                  </span>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
-                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">GARIS PERTAHANAN (DEF LINE)</span>
-                  <div className="flex items-center gap-2 text-white font-bold text-sm font-mono">
-                    <span className="text-red-400">MUN {tacticalMetrics?.homeDefensiveLineMeters ?? 41.2}m</span>
-                    <span className="text-zinc-600">/</span>
-                    <span className="text-sky-400">MCI {tacticalMetrics?.awayDefensiveLineMeters ?? 48.5}m</span>
-                  </div>
-                  <span className="text-[11px] text-emerald-400 font-mono mt-0.5 block">
-                    Struktur Kompak ({tacticalMetrics?.homeCompactnessAreaM2 ?? 482} m²)
-                  </span>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
-                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">STATUS ANOTASI</span>
-                  <div className="text-[#CEFF00] font-bold text-sm font-mono">
-                    {drawings.length} Corekan Aktif
-                  </div>
-                  <span className="text-[11px] text-zinc-400 font-mono mt-0.5 block">
-                    {drawings.filter(d => d.type === 'arrow').length} Panah · {drawings.filter(d => d.type === 'spotlight').length} Spotlight · {drawings.filter(d => d.type === 'zone').length} Zone
-                  </span>
-                </div>
+            {/* Preview Image */}
+            {exportImageUri && (
+              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-[#27272A] aspect-video">
+                <img src={exportImageUri} alt="Tactical Canvas Snapshot" className="w-full h-full object-cover" />
               </div>
+            )}
 
-              {/* Coaching Staff Tactical Dossier Summary Note */}
-              <div className="p-4 rounded-xl bg-[#CEFF00]/5 border border-[#CEFF00]/20 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#CEFF00] uppercase font-mono">
-                  <Activity size={14} />
-                  <span>Catatan Taktis Staf Pelatih (Tactical Dossier Debrief)</span>
-                </div>
-                <p className="text-xs text-zinc-300 leading-relaxed">
-                  Berdasarkan pelacakan pergerakan pemain di frame ini, transisi balik Manchester United memanfaatkan celah half-space kiri melalui overlapping run. Garis pertahanan Manchester City naik setinggi {tacticalMetrics?.awayDefensiveLineMeters ?? 48.5}m, menciptakan ruang 28.4m di belakang garis bek tengah untuk bola terobosan diagonal.
-                </p>
+            {/* Summary Metrics */}
+            <div className="grid grid-cols-3 gap-2 text-center font-mono text-xs p-3 rounded-xl bg-slate-50 dark:bg-[#18181C]">
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Matchup</span>
+                <span className="font-bold text-slate-900 dark:text-white">{homeCode} vs {awayCode}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Defensive Line</span>
+                <span className="font-bold text-[#CEFF00]">{liveMetrics.homeDefensiveLineMeters}m / {liveMetrics.awayDefensiveLineMeters}m</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 block">Hull Area</span>
+                <span className="font-bold text-sky-400">{liveMetrics.homeCompactnessAreaM2}m²</span>
               </div>
             </div>
 
-            {/* Modal Footer / Actions */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-[#27272A] bg-[#18181C]">
-              <span className="text-xs font-mono text-zinc-500 hidden sm:inline">
-                TactIQ Pro Analytics Engine v2.4
-              </span>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handlePrintPdf}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#27272A] hover:bg-[#323238] text-white font-medium text-xs transition-colors"
-                >
-                  <FileText size={14} />
-                  <span>Cetak / Simpan PDF</span>
-                </button>
-                <button
-                  onClick={handleDownloadPng}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#CEFF00] hover:bg-[#b8e600] text-black font-bold text-xs transition-all shadow-xs shadow-[#CEFF00]/20"
+            {/* Download Button */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-mono font-bold text-zinc-400 hover:text-white cursor-pointer"
+              >
+                Cancel
+              </button>
+              {exportImageUri && (
+                <a
+                  href={exportImageUri}
+                  download={`tactiq-dossier-${homeCode}-${awayCode}-${Date.now()}.png`}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-mono font-black rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   <Download size={14} />
-                  <span>Unduh Gambar PNG</span>
-                </button>
-              </div>
+                  <span>Download Snapshot PNG</span>
+                </a>
+              )}
             </div>
-
           </div>
         </div>
       )}
-
     </div>
   );
 };

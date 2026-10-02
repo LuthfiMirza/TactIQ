@@ -490,6 +490,15 @@ function SubstituteRow({
   );
 }
 
+// Module-level in-memory cache to persist active match, fixtures, and standings across Next.js client route transitions
+let cachedCenterFixtures: MatchFixture[] | null = null;
+let cachedCenterStandings: Array<{ rank: number; club: string; code?: string; played: number; gd: string; pts: number; form: string[]; isLeader: boolean }> | null = null;
+let cachedCenterActiveMatch: any = null;
+let cachedCenterLineup: { home: TeamLineup; away: TeamLineup } | null = null;
+let cachedCenterStatsData: typeof STATS_DATA | null = null;
+let cachedCenterH2HData: H2HEncounter[] | null = null;
+let cachedCenterH2HSummary: { homeWins: number; draws: number; awayWins: number } | null = null;
+
 export default function MatchCenterPage() {
   const [mounted, setMounted] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<MatchStatusType>('LIVE');
@@ -499,8 +508,8 @@ export default function MatchCenterPage() {
   const [isNotified, setIsNotified] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
   const [isScenarioOpen, setIsScenarioOpen] = useState(false);
-  const [fixtures, setFixtures] = useState<MatchFixture[]>(MATCHDAY_FIXTURES);
-  const [standings, setStandings] = useState<Array<{ rank: number; club: string; code?: string; played: number; gd: string; pts: number; form: string[]; isLeader: boolean }>>(LEAGUE_STANDINGS);
+  const [fixtures, setFixtures] = useState<MatchFixture[]>(() => cachedCenterFixtures || MATCHDAY_FIXTURES);
+  const [standings, setStandings] = useState<Array<{ rank: number; club: string; code?: string; played: number; gd: string; pts: number; form: string[]; isLeader: boolean }>>(() => cachedCenterStandings || LEAGUE_STANDINGS);
   const [absentees, setAbsentees] = useState(PREVIEW_ABSENTEES);
   const [liveScores, setLiveScores] = useState<any[]>([]);
   const [isSyncingLive, setIsSyncingLive] = useState(false);
@@ -555,16 +564,45 @@ export default function MatchCenterPage() {
     missingCapabilities?: string[];
     mode?: 'live' | 'cached' | 'demo';
     events?: Array<{ minute: number; team: string; player: string; type: string; detail?: string }>;
-  }>(DEFAULT_DEMO_MATCH);
+  }>(() => cachedCenterActiveMatch || DEFAULT_DEMO_MATCH);
 
-  const [activeLineup, setActiveLineup] = useState<{ home: TeamLineup; away: TeamLineup }>(LINEUPS);
-  const [matchStatsData, setMatchStatsData] = useState<typeof STATS_DATA>(STATS_DATA);
-  const [matchH2HData, setMatchH2HData] = useState<H2HEncounter[]>(H2H_ENCOUNTERS);
-  const [h2hSummary, setH2HSummary] = useState<{ homeWins: number; draws: number; awayWins: number }>({
+  const [activeLineup, setActiveLineup] = useState<{ home: TeamLineup; away: TeamLineup }>(() => cachedCenterLineup || LINEUPS);
+  const [matchStatsData, setMatchStatsData] = useState<typeof STATS_DATA>(() => cachedCenterStatsData || STATS_DATA);
+  const [matchH2HData, setMatchH2HData] = useState<H2HEncounter[]>(() => cachedCenterH2HData || H2H_ENCOUNTERS);
+  const [h2hSummary, setH2HSummary] = useState<{ homeWins: number; draws: number; awayWins: number }>(() => cachedCenterH2HSummary || {
     homeWins: 2,
     draws: 0,
     awayWins: 3,
   });
+
+  // Keep in-memory cache synchronized with state updates
+  useEffect(() => {
+    cachedCenterActiveMatch = activeMatch;
+  }, [activeMatch]);
+
+  useEffect(() => {
+    cachedCenterFixtures = fixtures;
+  }, [fixtures]);
+
+  useEffect(() => {
+    cachedCenterStandings = standings;
+  }, [standings]);
+
+  useEffect(() => {
+    cachedCenterLineup = activeLineup;
+  }, [activeLineup]);
+
+  useEffect(() => {
+    cachedCenterStatsData = matchStatsData;
+  }, [matchStatsData]);
+
+  useEffect(() => {
+    cachedCenterH2HData = matchH2HData;
+  }, [matchH2HData]);
+
+  useEffect(() => {
+    cachedCenterH2HSummary = h2hSummary;
+  }, [h2hSummary]);
 
   const handleSelectLiveMatch = (m: any) => {
     const goalEvents = Array.isArray(m.events) ? m.events.filter((ev: any) => ev.type === 'Goal') : [];
@@ -1002,7 +1040,7 @@ export default function MatchCenterPage() {
     socket.on('match_score_update', onScoreUpdate);
     socket.on('match_event', onMatchEvent);
 
-    // Fetch real matchday fixtures from PostgreSQL
+    // Fetch real matchday fixtures from API
     api.getFixtures()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -1010,13 +1048,13 @@ export default function MatchCenterPage() {
             id: f.id,
             homeTeam: f.homeTeam?.name || 'Home Club',
             homeShort: f.homeTeam?.code || 'HOM',
-            homeColor: '#6CABDD',
+            homeColor: getTeamColor(f.homeTeam?.name || ''),
             awayTeam: f.awayTeam?.name || 'Away Club',
             awayShort: f.awayTeam?.code || 'AWA',
-            awayColor: '#DA291C',
+            awayColor: getTeamColor(f.awayTeam?.name || ''),
             homeScore: f.homeScore ?? undefined,
             awayScore: f.awayScore ?? undefined,
-            timeOrStatus: f.status === 'SCHEDULED' ? 'Upcoming' : f.status,
+            timeOrStatus: f.status === 'SCHEDULED' ? 'Upcoming' : f.status === 'FINISHED' ? 'FT' : 'LIVE',
             statusType: (f.status === 'SCHEDULED' ? 'UPCOMING' : f.status === 'FINISHED' ? 'FINISHED' : 'LIVE') as MatchStatusType,
             venue: f.venue,
             xgHome: Number((1.85 + idx * 0.22).toFixed(2)),
@@ -1024,6 +1062,41 @@ export default function MatchCenterPage() {
             matchdayNote: f.status === 'SCHEDULED' ? 'TactIQ AI Preview Ready' : 'Final Match Stats',
           }));
           setFixtures(mapped);
+
+          // Auto-activate latest real match in hero scoreboard if currently showing demo
+          setActiveMatch((current) => {
+            if (current.isDemo && mapped.length > 0) {
+              const latest = mapped[0];
+              const hScore = latest.homeScore ?? 0;
+              const aScore = latest.awayScore ?? 0;
+              return {
+                id: latest.id,
+                league: 'Premier League · Real Matchday',
+                venue: latest.venue || 'Premier League Stadium',
+                homeTeam: latest.homeTeam,
+                homeShort: latest.homeShort,
+                homeColor: latest.homeColor,
+                awayTeam: latest.awayTeam,
+                awayShort: latest.awayShort,
+                awayColor: latest.awayColor,
+                homeScore: hScore,
+                awayScore: aScore,
+                statusType: latest.statusType,
+                timeOrStatus: latest.timeOrStatus,
+                scorersHome: latest.statusType !== 'UPCOMING' ? [`${latest.homeTeam} Goal`] : ['–'],
+                scorersAway: latest.statusType !== 'UPCOMING' ? [`${latest.awayTeam} Goal`] : ['–'],
+                xgHome: latest.xgHome ?? 1.85,
+                xgAway: latest.xgAway ?? 1.10,
+                winProbHome: 52,
+                winProbDraw: 26,
+                winProbAway: 22,
+                isLiveFeed: false,
+                isDemo: false,
+                mode: 'live',
+              };
+            }
+            return current;
+          });
         }
       })
       .catch((err) => console.warn('[MatchCenter] Real fixtures fetch error:', err));
