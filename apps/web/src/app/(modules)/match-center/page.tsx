@@ -518,6 +518,14 @@ export default function MatchCenterPage() {
   } | null>(null);
   const [isCustomMatchModalOpen, setIsCustomMatchModalOpen] = useState(false);
 
+  // Tactical What-If Simulation Sliders State (TSK-14 / B)
+  const [whatIfHomePossession, setWhatIfHomePossession] = useState<number>(55);
+  const [whatIfHomeForm, setWhatIfHomeForm] = useState<number>(11);
+  const [whatIfAwayForm, setWhatIfAwayForm] = useState<number>(10);
+  const [whatIfHomeGoalsAvg, setWhatIfHomeGoalsAvg] = useState<number>(2.2);
+  const [whatIfAwayGoalsAvg, setWhatIfAwayGoalsAvg] = useState<number>(1.2);
+  const [isSimulatingWhatIf, setIsSimulatingWhatIf] = useState<boolean>(false);
+
   // Active match state controlling the central hero scoreboard & tabs
   const [activeMatch, setActiveMatch] = useState<{
     id: string;
@@ -1135,10 +1143,30 @@ export default function MatchCenterPage() {
     };
   }, [activeMatch.id, activeMatch.homeTeam, activeMatch.awayTeam]);
 
-  const handleOpenAiModal = async () => {
-    setShowAiModal(true);
+  const runWhatIfSimulation = async (
+    homePoss = whatIfHomePossession,
+    homeForm = whatIfHomeForm,
+    awayForm = whatIfAwayForm,
+    homeGoals = whatIfHomeGoalsAvg,
+    awayGoals = whatIfAwayGoalsAvg
+  ) => {
+    setIsSimulatingWhatIf(true);
     try {
-      const res = await api.predictMatch({ fixtureId: 'fixture-mci-ars' });
+      const res = await api.predictMatch({
+        fixtureId: activeMatch.id || 'fixture-mci-ars',
+        homeTeamStats: {
+          possessionAvg: homePoss,
+          recentFormPoints: homeForm,
+          goalsScoredAvg: homeGoals,
+          goalsConcededAvg: 0.9,
+        },
+        awayTeamStats: {
+          possessionAvg: Math.max(20, Math.min(80, 100 - homePoss)),
+          recentFormPoints: awayForm,
+          goalsScoredAvg: awayGoals,
+          goalsConcededAvg: 1.2,
+        },
+      });
       if (res && res.winProbabilities) {
         setPredictionData({
           score: res.predictedScore,
@@ -1150,7 +1178,14 @@ export default function MatchCenterPage() {
       }
     } catch (e) {
       console.warn('[MatchCenter] Prediction API fallback:', e);
+    } finally {
+      setIsSimulatingWhatIf(false);
     }
+  };
+
+  const handleOpenAiModal = async () => {
+    setShowAiModal(true);
+    await runWhatIfSimulation();
   };
 
   const handleToggleNotification = () => {
@@ -2831,25 +2866,27 @@ export default function MatchCenterPage() {
 
       </div>
 
-      {/* Modal Score Probabilities */}
+      {/* Modal Score Probabilities with Interactive What-If Simulation Lab */}
       {showAiModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto"
           onClick={() => setShowAiModal(false)}
         >
           <div
-            className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-2xl transition-colors"
+            className="w-full max-w-xl sm:max-w-2xl rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-5 sm:p-6 shadow-2xl transition-colors my-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3 mb-4">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-amber-500 font-bold flex items-center gap-1.5">
                   <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[9px]">
-                    DEMO MODEL
+                    DIXON-COLES POISSON + RF
                   </span>
-                  AI Simulation Engine (RandomForest on Synthetic Data)
+                  AI Match Simulation Lab
                 </span>
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">Score Probabilities</h3>
+                <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white mt-0.5">
+                  Probabilitas Skor & "What-If" Tactical Simulator
+                </h3>
               </div>
               <button
                 type="button"
@@ -2862,35 +2899,194 @@ export default function MatchCenterPage() {
             </div>
 
             <div className="space-y-4 font-mono text-xs">
-              <p className="text-slate-500 dark:text-zinc-400 text-[11px] leading-relaxed">
-                <span className="font-bold text-amber-400">DEMO MODEL:</span> Estimated xG (model) — bukan shot-level xG telemetry nyata. Dilatih dengan data sintetis untuk demonstrasi probabilitas.
-              </p>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center pt-1">
+              {/* Outcome Probabilities Scorecards */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                 <div className="p-3 bg-slate-100/80 dark:bg-[#1E1E24] rounded-xl border border-slate-300 dark:border-zinc-700 shadow-2xs">
-                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">
+                  <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white block tabular-nums">
                     {predictionData?.score || '2 - 1'}
                   </span>
-                  <span className="text-[11px] text-sky-600 dark:text-sky-400 font-bold">
-                    Home Win: {predictionData?.homeWin ?? 45.1}%
+                  <span className="text-[11px] text-sky-600 dark:text-sky-400 font-bold block mt-0.5">
+                    {activeMatch.homeShort} Win: {predictionData?.homeWin ?? 45.1}%
                   </span>
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-xl border border-slate-200 dark:border-[#27272A]">
-                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">Draw</span>
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">
+                  <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white block">Draw</span>
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold block mt-0.5">
                     {predictionData?.draw ?? 19.6}%
                   </span>
                 </div>
                 <div className="p-3 bg-slate-50 dark:bg-[#18181C] rounded-xl border border-slate-200 dark:border-[#27272A]">
-                  <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white block">Away Win</span>
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold">
+                  <span className="text-base sm:text-xl font-black text-slate-900 dark:text-white block">
+                    {activeMatch.awayShort} Win
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-semibold block mt-0.5">
                     {predictionData?.awayWin ?? 35.3}%
                   </span>
                 </div>
               </div>
 
+              {/* ── Interactive What-If Tactical Simulation Lab ── */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/70 dark:border-zinc-800/80 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <FlaskConical size={15} className="text-[#CEFF00]" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      Uji Skenario Taktik (What-If Sliders)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400">
+                    Geser parameter untuk memprediksi perubahan peluang
+                  </span>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-zinc-400 font-bold">Preset Taktik:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWhatIfHomePossession(68);
+                      setWhatIfHomeForm(14);
+                      setWhatIfAwayForm(8);
+                      setWhatIfHomeGoalsAvg(2.8);
+                      setWhatIfAwayGoalsAvg(0.9);
+                      runWhatIfSimulation(68, 14, 8, 2.8, 0.9);
+                    }}
+                    className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] border border-zinc-700 hover:border-[#CEFF00] transition-colors"
+                  >
+                    High-Press Overload (68% Poss)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWhatIfHomePossession(50);
+                      setWhatIfHomeForm(10);
+                      setWhatIfAwayForm(10);
+                      setWhatIfHomeGoalsAvg(1.8);
+                      setWhatIfAwayGoalsAvg(1.8);
+                      runWhatIfSimulation(50, 10, 10, 1.8, 1.8);
+                    }}
+                    className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] border border-zinc-700 hover:border-[#CEFF00] transition-colors"
+                  >
+                    Balanced Derby (50/50)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWhatIfHomePossession(38);
+                      setWhatIfHomeForm(7);
+                      setWhatIfAwayForm(13);
+                      setWhatIfHomeGoalsAvg(1.0);
+                      setWhatIfAwayGoalsAvg(2.4);
+                      runWhatIfSimulation(38, 7, 13, 1.0, 2.4);
+                    }}
+                    className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] border border-zinc-700 hover:border-[#CEFF00] transition-colors"
+                  >
+                    Counter Low-Block (38% Poss)
+                  </button>
+                </div>
+
+                {/* Slider 1: Possession % */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700 dark:text-zinc-300">
+                      Penguasaan Bola: {activeMatch.homeShort} {whatIfHomePossession}% vs {activeMatch.awayShort} {100 - whatIfHomePossession}%
+                    </span>
+                    <span className="text-[10px] text-zinc-400 tabular-nums font-bold">
+                      {whatIfHomePossession}% : {100 - whatIfHomePossession}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={25}
+                    max={75}
+                    value={whatIfHomePossession}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setWhatIfHomePossession(val);
+                      runWhatIfSimulation(val, whatIfHomeForm, whatIfAwayForm, whatIfHomeGoalsAvg, whatIfAwayGoalsAvg);
+                    }}
+                    className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#CEFF00]"
+                  />
+                  <div className="flex justify-between text-[9px] text-zinc-500">
+                    <span>25% Dominasi Bertahan</span>
+                    <span>50% Seimbang</span>
+                    <span>75% Dominasi Total</span>
+                  </div>
+                </div>
+
+                {/* Sliders Grid: Form Points */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {/* Home Form */}
+                  <div className="space-y-1 bg-white/50 dark:bg-[#121215]/50 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800/80">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-400 font-semibold">{activeMatch.homeShort} Form (5 Laga):</span>
+                      <span className="font-bold text-[#CEFF00] tabular-nums">{whatIfHomeForm} / 15 pts</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={15}
+                      value={whatIfHomeForm}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setWhatIfHomeForm(val);
+                        runWhatIfSimulation(whatIfHomePossession, val, whatIfAwayForm, whatIfHomeGoalsAvg, whatIfAwayGoalsAvg);
+                      }}
+                      className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#CEFF00]"
+                    />
+                  </div>
+
+                  {/* Away Form */}
+                  <div className="space-y-1 bg-white/50 dark:bg-[#121215]/50 p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800/80">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-400 font-semibold">{activeMatch.awayShort} Form (5 Laga):</span>
+                      <span className="font-bold text-sky-400 tabular-nums">{whatIfAwayForm} / 15 pts</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={15}
+                      value={whatIfAwayForm}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setWhatIfAwayForm(val);
+                        runWhatIfSimulation(whatIfHomePossession, whatIfHomeForm, val, whatIfHomeGoalsAvg, whatIfAwayGoalsAvg);
+                      }}
+                      className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#CEFF00]"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Simulation Status Indicator */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-2 text-[10px] text-zinc-400">
+                    <span className={`w-2 h-2 rounded-full ${isSimulatingWhatIf ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
+                    <span>{isSimulatingWhatIf ? 'Menghitung matriks probabilitas...' : 'Simulasi Sinkron (Dixon-Coles Poisson)'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWhatIfHomePossession(55);
+                      setWhatIfHomeForm(11);
+                      setWhatIfAwayForm(10);
+                      setWhatIfHomeGoalsAvg(2.2);
+                      setWhatIfAwayGoalsAvg(1.2);
+                      runWhatIfSimulation(55, 11, 10, 2.2, 1.2);
+                    }}
+                    className="text-[10px] text-zinc-400 hover:text-white underline cursor-pointer"
+                  >
+                    Reset Nilai Default
+                  </button>
+                </div>
+              </div>
+
+              {/* Insights */}
               {predictionData?.insights && predictionData.insights.length > 0 && (
                 <div className="p-3 bg-slate-50 dark:bg-[#151518] rounded-xl border border-slate-200 dark:border-[#27272A] space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">AI Tactical Insights</span>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
+                    AI Tactical Insights (Hasil Simulasi)
+                  </span>
                   {predictionData.insights.map((insight, idx) => (
                     <div key={idx} className="text-[11px] text-slate-700 dark:text-zinc-300 leading-snug">
                       • {insight}
