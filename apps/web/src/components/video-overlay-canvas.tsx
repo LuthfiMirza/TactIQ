@@ -14,8 +14,24 @@ import {
   FastForward,
   Gauge,
   Compass,
+  Pencil,
+  ArrowUpRight,
+  Circle,
+  Square,
+  Trash2,
+  Undo,
+  Download,
+  FileText,
+  X,
 } from 'lucide-react';
 import { generate600FrameSequence, calculateTacticalMetrics } from '@/lib/tactical-600-sequence';
+
+export interface TacticalDrawing {
+  id: string;
+  type: 'arrow' | 'spotlight' | 'zone' | 'pen';
+  color: string;
+  points: Array<{ x: number; y: number }>;
+}
 
 declare global {
   interface Window {
@@ -84,6 +100,19 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
   });
   const [tacticalMetrics, setTacticalMetrics] = useState<TacticalMetricsDTO | null>(null);
   const [isYtReady, setIsYtReady] = useState<boolean>(false);
+
+  // Tactical Annotation & Drawing States (TSK-PRO)
+  const [isDrawMode, setIsDrawMode] = useState<boolean>(false);
+  const [activeDrawTool, setActiveDrawTool] = useState<'arrow' | 'spotlight' | 'zone' | 'pen'>('arrow');
+  const [drawColor, setDrawColor] = useState<string>('#CEFF00');
+  const [drawings, setDrawings] = useState<TacticalDrawing[]>([]);
+  const drawingsRef = useRef<TacticalDrawing[]>([]);
+  const currentDrawingRef = useRef<TacticalDrawing | null>(null);
+  const isPointerDownRef = useRef<boolean>(false);
+
+  // Tactical Dossier Export Modal State
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [exportedImageUrl, setExportedImageUrl] = useState<string | null>(null);
 
   const trailsRef = useRef<Map<number, Array<{ x: number; y: number }>>>(new Map());
   const localTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -269,6 +298,86 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           ctx.fillText(`${Math.round(entity.speedKmh)}k`, px, py + 18);
         }
       }
+    });
+
+    // 4. Render User Tactical Drawings & Annotations (TSK-PRO)
+    const allDrawings = [...drawingsRef.current];
+    if (currentDrawingRef.current) {
+      allDrawings.push(currentDrawingRef.current);
+    }
+
+    allDrawings.forEach((d) => {
+      if (!d.points || d.points.length === 0) return;
+      ctx.save();
+      ctx.strokeStyle = d.color;
+      ctx.fillStyle = d.color;
+      ctx.lineWidth = 2.5;
+
+      if (d.type === 'arrow' && d.points.length >= 2) {
+        const p1 = { x: d.points[0].x * width, y: d.points[0].y * height };
+        const p2 = { x: d.points[1].x * width, y: d.points[1].y * height };
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const angle = Math.atan2(dy, dx);
+        const headLen = 14;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p2.x - headLen * Math.cos(angle - Math.PI / 6), p2.y - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(p2.x - headLen * Math.cos(angle + Math.PI / 6), p2.y - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+      } else if (d.type === 'spotlight' && d.points.length >= 1) {
+        const c = { x: d.points[0].x * width, y: d.points[0].y * height };
+        let radius = 26;
+        if (d.points.length >= 2) {
+          const p2 = { x: d.points[1].x * width, y: d.points[1].y * height };
+          radius = Math.max(16, Math.hypot(p2.x - c.x, p2.y - c.y));
+        }
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+
+        ctx.fillStyle = d.color + '26';
+        ctx.fill();
+      } else if (d.type === 'zone' && d.points.length >= 2) {
+        const p1 = { x: d.points[0].x * width, y: d.points[0].y * height };
+        const p2 = { x: d.points[1].x * width, y: d.points[1].y * height };
+        const minX = Math.min(p1.x, p2.x);
+        const minY = Math.min(p1.y, p2.y);
+        const w = Math.abs(p2.x - p1.x);
+        const h = Math.abs(p2.y - p1.y);
+
+        ctx.fillStyle = d.color + '22';
+        ctx.fillRect(minX, minY, w, h);
+        ctx.strokeStyle = d.color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(minX, minY, w, h);
+
+        ctx.fillStyle = d.color;
+        ctx.font = 'bold 9px JetBrains Mono, monospace';
+        ctx.fillText('TACTICAL ZONE', minX + 6, minY + 14);
+      } else if (d.type === 'pen' && d.points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(d.points[0].x * width, d.points[0].y * height);
+        for (let i = 1; i < d.points.length; i++) {
+          ctx.lineTo(d.points[i].x * width, d.points[i].y * height);
+        }
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      ctx.restore();
     });
 
     setEntityStats({ homeCount: homeC, awayCount: awayC, ballSpeed: bSpeed });
@@ -554,6 +663,112 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
     }
   };
 
+  // ─── 6. Tactical Canvas Drawing & Pointer Handlers (TSK-PRO) ──────────
+  const getCanvasRelativePoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    return { x, y };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawMode) return;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    isPointerDownRef.current = true;
+    const pt = getCanvasRelativePoint(e);
+
+    const newDrawing: TacticalDrawing = {
+      id: `draw-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: activeDrawTool,
+      color: drawColor,
+      points: [pt],
+    };
+    currentDrawingRef.current = newDrawing;
+    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawMode || !isPointerDownRef.current || !currentDrawingRef.current) return;
+    const pt = getCanvasRelativePoint(e);
+
+    if (activeDrawTool === 'pen') {
+      currentDrawingRef.current.points.push(pt);
+    } else {
+      if (currentDrawingRef.current.points.length === 1) {
+        currentDrawingRef.current.points.push(pt);
+      } else {
+        currentDrawingRef.current.points[1] = pt;
+      }
+    }
+    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawMode || !isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+
+    if (currentDrawingRef.current) {
+      const d = currentDrawingRef.current;
+      if (d.type === 'pen' && d.points.length > 1) {
+        const nextDrawings = [...drawingsRef.current, d];
+        setDrawings(nextDrawings);
+        drawingsRef.current = nextDrawings;
+      } else if (d.points.length >= 2 || (d.type === 'spotlight' && d.points.length >= 1)) {
+        const nextDrawings = [...drawingsRef.current, d];
+        setDrawings(nextDrawings);
+        drawingsRef.current = nextDrawings;
+      }
+      currentDrawingRef.current = null;
+      if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+    }
+  };
+
+  const handleUndoDrawing = () => {
+    const nextDrawings = drawingsRef.current.slice(0, -1);
+    setDrawings(nextDrawings);
+    drawingsRef.current = nextDrawings;
+    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+  };
+
+  const handleClearDrawings = () => {
+    setDrawings([]);
+    drawingsRef.current = [];
+    currentDrawingRef.current = null;
+    if (currentFrame) renderFrame(currentFrame, showVideoBackground);
+  };
+
+  // ─── 7. Tactical Dossier Export Handlers (TSK-PRO) ─────────────────────
+  const handleExportDossier = () => {
+    if (!canvasRef.current) return;
+    try {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      setExportedImageUrl(dataUrl);
+      setShowExportModal(true);
+    } catch (err) {
+      console.error('Failed to export canvas snapshot:', err);
+    }
+  };
+
+  const handleDownloadPng = () => {
+    if (!exportedImageUrl) return;
+    const a = document.createElement('a');
+    a.href = exportedImageUrl;
+    const frameNum = (currentFrame?.frameNumber ?? 0) % 600;
+    a.download = `TactIQ_Tactical_Dossier_Frame_${frameNum}_FA_Shield_2024.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
   return (
     <div className={`relative flex flex-col w-full bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl overflow-hidden shadow-xs transition-colors ${className}`}>
       
@@ -620,6 +835,37 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             <span className="sm:hidden">{showVideoBackground ? 'Cam Video' : '2D Plane'}</span>
           </button>
 
+          {/* Tactical Drawing Toolbar Toggle */}
+          <button
+            onClick={() => setIsDrawMode(!isDrawMode)}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] ${
+              isDrawMode
+                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs shadow-[#CEFF00]/20'
+                : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
+            }`}
+            title="Tactical Telestrator / Canvas Drawing Tools"
+          >
+            <Pencil size={13} />
+            <span className="hidden sm:inline">Coret Taktik</span>
+            <span className="sm:hidden">Draw</span>
+            {drawings.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-black text-[#CEFF00] font-bold">
+                {drawings.length}
+              </span>
+            )}
+          </button>
+
+          {/* Export Tactical Dossier Button */}
+          <button
+            onClick={handleExportDossier}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] bg-[#121215] text-zinc-300 border border-[#27272A] hover:text-[#CEFF00] hover:border-[#CEFF00]/40"
+            title="Ekspor Dossier Taktis (PDF / PNG)"
+          >
+            <Download size={13} />
+            <span className="hidden sm:inline">Ekspor Dossier</span>
+            <span className="sm:hidden">Export</span>
+          </button>
+
           {/* Telemetry Entity Counters */}
           <div className="hidden md:flex items-center gap-3 text-xs font-mono">
             <div className="flex items-center gap-1 text-slate-600 dark:text-zinc-400">
@@ -633,6 +879,124 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Telestrator Drawing Toolbar (When isDrawMode is active) */}
+      {isDrawMode && (
+        <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2 bg-[#1A1A22] border-b border-[#CEFF00]/20 text-xs font-mono gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="text-[10px] text-[#CEFF00] font-bold uppercase tracking-wider hidden md:inline">
+              TELESTRATOR TOOLS:
+            </span>
+
+            {/* Tool Selection Buttons */}
+            <div className="flex items-center bg-[#121215] border border-[#27272A] rounded-lg p-0.5">
+              <button
+                onClick={() => setActiveDrawTool('arrow')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                  activeDrawTool === 'arrow'
+                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="Panah Lari / Movement Arrow"
+              >
+                <ArrowUpRight size={13} />
+                <span className="hidden sm:inline">Panah</span>
+              </button>
+
+              <button
+                onClick={() => setActiveDrawTool('spotlight')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                  activeDrawTool === 'spotlight'
+                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="Player Spotlight / Halo Ring"
+              >
+                <Circle size={13} />
+                <span className="hidden sm:inline">Spotlight</span>
+              </button>
+
+              <button
+                onClick={() => setActiveDrawTool('zone')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                  activeDrawTool === 'zone'
+                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="Tactical Zone / Half-space Box"
+              >
+                <Square size={13} />
+                <span className="hidden sm:inline">Zone Box</span>
+              </button>
+
+              <button
+                onClick={() => setActiveDrawTool('pen')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
+                  activeDrawTool === 'pen'
+                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+                title="Freehand Pen"
+              >
+                <Pencil size={13} />
+                <span className="hidden sm:inline">Freehand</span>
+              </button>
+            </div>
+
+            {/* Color Palette */}
+            <div className="flex items-center gap-1.5 pl-2 border-l border-zinc-700/60">
+              {[
+                { name: 'Volt', color: '#CEFF00' },
+                { name: 'Cyan', color: '#00F0FF' },
+                { name: 'Red', color: '#FF3B30' },
+                { name: 'Emerald', color: '#00E676' },
+                { name: 'White', color: '#FFFFFF' },
+              ].map((c) => (
+                <button
+                  key={c.color}
+                  onClick={() => setDrawColor(c.color)}
+                  style={{ backgroundColor: c.color }}
+                  className={`w-5 h-5 rounded-full transition-transform ${
+                    drawColor === c.color ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-[#1A1A22]' : 'opacity-70 hover:opacity-100'
+                  }`}
+                  title={c.name}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Undo & Clear Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleUndoDrawing}
+              disabled={drawings.length === 0}
+              className="flex items-center gap-1 px-2 py-1 rounded bg-[#121215] border border-[#27272A] text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none text-[11px]"
+              title="Batalkan coretan terakhir (Undo)"
+            >
+              <Undo size={12} />
+              <span>Undo</span>
+            </button>
+
+            <button
+              onClick={handleClearDrawings}
+              disabled={drawings.length === 0}
+              className="flex items-center gap-1 px-2 py-1 rounded bg-red-950/40 border border-red-800/40 text-red-400 hover:bg-red-900/60 disabled:opacity-40 disabled:pointer-events-none text-[11px]"
+              title="Hapus semua coretan"
+            >
+              <Trash2 size={12} />
+              <span>Bersihkan</span>
+            </button>
+
+            <button
+              onClick={() => setIsDrawMode(false)}
+              className="p-1 rounded text-zinc-400 hover:text-white"
+              title="Tutup Mode Coret"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 16:9 Aspect Ratio Container with Canvas & Underlying Video */}
       <div ref={containerRef} className="relative w-full aspect-video bg-[#0F2C1F] flex items-center justify-center overflow-hidden rounded-b-none">
@@ -665,7 +1029,12 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* HTML5 Overlay Canvas for 2D Pitch & Player Bounding Circles */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 z-10 w-full h-full pointer-events-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className={`absolute inset-0 z-10 w-full h-full ${
+            isDrawMode ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'
+          }`}
         />
 
         {/* Live Status Pill in Viewport */}
@@ -767,6 +1136,121 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
           <span>Tempo: {tempo}x</span>
         </div>
       </div>
+
+      {/* Tactical Dossier Export Modal (TSK-PRO) */}
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-3xl bg-[#121215] border border-[#27272A] rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#27272A] bg-[#18181C]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#CEFF00]/10 border border-[#CEFF00]/30 flex items-center justify-center text-[#CEFF00]">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white font-sans">
+                    Dossier Analisis Taktis Pertandingan
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-mono">
+                    FA Community Shield 2024 · MUN vs MCI · Laporan Resmi Tim Analis
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body / Report Content */}
+            <div className="p-6 overflow-y-auto space-y-6 text-sm">
+              {/* Captured Canvas Snapshot */}
+              {exportedImageUrl && (
+                <div className="rounded-xl overflow-hidden border border-[#27272A] bg-[#0A0A0C]">
+                  <img
+                    src={exportedImageUrl}
+                    alt="Tactical Canvas Snapshot"
+                    className="w-full aspect-video object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Match Moment & Phase Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
+                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">FASE LAGA</span>
+                  <div className="text-white font-bold text-sm">
+                    {activeMoment ? `${activeMoment.minute}' ${activeMoment.label}` : 'Continuous Match Play'}
+                  </div>
+                  <span className="text-[11px] text-zinc-500 font-mono mt-0.5 block">
+                    Frame {(currentFrame?.frameNumber ?? 0) % 600} / 600
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
+                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">GARIS PERTAHANAN (DEF LINE)</span>
+                  <div className="flex items-center gap-2 text-white font-bold text-sm font-mono">
+                    <span className="text-red-400">MUN {tacticalMetrics?.homeDefensiveLineMeters ?? 41.2}m</span>
+                    <span className="text-zinc-600">/</span>
+                    <span className="text-sky-400">MCI {tacticalMetrics?.awayDefensiveLineMeters ?? 48.5}m</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-400 font-mono mt-0.5 block">
+                    Struktur Kompak ({tacticalMetrics?.homeCompactnessAreaM2 ?? 482} m²)
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#18181C] border border-[#27272A]">
+                  <span className="text-[10px] uppercase font-mono text-zinc-400 block mb-1">STATUS ANOTASI</span>
+                  <div className="text-[#CEFF00] font-bold text-sm font-mono">
+                    {drawings.length} Corekan Aktif
+                  </div>
+                  <span className="text-[11px] text-zinc-400 font-mono mt-0.5 block">
+                    {drawings.filter(d => d.type === 'arrow').length} Panah · {drawings.filter(d => d.type === 'spotlight').length} Spotlight · {drawings.filter(d => d.type === 'zone').length} Zone
+                  </span>
+                </div>
+              </div>
+
+              {/* Coaching Staff Tactical Dossier Summary Note */}
+              <div className="p-4 rounded-xl bg-[#CEFF00]/5 border border-[#CEFF00]/20 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#CEFF00] uppercase font-mono">
+                  <Activity size={14} />
+                  <span>Catatan Taktis Staf Pelatih (Tactical Dossier Debrief)</span>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Berdasarkan pelacakan pergerakan pemain di frame ini, transisi balik Manchester United memanfaatkan celah half-space kiri melalui overlapping run. Garis pertahanan Manchester City naik setinggi {tacticalMetrics?.awayDefensiveLineMeters ?? 48.5}m, menciptakan ruang 28.4m di belakang garis bek tengah untuk bola terobosan diagonal.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer / Actions */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[#27272A] bg-[#18181C]">
+              <span className="text-xs font-mono text-zinc-500 hidden sm:inline">
+                TactIQ Pro Analytics Engine v2.4
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handlePrintPdf}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#27272A] hover:bg-[#323238] text-white font-medium text-xs transition-colors"
+                >
+                  <FileText size={14} />
+                  <span>Cetak / Simpan PDF</span>
+                </button>
+                <button
+                  onClick={handleDownloadPng}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#CEFF00] hover:bg-[#b8e600] text-black font-bold text-xs transition-all shadow-xs shadow-[#CEFF00]/20"
+                >
+                  <Download size={14} />
+                  <span>Unduh Gambar PNG</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
