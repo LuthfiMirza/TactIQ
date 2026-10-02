@@ -30,4 +30,5 @@ export const config = {
   mlServiceUrl: process.env.ML_SERVICE_URL || 'http://localhost:8100',
   footballDataToken: process.env.FOOTBALL_DATA_TOKEN || '',
   apiFootballKey: process.env.API_FOOTBALL_KEY || '',
+  highlightlyApiKey: process.env.HIGHLIGHTLY_API_KEY || process.env.RAPIDAPI_KEY || process.env.HIGHLIGHTLY_KEY || '',
 };

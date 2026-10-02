@@ -9,6 +9,9 @@ import type {
   TrackingStartRequest,
   TrackingStartResponse,
   ApiResponse,
+  HomographyCalibrationResult,
+  HomographyManualCalibrateRequest,
+  HomographyStatusResponse,
 } from '@tactiq/shared-types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -195,6 +198,40 @@ class ApiClient {
       body: JSON.stringify(payload),
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // TSK-31: Dynamic Homography Calibration via Field Line Detection
+  // ---------------------------------------------------------------------------
+  public async calibrateFieldLines(payload?: {
+    video_path?: string;
+    frame_index?: number;
+  }): Promise<HomographyCalibrationResult> {
+    return this.request<HomographyCalibrationResult>('/api/v1/tracking/homography/calibrate-lines', {
+      method: 'POST',
+      body: JSON.stringify(payload || {}),
+    });
+  }
+
+  public async calibrateHomographyManual(payload: HomographyManualCalibrateRequest): Promise<any> {
+    return this.request<any>('/api/v1/tracking/homography/calibrate-manual', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async getHomographyStatus(): Promise<HomographyStatusResponse> {
+    return this.request<HomographyStatusResponse>('/api/v1/tracking/homography/status', {
+      method: 'GET',
+    });
+  }
+
+  public async transformCoordinates(points: Array<{ camera_x: number; camera_y: number }>): Promise<any> {
+    return this.request<any>('/api/v1/tracking/homography/transform', {
+      method: 'POST',
+      body: JSON.stringify({ points }),
+    });
+  }
 }
+
 
 export const api = new ApiClient(API_BASE_URL);

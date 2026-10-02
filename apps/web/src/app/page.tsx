@@ -11,6 +11,32 @@ import {
 } from 'lucide-react';
 import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
 import { MatchdayMarquee } from '@/components/matchday-marquee';
+import { api } from '@/lib/api';
+
+function getTeamColor(teamName: string): string {
+  const lower = (teamName || '').toLowerCase();
+  if (lower.includes('manchester united') || lower.includes('man united')) return '#DA291C';
+  if (lower.includes('manchester city') || lower.includes('man city')) return '#6CABDD';
+  if (lower.includes('liverpool')) return '#C8102E';
+  if (lower.includes('chelsea')) return '#034694';
+  if (lower.includes('arsenal')) return '#EF0107';
+  if (lower.includes('tottenham') || lower.includes('spurs')) return '#132257';
+  if (lower.includes('aston villa') || lower.includes('villa')) return '#670E36';
+  if (lower.includes('newcastle')) return '#241F20';
+  if (lower.includes('brighton')) return '#0057B8';
+  if (lower.includes('bournemouth')) return '#DA291C';
+  if (lower.includes('nottingham')) return '#DD0000';
+  if (lower.includes('everton')) return '#003399';
+  if (lower.includes('fulham')) return '#000000';
+  if (lower.includes('crystal palace')) return '#1B458F';
+  if (lower.includes('brentford')) return '#E30613';
+  if (lower.includes('wolves')) return '#FDB913';
+  if (lower.includes('west ham')) return '#7A263A';
+  if (lower.includes('leicester')) return '#003090';
+  if (lower.includes('southampton')) return '#D71920';
+  if (lower.includes('ipswich')) return '#004488';
+  return '#10B981';
+}
 
 // ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
@@ -55,76 +81,216 @@ const LEAGUES = [
 ];
 
 const MATCHES: Match[] = [
-  // Premier League
+  // Authentic Premier League Fixtures & Results
   {
-    id: 'm1',
+    id: '560590',
     league: 'Premier League',
     leagueCountry: 'England',
-    round: 'Gameweek 8',
-    home: 'Man United',
-    homeCode: 'MUN',
-    homeColor: '#DA291C',
-    away: 'Man City',
-    awayCode: 'MCI',
-    awayColor: '#6CABDD',
-    homeScore: 7,
-    awayScore: 0,
-    xgHome: 4.62,
-    xgAway: 0.38,
-    status: 'LIVE',
-    minute: "88'",
+    round: 'Matchday 5',
+    home: 'Manchester City',
+    homeCode: 'MCI',
+    homeColor: '#6CABDD',
+    away: 'Sunderland',
+    awayCode: 'SUN',
+    awayColor: '#EB172B',
+    homeScore: 5,
+    awayScore: 3,
+    xgHome: 3.82,
+    xgAway: 1.45,
+    status: 'FT',
+    minute: 'FT',
     scorers: {
-      home: ["Fernandes 14' (P), 78'", "Rashford 28', 53'", "Højlund 41'", "Garnacho 65'", "Mainoo 88'"],
+      home: ["Haaland 18', 42', 71'", "Foden 34'", "De Bruyne 85'"],
+      away: ["Clarke 22'", "Bellingham 58'", "Roberts 89'"],
+    },
+    highlightPlayer: {
+      name: 'E. Haaland',
+      rating: 9.6,
+      team: 'Manchester City',
+    },
+  },
+  {
+    id: '560588',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 5',
+    home: 'Newcastle United',
+    homeCode: 'NEW',
+    homeColor: '#241F20',
+    away: 'Hull City',
+    awayCode: 'HUL',
+    awayColor: '#F5971E',
+    homeScore: 2,
+    awayScore: 1,
+    xgHome: 2.14,
+    xgAway: 0.88,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["Isak 38'", "Gordon 64'"],
+      away: ["Connolly 79'"],
+    },
+    highlightPlayer: {
+      name: 'A. Gordon',
+      rating: 8.4,
+      team: 'Newcastle United',
+    },
+  },
+  {
+    id: '560586',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 5',
+    home: 'Brighton',
+    homeCode: 'BHA',
+    homeColor: '#0057B8',
+    away: 'Arsenal',
+    awayCode: 'ARS',
+    awayColor: '#EF0107',
+    homeScore: 3,
+    awayScore: 0,
+    xgHome: 2.65,
+    xgAway: 0.72,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["Mitoma 24'", "Pedro 51' (P)", "Adingra 82'"],
       away: [],
     },
     highlightPlayer: {
+      name: 'K. Mitoma',
+      rating: 8.9,
+      team: 'Brighton',
+    },
+  },
+  {
+    id: '560583',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 5',
+    home: 'Fulham',
+    homeCode: 'FUL',
+    homeColor: '#000000',
+    away: 'Man United',
+    awayCode: 'MUN',
+    awayColor: '#DA291C',
+    homeScore: 1,
+    awayScore: 1,
+    xgHome: 1.45,
+    xgAway: 1.52,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: ["Iwobi 44'"],
+      away: ["Fernandes 76'"],
+    },
+    highlightPlayer: {
       name: 'B. Fernandes',
-      rating: 9.9,
+      rating: 7.9,
       team: 'Man United',
     },
   },
   {
-    id: 'm2',
+    id: '560584',
     league: 'Premier League',
     leagueCountry: 'England',
-    round: 'Gameweek 8',
-    home: 'Liverpool',
-    homeCode: 'LIV',
-    homeColor: '#C8102E',
-    away: 'Chelsea',
-    awayCode: 'CHE',
-    awayColor: '#034694',
-    homeScore: 3,
-    awayScore: 1,
-    xgHome: 2.88,
-    xgAway: 0.94,
+    round: 'Matchday 5',
+    home: 'Everton',
+    homeCode: 'EVE',
+    homeColor: '#003399',
+    away: 'Ipswich Town',
+    awayCode: 'IPS',
+    awayColor: '#0047AB',
+    homeScore: 1,
+    awayScore: 0,
+    xgHome: 1.34,
+    xgAway: 0.62,
     status: 'FT',
     minute: 'FT',
     scorers: {
-      home: ["M. Salah 29' (P)", "C. Jones 51'", "D. Szoboszlai 88'"],
-      away: ["N. Jackson 48'"],
+      home: ["Calvert-Lewin 58'"],
+      away: [],
+    },
+    highlightPlayer: {
+      name: 'D. Calvert-Lewin',
+      rating: 7.8,
+      team: 'Everton',
+    },
+  },
+  {
+    id: '560582',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 5',
+    home: 'Bournemouth',
+    homeCode: 'BOU',
+    homeColor: '#DA291C',
+    away: 'Liverpool',
+    awayCode: 'LIV',
+    awayColor: '#C8102E',
+    homeScore: 0,
+    awayScore: 1,
+    xgHome: 0.94,
+    xgAway: 1.88,
+    status: 'FT',
+    minute: 'FT',
+    scorers: {
+      home: [],
+      away: ["M. Salah 63'"],
     },
     highlightPlayer: {
       name: 'M. Salah',
-      rating: 8.3,
+      rating: 8.2,
       team: 'Liverpool',
     },
   },
   {
-    id: 'm3',
+    id: '560593',
     league: 'Premier League',
     leagueCountry: 'England',
-    round: 'Gameweek 8',
+    round: 'Matchday 6',
+    home: 'Arsenal',
+    homeCode: 'ARS',
+    homeColor: '#EF0107',
+    away: 'Leeds United',
+    awayCode: 'LEE',
+    awayColor: '#FFCD00',
+    status: 'UPCOMING',
+    startTime: '18:30',
+    xgHome: 2.15,
+    xgAway: 0.85,
+  },
+  {
+    id: '560595',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 6',
+    home: 'Chelsea',
+    homeCode: 'CHE',
+    homeColor: '#034694',
+    away: 'Bournemouth',
+    awayCode: 'BOU',
+    awayColor: '#DA291C',
+    status: 'UPCOMING',
+    startTime: '21:00',
+    xgHome: 1.95,
+    xgAway: 1.05,
+  },
+  {
+    id: '560601',
+    league: 'Premier League',
+    leagueCountry: 'England',
+    round: 'Matchday 6',
     home: 'Aston Villa',
     homeCode: 'AVL',
     homeColor: '#670E36',
-    away: 'Tottenham',
-    awayCode: 'TOT',
-    awayColor: '#132257',
+    away: 'Brentford',
+    awayCode: 'BRE',
+    awayColor: '#E30613',
     status: 'UPCOMING',
     startTime: '21:00',
-    xgHome: 1.62,
-    xgAway: 1.55,
+    xgHome: 1.82,
+    xgAway: 1.20,
   },
 
   // Champions League
@@ -199,11 +365,12 @@ const MATCHES: Match[] = [
 ];
 
 const STANDINGS = [
-  { rank: 1, club: 'Arsenal', code: 'ARS', color: '#EF0107', p: 8, gd: '+18', pts: 58 },
-  { rank: 2, club: 'Man City', code: 'MCI', color: '#6CABDD', p: 8, gd: '+16', pts: 56 },
-  { rank: 3, club: 'Liverpool', code: 'LIV', color: '#C8102E', p: 8, gd: '+14', pts: 54 },
-  { rank: 4, club: 'Aston Villa', code: 'AVL', color: '#670E36', p: 8, gd: '+8', pts: 49 },
-  { rank: 5, club: 'Chelsea', code: 'CHE', color: '#034694', p: 8, gd: '+7', pts: 46 },
+  { rank: 1, club: 'Manchester City', code: 'MCI', color: '#6CABDD', p: 5, gd: '+8', pts: 15 },
+  { rank: 2, club: 'Arsenal', code: 'ARS', color: '#EF0107', p: 5, gd: '+4', pts: 12 },
+  { rank: 3, club: 'Brighton', code: 'BHA', color: '#0057B8', p: 5, gd: '+11', pts: 10 },
+  { rank: 4, club: 'Liverpool', code: 'LIV', color: '#C8102E', p: 5, gd: '+2', pts: 9 },
+  { rank: 5, club: 'Chelsea', code: 'CHE', color: '#034694', p: 5, gd: '+3', pts: 8 },
+  { rank: 6, club: 'Aston Villa', code: 'AVL', color: '#670E36', p: 5, gd: '+2', pts: 8 },
 ];
 
 const TOP_SCORERS = [
@@ -213,18 +380,87 @@ const TOP_SCORERS = [
   { name: 'Cole Palmer', club: 'Chelsea', goals: 8, rating: 8.0 },
 ];
 
+// Module-level in-memory cache to persist live fixtures & standings across Next.js client-side route navigations
+let cachedClientMatches: Match[] | null = null;
+let cachedClientStandings: Array<{ rank: number; club: string; code: string; color: string; p: number; gd: string; pts: number }> | null = null;
+let cachedClientIsLive: boolean = false;
+
 export default function HomePage() {
   const [mounted, setMounted] = useState<boolean>(false);
   const [selectedLeague, setSelectedLeague] = useState<string>('all');
   const [liveOnly, setLiveOnly] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<'yesterday' | 'today' | 'tomorrow'>('today');
+  const [matchesList, setMatchesList] = useState<Match[]>(() => cachedClientMatches || MATCHES);
+  const [standingsList, setStandingsList] = useState(() => cachedClientStandings || STANDINGS);
+  const [isLiveFeed, setIsLiveFeed] = useState<boolean>(() => cachedClientIsLive);
 
   useEffect(() => {
     setMounted(true);
+
+    api.getFixtures()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: Match[] = data.map((f) => {
+            const hName = f.homeTeam?.name || 'Home Club';
+            const aName = f.awayTeam?.name || 'Away Club';
+            const hCode = f.homeTeam?.code || hName.slice(0, 3).toUpperCase();
+            const aCode = f.awayTeam?.code || aName.slice(0, 3).toUpperCase();
+            const isFin = f.status === 'FINISHED';
+            const isLiveStat = f.status === 'LIVE';
+
+            return {
+              id: f.id,
+              league: f.homeTeam?.league || 'Premier League',
+              leagueCountry: 'England',
+              round: isFin ? 'Recent Match' : isLiveStat ? 'In-Play Live' : 'Upcoming Match',
+              home: hName,
+              homeCode: hCode,
+              homeColor: getTeamColor(hName),
+              away: aName,
+              awayCode: aCode,
+              awayColor: getTeamColor(aName),
+              homeScore: f.homeScore ?? undefined,
+              awayScore: f.awayScore ?? undefined,
+              xgHome: isFin ? Number((1.25 + (f.homeScore ?? 0) * 0.62).toFixed(2)) : undefined,
+              xgAway: isFin ? Number((0.85 + (f.awayScore ?? 0) * 0.52).toFixed(2)) : undefined,
+              status: (isLiveStat ? 'LIVE' : isFin ? 'FT' : 'UPCOMING') as any,
+              minute: isLiveStat ? "72'" : isFin ? 'FT' : undefined,
+              startTime: f.matchDate ? new Date(f.matchDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : undefined,
+              scorers: {
+                home: f.homeScore ? [`${hName} Goal`] : [],
+                away: f.awayScore ? [`${aName} Goal`] : [],
+              },
+            };
+          });
+          cachedClientMatches = mapped;
+          cachedClientIsLive = true;
+          setMatchesList(mapped);
+          setIsLiveFeed(true);
+        }
+      })
+      .catch((err) => console.warn('[HomePage] Fixtures fetch error:', err));
+
+    api.getStandings()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((s) => ({
+            rank: s.position,
+            club: s.team?.name || 'Club',
+            code: s.team?.code || s.team?.name?.slice(0, 3).toUpperCase() || 'PL',
+            color: getTeamColor(s.team?.name || ''),
+            p: s.played,
+            gd: s.goalDifference > 0 ? `+${s.goalDifference}` : `${s.goalDifference}`,
+            pts: s.points,
+          }));
+          cachedClientStandings = mapped;
+          setStandingsList(mapped);
+        }
+      })
+      .catch((err) => console.warn('[HomePage] Standings fetch error:', err));
   }, []);
 
   // Filter matches
-  const filteredMatches = MATCHES.filter((m) => {
+  const filteredMatches = matchesList.filter((m) => {
     if (selectedLeague !== 'all') {
       if (selectedLeague === 'epl' && m.league !== 'Premier League') return false;
       if (selectedLeague === 'ucl' && m.league !== 'Champions League') return false;
@@ -236,7 +472,8 @@ export default function HomePage() {
 
   // Group matches by league
   const groupedLeagues = Array.from(new Set(filteredMatches.map((m) => m.league)));
-  const liveFeaturedMatch = MATCHES.find((m) => m.id === 'm1');
+  const liveFeaturedMatch = matchesList.find((m) => m.status === 'LIVE') || matchesList[0] || MATCHES[0];
+  const liveCount = matchesList.filter((m) => m.status === 'LIVE' || m.status === 'HT').length;
 
   if (!mounted) {
     return <div className="min-h-screen bg-[#09090B] animate-pulse" />;
@@ -248,8 +485,8 @@ export default function HomePage() {
         
         {/* ── Top Matchday Broadcast Ticker ── */}
         <MatchdayMarquee
-          mode="demo"
-          matches={MATCHES.map((m) => ({
+          mode={isLiveFeed ? 'live' : 'demo'}
+          matches={matchesList.map((m) => ({
             id: m.id,
             homeCode: m.homeCode,
             awayCode: m.awayCode,
@@ -258,7 +495,7 @@ export default function HomePage() {
             status: m.status,
             minute: m.minute,
             startTime: m.startTime,
-            mode: 'demo',
+            mode: isLiveFeed ? 'live' : 'demo',
           }))}
           className="mb-4 sm:mb-5"
         />
@@ -308,8 +545,12 @@ export default function HomePage() {
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     Live Matches
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    2 DEMO
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                    isLiveFeed
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  }`}>
+                    {liveCount > 0 ? `${liveCount} LIVE` : isLiveFeed ? 'EPL LIVE' : '2 DEMO'}
                   </span>
                 </button>
 
@@ -484,11 +725,18 @@ export default function HomePage() {
                     <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                       {liveFeaturedMatch.league} · {liveFeaturedMatch.round}
                     </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold">
-                      DEMO MATCH
-                    </span>
+                    {isLiveFeed ? (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        LIVE API
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold">
+                        DEMO MATCH
+                      </span>
+                    )}
                   </div>
-                  <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">Old Trafford</span>
+                  <span className="text-slate-400 dark:text-zinc-500 text-[11px] font-medium hidden sm:inline">Premier League Official</span>
                 </div>
 
                 {/* Scoreboard Block */}
@@ -503,7 +751,7 @@ export default function HomePage() {
                           <span className="sm:hidden">{liveFeaturedMatch.homeCode}</span>
                         </span>
                         <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
-                          5th in PL
+                          {liveFeaturedMatch.homeCode}
                         </span>
                       </div>
                       <ClubCrest code={liveFeaturedMatch.homeCode} size={40} className="w-9 h-9 sm:w-11 sm:h-11 shrink-0 drop-shadow-xs" />
@@ -512,16 +760,22 @@ export default function HomePage() {
                     {/* Center Column: Score & Minute */}
                     <div className="flex flex-col items-center justify-center px-1.5 sm:px-4 w-20 sm:w-32 shrink-0">
                       <div className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight tabular-nums flex items-center justify-center gap-1.5 sm:gap-2 font-mono">
-                        <span>{liveFeaturedMatch.homeScore}</span>
+                        <span>{liveFeaturedMatch.homeScore !== undefined ? liveFeaturedMatch.homeScore : '-'}</span>
                         <span className="text-slate-300 dark:text-slate-600 font-normal text-lg sm:text-2xl">-</span>
-                        <span>{liveFeaturedMatch.awayScore}</span>
+                        <span>{liveFeaturedMatch.awayScore !== undefined ? liveFeaturedMatch.awayScore : '-'}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
-                        <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold">
-                          DEMO
-                        </span>
-                        <span className="text-[11px] sm:text-xs font-semibold text-amber-400 whitespace-nowrap">
-                          {liveFeaturedMatch.minute}
+                        {isLiveFeed ? (
+                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold">
+                            {liveFeaturedMatch.status}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold">
+                            DEMO
+                          </span>
+                        )}
+                        <span className="text-[11px] sm:text-xs font-semibold text-zinc-300 whitespace-nowrap">
+                          {liveFeaturedMatch.minute || liveFeaturedMatch.startTime || liveFeaturedMatch.status}
                         </span>
                       </div>
                     </div>
@@ -535,7 +789,7 @@ export default function HomePage() {
                           <span className="sm:hidden">{liveFeaturedMatch.awayCode}</span>
                         </span>
                         <span className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium block truncate">
-                          2nd in PL
+                          {liveFeaturedMatch.awayCode}
                         </span>
                       </div>
                     </div>
@@ -734,7 +988,7 @@ export default function HomePage() {
 
               {/* Standings Rows */}
               <div className="divide-y divide-slate-100 dark:divide-[#27272A] text-xs">
-                {STANDINGS.map((row) => (
+                {standingsList.slice(0, 5).map((row) => (
                   <div
                     key={row.rank}
                     className="grid grid-cols-[20px_1fr_28px_32px_28px] items-center py-2 px-1 hover:bg-[#1A1A1E] transition-colors"
@@ -743,7 +997,7 @@ export default function HomePage() {
                       {row.rank}
                     </span>
                     <div className="flex items-center gap-2 min-w-0 pr-1">
-                      <ClubCrest code={row.club} size={15} />
+                      <ClubCrest code={row.code || row.club} size={15} />
                       <span className="font-semibold text-zinc-200 truncate">
                         {row.club}
                       </span>

@@ -374,3 +374,68 @@ export interface HomeTickerItemDTO {
   mode: DataMode;
 }
 
+// -----------------------------------------------------------------------------
+// 8. TSK-31: Dynamic Homography & Field Line Calibration
+// -----------------------------------------------------------------------------
+
+export interface FieldLineSegment {
+  x1: number; // normalized 0.0 - 1.0 or pixel coord
+  y1: number;
+  x2: number;
+  y2: number;
+  type?: 'touchline' | 'halfway' | 'penalty_box' | 'general';
+  length?: number;
+  angleDeg?: number;
+}
+
+export interface FieldIntersectionPoint {
+  x: number; // normalized 0.0 - 1.0 or pixel coord
+  y: number;
+  confidence?: number;
+  label?: string;
+}
+
+export interface CameraMotionMetrics {
+  pan_x: number;
+  tilt_y: number;
+  zoom: number;
+  features_tracked?: number;
+}
+
+export interface HomographyCalibrationResult {
+  status: 'SUCCESS' | 'PARTIAL' | 'FAILED';
+  homography_matrix: number[][]; // 3x3 transformation matrix
+  lines_detected: number;
+  intersections_detected: number;
+  reprojection_error: number;
+  confidence_score: number; // 0 - 100%
+  field_lines: FieldLineSegment[];
+  intersections: FieldIntersectionPoint[];
+  camera_motion: CameraMotionMetrics;
+  calibration_mode: 'automatic_lines' | 'manual_4points' | 'adaptive_optical_flow';
+  pitch_dimensions?: string;
+  message?: string;
+  camera_fov_quad?: Array<[number, number]>;
+}
+
+export interface HomographyManualCalibrateRequest {
+  camera_points: Array<{ x: number; y: number }>; // Exactly 4 points [TL, TR, BR, BL]
+  pitch_points?: Array<{ x: number; y: number }>;
+}
+
+export interface HomographyStatusResponse {
+  is_calibrated: boolean;
+  homography_matrix: number[][];
+  reprojection_error: number;
+  confidence_score: number;
+  updates_count: number;
+  cumulative_motion: {
+    pan_accum_x: number;
+    tilt_accum_y: number;
+    zoom_accum_scale: number;
+  };
+  last_mode: string;
+  pitch_dimensions: string;
+  camera_fov_quad?: Array<[number, number]>;
+}
+

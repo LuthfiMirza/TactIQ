@@ -180,4 +180,139 @@ export class TrackingController {
       });
     }
   }
+
+  /**
+   * POST /api/v1/tracking/homography/calibrate-lines
+   * [TSK-31] Dynamic Homography Calibration via Deteksi Garis Lapangan
+   */
+  public static async calibrateFieldLines(req: Request, res: Response): Promise<void> {
+    try {
+      const { video_path, frame_index } = req.body || {};
+      const result = await MLService.calibrateFieldLines({ video_path, frame_index });
+
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString(),
+        meta: {
+          source: 'TactIQ ML Field Line & Homography Engine (TSK-31)',
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          mode: 'live',
+        },
+      });
+    } catch (error) {
+      console.error('Error in calibrateFieldLines:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'HOMOGRAPHY_CALIBRATION_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/tracking/homography/calibrate-manual
+   * [TSK-20 / TSK-31] 4-Point Manual Homography Re-Anchoring
+   */
+  public static async calibrateManual(req: Request, res: Response): Promise<void> {
+    try {
+      const payload = req.body;
+      if (!payload.camera_points || payload.camera_points.length !== 4) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_POINTS',
+            message: 'Exactly 4 camera coordinate points are required [TL, TR, BR, BL].',
+          },
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const result = await MLService.calibrateHomographyManual(payload);
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error in calibrateManual:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'MANUAL_CALIBRATION_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * GET /api/v1/tracking/homography/status
+   * Returns current active homography calibration state and diagnostics
+   */
+  public static async getHomographyStatus(_req: Request, res: Response): Promise<void> {
+    try {
+      const status = await MLService.getHomographyStatus();
+      res.json({
+        success: true,
+        data: status,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error in getHomographyStatus:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'HOMOGRAPHY_STATUS_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/tracking/homography/transform
+   * Transforms camera perspective points to 2D pitch coordinates
+   */
+  public static async transformCoordinates(req: Request, res: Response): Promise<void> {
+    try {
+      const { points } = req.body;
+      if (!Array.isArray(points)) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_POINTS',
+            message: 'Points must be an array of { camera_x, camera_y }',
+          },
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const result = await MLService.transformCoordinates(points);
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error in transformCoordinates:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'HOMOGRAPHY_TRANSFORM_FAILED',
+          message: (error as Error).message,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 }
+

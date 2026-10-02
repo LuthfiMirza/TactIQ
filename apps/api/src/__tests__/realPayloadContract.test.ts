@@ -2,11 +2,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const FIXTURES_DIR = path.resolve(__dirname, '../../../../tests/fixtures/providers');
+const FIXTURES_DIR = path.resolve(process.cwd(), 'tests/fixtures/providers');
 
 describe('Real Payload Contract Tests (Offline - Zero Network Quota Used)', () => {
   const originalFetch = global.fetch;

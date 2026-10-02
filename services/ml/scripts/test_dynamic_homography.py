@@ -9,6 +9,7 @@ Verifies:
 
 import os
 import sys
+import math
 import cv2
 import numpy as np
 import logging
@@ -121,8 +122,56 @@ def test_video_file_adaptation():
     logger.info("✅ Test 3 Passed: Successfully adapted on video stream!")
 
 
+def test_dynamic_calibration_from_field_lines():
+    logger.info("\n🧪 Test 4: Testing Dynamic Homography Calibration via Field Line Detection (TSK-31)...")
+    estimator = DynamicHomographyEstimator()
+    frame = create_mock_soccer_frame()
+
+    calib_res = estimator.calibrate_from_field_lines(frame)
+    logger.info(f"   • Status: {calib_res['status']}")
+    logger.info(f"   • Lines detected: {calib_res['lines_detected']}")
+    logger.info(f"   • Intersections detected: {calib_res['intersections_detected']}")
+    logger.info(f"   • Reprojection error: {calib_res['reprojection_error']}")
+    logger.info(f"   • Confidence score: {calib_res['confidence_score']}%")
+    logger.info(f"   • Calibration mode: {calib_res['calibration_mode']}")
+
+    assert calib_res["status"] in ("SUCCESS", "PARTIAL"), "Field line calibration failed!"
+    assert calib_res["confidence_score"] >= 60.0, f"Confidence too low: {calib_res['confidence_score']}"
+    assert len(calib_res["homography_matrix"]) == 3, "Homography matrix should be 3x3"
+    assert len(calib_res["field_lines"]) >= 3, "Expected at least 3 detected field line structures"
+    assert "camera_fov_quad" in calib_res, "Expected camera FOV quad in calibration output"
+
+    logger.info("✅ Test 4 Passed: Dynamic Homography Calibration via Field Lines fully operational (TSK-31)!")
+
+
+def test_inverse_homography_and_fov():
+    logger.info("\n🧪 Test 5: Testing Inverse Homography (Pitch -> Camera) & Camera FOV Frustum...")
+    estimator = DynamicHomographyEstimator()
+
+    # Forward transform
+    cx, cy = 0.5, 0.5
+    px, py = estimator.transform_camera_to_pitch(cx, cy)
+    # Backward transform (reproject)
+    rcx, rcy = estimator.reproject_pitch_to_camera(px, py)
+    logger.info(f"   • Camera ({cx}, {cy}) -> Pitch ({px}, {py}) -> Reprojected Camera ({rcx}, {rcy})")
+
+    # Round trip error should be tiny (< 0.05 normalized)
+    round_trip_dist = math.hypot(cx - rcx, cy - rcy)
+    assert round_trip_dist < 0.08, f"Round trip error too high: {round_trip_dist}"
+
+    # Camera FOV quad
+    fov = estimator.get_camera_fov_quad()
+    assert len(fov) == 4, "Camera FOV quad must have 4 corners"
+    for pt in fov:
+        assert 0.0 <= pt[0] <= 1.0 and 0.0 <= pt[1] <= 1.0, f"FOV corner out of range: {pt}"
+
+    logger.info("✅ Test 5 Passed: Inverse homography & FOV frustum validated!")
+
+
 if __name__ == "__main__":
     test_field_line_detector()
     test_adaptive_homography_pan_zoom()
     test_video_file_adaptation()
-    logger.info("\n🎉 ALL TSK-32 DYNAMIC HOMOGRAPHY TESTS PASSED SUCCESSFULLY!")
+    test_dynamic_calibration_from_field_lines()
+    test_inverse_homography_and_fov()
+    logger.info("\n🎉 ALL TSK-31 DYNAMIC HOMOGRAPHY TESTS PASSED SUCCESSFULLY!")

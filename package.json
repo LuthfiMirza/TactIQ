@@ -19,8 +19,11 @@
     "sync:scouting": "cd services/ml && ./venv/bin/python scripts/refresh_fbref_stats.py"
   },
   "devDependencies": {
-    "@esbuild/darwin-x64": "^0.28.2",
     "concurrently": "^9.1.2"
+  },
+  "optionalDependencies": {
+    "@esbuild/darwin-x64": "^0.28.2",
+    "@esbuild/win32-x64": "^0.28.2"
   },
   "keywords": [
     "football",
