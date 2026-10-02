@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { X, Youtube, Upload, Film, CheckCircle2, AlertCircle, Sparkles, Play, ShieldAlert } from 'lucide-react';
+import { X, Youtube, Upload, Film, CheckCircle2, AlertCircle, Sparkles, Play, ShieldAlert, Loader2 } from 'lucide-react';
 
 export interface CustomVideoSessionConfig {
   id: string;
@@ -73,6 +73,8 @@ export function formatYouTubeEmbedUrl(inputUrl: string): { embedUrl: string; vid
   return { embedUrl, videoId };
 }
 
+import { api } from '@/lib/api';
+
 export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
   isOpen,
   onClose,
@@ -86,6 +88,10 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [localVideoPreviewUrl, setLocalVideoPreviewUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -94,21 +100,41 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
   const { embedUrl, videoId } = formatYouTubeEmbedUrl(youtubeInput);
   const isValidYouTube = Boolean(videoId);
 
+  const processSelectedFile = (file: File) => {
+    if (!file.type.startsWith('video/')) {
+      setErrorMessage('File harus berupa video (MP4 atau WebM).');
+      return;
+    }
+    setSelectedFile(file);
+    setErrorMessage(null);
+    setUploadSuccessMessage(null);
+    const blobUrl = URL.createObjectURL(file);
+    setLocalVideoPreviewUrl(blobUrl);
+    if (matchTitle === 'Custom Tactical Match Analysis') {
+      setMatchTitle(file.name.replace(/\.[^/.]+$/, ''));
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('video/')) {
-        setErrorMessage('File harus berupa video (MP4 atau WebM).');
-        return;
-      }
-      setSelectedFile(file);
-      setErrorMessage(null);
-      const blobUrl = URL.createObjectURL(file);
-      setLocalVideoPreviewUrl(blobUrl);
-      if (matchTitle === 'Custom Tactical Match Analysis') {
-        setMatchTitle(file.name.replace(/\.[^/.]+$/, ''));
-      }
-    }
+    if (file) processSelectedFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processSelectedFile(file);
   };
 
   const handleSelectPreset = (preset: typeof PRESET_MATCHES[0]) => {
@@ -119,7 +145,7 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
     setErrorMessage(null);
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     setErrorMessage(null);
 
     if (activeTab === 'youtube') {
@@ -141,24 +167,81 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
         sourceType: 'youtube',
       });
       onClose();
-      if (!localVideoPreviewUrl) {
+    } else {
+      if (!localVideoPreviewUrl && !selectedFile) {
         setErrorMessage('Pilih file video MP4 dari perangkat atau klik tombol Cuplikan Lokal Demo.');
         return;
       }
 
-      onApplyVideo({
-        id: `custom-local-${Date.now()}`,
-        title: matchTitle.trim() || (selectedFile ? selectedFile.name : 'FA Community Shield - Garnacho / Bernardo Clip'),
-        competition: 'Local MP4 Stream (YOLOv8 + ByteTrack)',
-        venue: 'Wembley Stadium, London',
-        homeCode: homeTeam.toUpperCase().trim() || 'MUN',
-        awayCode: awayTeam.toUpperCase().trim() || 'MCI',
-        score: '1 — 1',
-        statusBadge: 'LOCAL MP4 SYNC',
-        videoSrc: localVideoPreviewUrl,
-        sourceType: 'local_file',
-      });
-      onClose();
+      if (selectedFile) {
+        setIsUploading(true);
+        setUploadProgress(25);
+        try {
+          const formData = new FormData();
+          formData.append('video', selectedFile);
+          formData.append('file', selectedFile); // compat for both API gateway and ML service
+          const generatedSessionId = `session-upload-${Date.now()}`;
+          formData.append('session_id', generatedSessionId);
+          formData.append('title', matchTitle.trim() || selectedFile.name);
+
+          setUploadProgress(65);
+          const res = await api.uploadTrackingVideo(formData);
+          setUploadProgress(100);
+          setUploadSuccessMessage(res.message);
+
+          const finalVideoUrl = localVideoPreviewUrl || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${res.videoUrl}`;
+
+          onApplyVideo({
+            id: res.sessionId || generatedSessionId,
+            title: matchTitle.trim() || res.title || selectedFile.name,
+            competition: 'Local MP4 Stream (YOLOv8 + ByteTrack)',
+            venue: 'Computer Vision Optical Analysis',
+            homeCode: homeTeam.toUpperCase().trim() || 'MUN',
+            awayCode: awayTeam.toUpperCase().trim() || 'MCI',
+            score: '1 — 1',
+            statusBadge: 'YOLOv8 CV ACTIVE',
+            videoSrc: finalVideoUrl,
+            sourceType: 'local_file',
+          });
+
+          setTimeout(() => {
+            onClose();
+          }, 350);
+        } catch (uploadErr) {
+          console.warn('Backend upload encountered an issue, fallback to client HTML5 video blob:', uploadErr);
+          // Graceful fallback to client blob so user experience is smooth
+          onApplyVideo({
+            id: `custom-local-${Date.now()}`,
+            title: matchTitle.trim() || selectedFile.name,
+            competition: 'Local MP4 Stream (YOLOv8 + ByteTrack)',
+            venue: 'Wembley Stadium, London',
+            homeCode: homeTeam.toUpperCase().trim() || 'MUN',
+            awayCode: awayTeam.toUpperCase().trim() || 'MCI',
+            score: '1 — 1',
+            statusBadge: 'LOCAL MP4 SYNC',
+            videoSrc: localVideoPreviewUrl!,
+            sourceType: 'local_file',
+          });
+          onClose();
+        } finally {
+          setIsUploading(false);
+        }
+      } else {
+        // Preset sample video
+        onApplyVideo({
+          id: `custom-local-${Date.now()}`,
+          title: matchTitle.trim() || 'FA Community Shield - Garnacho / Bernardo Clip',
+          competition: 'Local MP4 Stream (YOLOv8 + ByteTrack)',
+          venue: 'Wembley Stadium, London',
+          homeCode: homeTeam.toUpperCase().trim() || 'MUN',
+          awayCode: awayTeam.toUpperCase().trim() || 'MCI',
+          score: '1 — 1',
+          statusBadge: 'LOCAL MP4 SYNC',
+          videoSrc: localVideoPreviewUrl!,
+          sourceType: 'local_file',
+        });
+        onClose();
+      }
     }
   };
 
@@ -303,10 +386,19 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Local File Picker */}
+              {/* Local File Picker with Drag & Drop */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#27272A] hover:border-[#CEFF00]/70 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-[#16161A]/50 group"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-[#16161A]/50 group relative ${
+                  isDragging
+                    ? 'border-[#CEFF00] bg-[#CEFF00]/10 scale-[1.01]'
+                    : selectedFile
+                    ? 'border-emerald-500/50 bg-emerald-950/10'
+                    : 'border-[#27272A] hover:border-[#CEFF00]/70'
+                }`}
               >
                 <input
                   ref={fileInputRef}
@@ -315,15 +407,52 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 group-hover:text-[#CEFF00] group-hover:bg-[#CEFF00]/10 transition-colors">
-                  <Upload size={22} />
+                <div className={`w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center transition-colors ${
+                  selectedFile
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-zinc-800 text-zinc-300 group-hover:text-[#CEFF00] group-hover:bg-[#CEFF00]/10'
+                }`}>
+                  {selectedFile ? <CheckCircle2 size={24} /> : <Upload size={22} />}
                 </div>
                 <p className="text-xs font-bold text-zinc-200">
-                  {selectedFile ? selectedFile.name : 'Klik untuk memilih file video MP4 / WebM'}
+                  {selectedFile ? (
+                    <span className="text-emerald-400 font-mono">
+                      {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  ) : (
+                    'Drag & drop file video MP4 di sini atau klik untuk memilih'
+                  )}
                 </p>
-                <p className="text-[10px] text-zinc-500 font-mono mt-1">
-                  Video dimuat langsung di browser via HTML5 Blob (100% cepat tanpa perlu proses upload server).
+                <p className="text-[10px] text-zinc-400 font-mono mt-1">
+                  Upload langsung multipart/form-data ke backend ML YOLOv8 + ByteTrack stream.
                 </p>
+
+                {/* Upload Progress Bar */}
+                {isUploading && (
+                  <div className="mt-4 space-y-1.5 animate-in fade-in">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                      <span className="flex items-center gap-1 text-[#CEFF00]">
+                        <Loader2 size={11} className="animate-spin" />
+                        <span>Mengunggah video ke API Tracking Hub...</span>
+                      </span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#CEFF00] transition-all duration-300 rounded-full shadow-xs shadow-[#CEFF00]"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload Success Feedback */}
+                {uploadSuccessMessage && (
+                  <div className="mt-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono flex items-center justify-center gap-1.5">
+                    <CheckCircle2 size={13} />
+                    <span>{uploadSuccessMessage}</span>
+                  </div>
+                )}
               </div>
 
               {/* Quick Preset for Local Match Clip */}
@@ -430,11 +559,21 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
 
           <button
             type="button"
+            disabled={isUploading}
             onClick={handleApply}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-mono font-black shadow-xs shadow-[#CEFF00]/20 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#CEFF00] hover:bg-[#b8e600] disabled:bg-[#CEFF00]/50 text-black text-xs font-mono font-black shadow-xs shadow-[#CEFF00]/20 transition-all cursor-pointer disabled:cursor-not-allowed"
           >
-            <Play size={14} />
-            <span>Terapkan &amp; Jalankan Tracker</span>
+            {isUploading ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Mengunggah ke ML Backend ({uploadProgress}%)...</span>
+              </>
+            ) : (
+              <>
+                <Play size={14} />
+                <span>Terapkan &amp; Jalankan Tracker</span>
+              </>
+            )}
           </button>
         </div>
       </div>

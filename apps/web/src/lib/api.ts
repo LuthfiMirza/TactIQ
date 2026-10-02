@@ -195,6 +195,35 @@ class ApiClient {
       body: JSON.stringify(payload),
     });
   }
+
+  public async uploadTrackingVideo(formData: FormData): Promise<{
+    sessionId: string;
+    title: string;
+    videoUrl: string;
+    filename: string;
+    sizeBytes: number;
+    status: string;
+    tracker: string;
+    message: string;
+  }> {
+    const url = `${this.baseUrl}/api/v1/tracking/upload-video`;
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      let errMessage = `Upload failed with status ${response.status}`;
+      try {
+        const errJson = await response.json();
+        if (errJson.error?.message || errJson.message) {
+          errMessage = errJson.error?.message || errJson.message;
+        }
+      } catch {}
+      throw new ApiError(errMessage, response.status, '/api/v1/tracking/upload-video');
+    }
+    const json: ApiResponse<any> = await response.json();
+    return json.data;
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);
