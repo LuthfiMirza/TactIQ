@@ -141,21 +141,20 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
         sourceType: 'youtube',
       });
       onClose();
-    } else {
-      if (!selectedFile || !localVideoPreviewUrl) {
-        setErrorMessage('Pilih file video MP4 atau WebM dari perangkat Anda terlebih dahulu.');
+      if (!localVideoPreviewUrl) {
+        setErrorMessage('Pilih file video MP4 dari perangkat atau klik tombol Cuplikan Lokal Demo.');
         return;
       }
 
       onApplyVideo({
         id: `custom-local-${Date.now()}`,
-        title: matchTitle.trim() || selectedFile.name,
-        competition: 'Local File Stream',
-        venue: 'Direct Client Video',
-        homeCode: homeTeam.toUpperCase().trim() || 'HOM',
-        awayCode: awayTeam.toUpperCase().trim() || 'AWA',
-        score: '0 — 0',
-        statusBadge: 'LOCAL MP4',
+        title: matchTitle.trim() || (selectedFile ? selectedFile.name : 'FA Community Shield - Garnacho / Bernardo Clip'),
+        competition: 'Local MP4 Stream (YOLOv8 + ByteTrack)',
+        venue: 'Wembley Stadium, London',
+        homeCode: homeTeam.toUpperCase().trim() || 'MUN',
+        awayCode: awayTeam.toUpperCase().trim() || 'MCI',
+        score: '1 — 1',
+        statusBadge: 'LOCAL MP4 SYNC',
         videoSrc: localVideoPreviewUrl,
         sourceType: 'local_file',
       });
@@ -325,6 +324,35 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
                 <p className="text-[10px] text-zinc-500 font-mono mt-1">
                   Video dimuat langsung di browser via HTML5 Blob (100% cepat tanpa perlu proses upload server).
                 </p>
+              </div>
+
+              {/* Quick Preset for Local Match Clip */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#16161A] border border-[#27272A]">
+                <div className="flex items-center gap-2.5">
+                  <Film size={16} className="text-[#CEFF00]" />
+                  <div>
+                    <span className="text-xs font-bold text-white block">
+                      Klip Cuplikan Gol / Transisi Lokal
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-mono block">
+                      Contoh klip MP4 15-detik FA Community Shield (YOLOv8 + ByteTrack)
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocalVideoPreviewUrl('/sample_crossing.mp4');
+                    setSelectedFile(null);
+                    setMatchTitle('FA Community Shield 2024 - Garnacho / Bernardo Clip');
+                    setHomeTeam('MUN');
+                    setAwayTeam('MCI');
+                    setErrorMessage(null);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-mono font-bold transition-colors cursor-pointer shrink-0"
+                >
+                  Gunakan Klip Ini
+                </button>
               </div>
 
               {/* Local Video Preview */}

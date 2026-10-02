@@ -119,6 +119,14 @@ export interface MatchPredictRequest {
         possessionAvg: number;
     };
 }
+export interface TacticalMetricsDTO {
+    homeDefensiveLineMeters: number;
+    awayDefensiveLineMeters: number;
+    homeCompactnessAreaM2: number;
+    awayCompactnessAreaM2: number;
+    homeInterLineDistanceMeters: number;
+    awayInterLineDistanceMeters: number;
+}
 export interface TrackingEntity {
     id: number;
     team: EntityTeam;
@@ -126,12 +134,17 @@ export interface TrackingEntity {
     y: number;
     speedKmh?: number;
     jerseyNumber?: number;
+    camera_x?: number;
+    camera_y?: number;
+    bbox?: [number, number, number, number];
+    confidence?: number;
 }
 export interface TrackingFramePayload {
     sessionId: string;
     timestampMs: number;
     frameNumber?: number;
     entities: TrackingEntity[];
+    tacticalMetrics?: TacticalMetricsDTO;
 }
 export interface VideoTrackingSessionDTO {
     id: string;

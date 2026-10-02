@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useRef, useEffect, useState } from 'react';
-import type { TrackingEntity } from '@tactiq/shared-types';
-import { Compass, Eye, Shield, Share2, Grid3X3 } from 'lucide-react';
+import type { TrackingEntity, TacticalMetricsDTO } from '@tactiq/shared-types';
+import { Compass, Shield, Maximize2, Layers, Gauge, Activity } from 'lucide-react';
+import { calculateTacticalMetrics } from '@/lib/tactical-600-sequence';
 
 interface TacticalMinimapProps {
   entities?: TrackingEntity[];
@@ -11,36 +12,36 @@ interface TacticalMinimapProps {
   className?: string;
 }
 
-// ─── Default Tactical Formation Entities (MUN 3-2-4-1 vs MCI 4-4-2) ──────
+// ─── Default 11v11 Tactical Formation (MUN 3-2-4-1 vs MCI 4-4-2) ───────────
 const DEFAULT_FORMATION_ENTITIES: TrackingEntity[] = [
-  // Man United (Home - Red)
+  // Man United (Home - Red 3-2-4-1)
   { id: 1, team: 'home', x: 0.08, y: 0.50, jerseyNumber: 1, speedKmh: 4.2 },
   { id: 4, team: 'home', x: 0.22, y: 0.24, jerseyNumber: 4, speedKmh: 12.1 },
-  { id: 2, team: 'home', x: 0.20, y: 0.50, jerseyNumber: 2, speedKmh: 14.5 },
+  { id: 5, team: 'home', x: 0.20, y: 0.50, jerseyNumber: 5, speedKmh: 14.5 },
   { id: 6, team: 'home', x: 0.22, y: 0.76, jerseyNumber: 6, speedKmh: 11.8 },
-  { id: 41, team: 'home', x: 0.38, y: 0.38, jerseyNumber: 41, speedKmh: 16.2 },
-  { id: 5, team: 'home', x: 0.38, y: 0.62, jerseyNumber: 5, speedKmh: 15.0 },
-  { id: 7, team: 'home', x: 0.62, y: 0.16, jerseyNumber: 7, speedKmh: 24.8 },
-  { id: 8, team: 'home', x: 0.58, y: 0.40, jerseyNumber: 8, speedKmh: 18.4 },
-  { id: 29, team: 'home', x: 0.58, y: 0.60, jerseyNumber: 29, speedKmh: 17.2 },
-  { id: 11, team: 'home', x: 0.62, y: 0.84, jerseyNumber: 11, speedKmh: 23.5 },
-  { id: 19, team: 'home', x: 0.74, y: 0.50, jerseyNumber: 9, speedKmh: 19.8 },
+  { id: 20, team: 'home', x: 0.36, y: 0.16, jerseyNumber: 20, speedKmh: 17.5 },
+  { id: 18, team: 'home', x: 0.36, y: 0.44, jerseyNumber: 18, speedKmh: 16.2 },
+  { id: 37, team: 'home', x: 0.38, y: 0.62, jerseyNumber: 37, speedKmh: 15.0 },
+  { id: 16, team: 'home', x: 0.58, y: 0.18, jerseyNumber: 16, speedKmh: 24.8 },
+  { id: 8, team: 'home', x: 0.54, y: 0.46, jerseyNumber: 8, speedKmh: 18.4 },
+  { id: 17, team: 'home', x: 0.60, y: 0.82, jerseyNumber: 17, speedKmh: 23.5 },
+  { id: 7, team: 'home', x: 0.68, y: 0.50, jerseyNumber: 7, speedKmh: 19.8 },
 
-  // Man City (Away - Blue)
+  // Man City (Away - Sky Blue 4-4-2)
   { id: 31, team: 'away', x: 0.92, y: 0.50, jerseyNumber: 31, speedKmh: 3.9 },
-  { id: 25, team: 'away', x: 0.78, y: 0.20, jerseyNumber: 25, speedKmh: 14.2 },
-  { id: 3, team: 'away', x: 0.76, y: 0.40, jerseyNumber: 3, speedKmh: 13.8 },
-  { id: 14, team: 'away', x: 0.76, y: 0.60, jerseyNumber: 14, speedKmh: 12.9 },
+  { id: 82, team: 'away', x: 0.78, y: 0.20, jerseyNumber: 82, speedKmh: 14.2 },
+  { id: 25, team: 'away', x: 0.75, y: 0.40, jerseyNumber: 25, speedKmh: 13.8 },
+  { id: 3, team: 'away', x: 0.75, y: 0.60, jerseyNumber: 3, speedKmh: 12.9 },
   { id: 24, team: 'away', x: 0.78, y: 0.80, jerseyNumber: 24, speedKmh: 15.1 },
-  { id: 20, team: 'away', x: 0.55, y: 0.22, jerseyNumber: 20, speedKmh: 18.0 },
-  { id: 16, team: 'away', x: 0.52, y: 0.42, jerseyNumber: 16, speedKmh: 17.5 },
-  { id: 17, team: 'away', x: 0.52, y: 0.58, jerseyNumber: 17, speedKmh: 16.8 },
-  { id: 47, team: 'away', x: 0.55, y: 0.78, jerseyNumber: 47, speedKmh: 19.2 },
-  { id: 9, team: 'away', x: 0.42, y: 0.46, jerseyNumber: 9, speedKmh: 16.0 },
-  { id: 199, team: 'away', x: 0.42, y: 0.54, jerseyNumber: 19, speedKmh: 15.5 },
+  { id: 8, team: 'away', x: 0.58, y: 0.38, jerseyNumber: 8, speedKmh: 18.0 },
+  { id: 75, team: 'away', x: 0.58, y: 0.62, jerseyNumber: 75, speedKmh: 17.5 },
+  { id: 52, team: 'away', x: 0.52, y: 0.20, jerseyNumber: 52, speedKmh: 16.8 },
+  { id: 87, team: 'away', x: 0.50, y: 0.44, jerseyNumber: 87, speedKmh: 19.2 },
+  { id: 20, team: 'away', x: 0.52, y: 0.80, jerseyNumber: 20, speedKmh: 16.0 },
+  { id: 9, team: 'away', x: 0.42, y: 0.50, jerseyNumber: 9, speedKmh: 15.5 },
 
   // Match Ball
-  { id: 999, team: 'ball', x: 0.58, y: 0.40, speedKmh: 28.5 },
+  { id: 99, team: 'ball', x: 0.54, y: 0.46, speedKmh: 28.5 },
 ];
 
 export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
@@ -50,13 +51,17 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
   className = '',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [showPassingLanes, setShowPassingLanes] = useState(true);
-  const [showConvexHull, setShowConvexHull] = useState(false);
-  const [showTacticalZones, setShowTacticalZones] = useState(false);
-  const [showCameraFOV, setShowCameraFOV] = useState(true);
+  const [showPassingLanes, setShowPassingLanes] = useState<boolean>(true);
+  const [showConvexHull, setShowConvexHull] = useState<boolean>(true);
+  const [showTacticalZones, setShowTacticalZones] = useState<boolean>(false);
+  const [showCameraFOV, setShowCameraFOV] = useState<boolean>(true);
+  const [showDefensiveLine, setShowDefensiveLine] = useState<boolean>(true);
 
   // Fall back to default formation entities if none streamed yet
   const activeEntities = entities && entities.length > 0 ? entities : DEFAULT_FORMATION_ENTITIES;
+
+  // Compute live tactical kinematics
+  const metrics: TacticalMetricsDTO = calculateTacticalMetrics(activeEntities);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -87,9 +92,9 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       }
     }
 
-    // Optional: 18 FIFA Tactical Zones (Half-spaces, Zone 14)
+    // 2. Optional: 18 FIFA Tactical Zones & Zone 14 Highlight
     if (showTacticalZones) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
 
@@ -97,13 +102,13 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       const thirdW = pW / 3;
       ctx.strokeRect(pad + thirdW, pad, thirdW, pH);
 
-      // Horizontal zones (Zone 14 highlight)
+      // Horizontal zones (Zone 14 amber highlight)
       const sixthW = pW / 6;
       const zone14X = pad + thirdW + sixthW * 0.5;
       const zone14Y = pad + pH * 0.3;
       const zone14W = sixthW;
       const zone14H = pH * 0.4;
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)'; // Zone 14 amber tint
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
       ctx.fillRect(zone14X, zone14Y, zone14W, zone14H);
       ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
       ctx.strokeRect(zone14X, zone14Y, zone14W, zone14H);
@@ -115,7 +120,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       ctx.setLineDash([]);
     }
 
-    // 2. Pitch Line Markings (Crisp white lines with high legibility)
+    // 3. Pitch Line Markings (Crisp white lines with high legibility)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.lineWidth = 1.5;
 
@@ -155,36 +160,65 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
     ctx.arc(pad + pW - boxW, pad + pH / 2, radius * 0.65, Math.PI * 0.65, Math.PI * 1.35);
     ctx.stroke();
 
-    // Corner Arcs
-    const cArc = 6;
-    ctx.beginPath();
-    ctx.arc(pad, pad, cArc, 0, Math.PI * 0.5);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(pad, pad + pH, cArc, -Math.PI * 0.5, 0);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(pad + pW, pad, cArc, Math.PI * 0.5, Math.PI);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(pad + pW, pad + pH, cArc, Math.PI, Math.PI * 1.5);
-    ctx.stroke();
-
-    // 3. Separate Entities
+    // 4. Separate Entities
     const homePlayers = activeEntities.filter((e) => e.team === 'home');
     const awayPlayers = activeEntities.filter((e) => e.team === 'away');
     const ball = activeEntities.find((e) => e.team === 'ball');
 
-    // 4. Optional: Convex Hulls (Team Compactness Shape)
-    if (showConvexHull) {
-      const drawHull = (players: TrackingEntity[], strokeColor: string) => {
-        if (players.length < 3) return;
-        const cx = players.reduce((acc, p) => acc + p.x, 0) / players.length;
-        const cy = players.reduce((acc, p) => acc + p.y, 0) / players.length;
-        const sorted = [...players].sort((a, b) => {
-          return Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx);
-        });
+    // 5. Defensive Line Height Visualization (Modern Tactical Kinematics)
+    if (showDefensiveLine) {
+      // Home Defensive Line (Red dashed line across pitch)
+      const homeDefLineX = pad + (metrics.homeDefensiveLineMeters / 105.0) * pW;
+      ctx.save();
+      ctx.strokeStyle = '#EF4444';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(homeDefLineX, pad);
+      ctx.lineTo(homeDefLineX, pad + pH);
+      ctx.stroke();
 
+      // Label at top
+      ctx.fillStyle = '#EF4444';
+      ctx.font = 'bold 7.5px monospace';
+      ctx.fillText(`MUN DEF ${metrics.homeDefensiveLineMeters}m`, homeDefLineX + 3, pad + 10);
+      ctx.restore();
+
+      // Away Defensive Line (Sky Blue dashed line across pitch)
+      const awayDefLineX = pad + (1.0 - (metrics.awayDefensiveLineMeters / 105.0)) * pW;
+      ctx.save();
+      ctx.strokeStyle = '#6CABDD';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(awayDefLineX, pad);
+      ctx.lineTo(awayDefLineX, pad + pH);
+      ctx.stroke();
+
+      // Label at bottom
+      ctx.fillStyle = '#6CABDD';
+      ctx.font = 'bold 7.5px monospace';
+      ctx.fillText(`MCI DEF ${metrics.awayDefensiveLineMeters}m`, awayDefLineX - 68, pad + pH - 5);
+      ctx.restore();
+    }
+
+    // 6. Convex Hulls (Team Compactness Shape & Shaded Area)
+    if (showConvexHull) {
+      const drawHullWithFill = (
+        players: TrackingEntity[],
+        strokeColor: string,
+        fillColor: string,
+        areaM2: number,
+        tagPrefix: string
+      ) => {
+        const outfield = players.filter((p) => p.jerseyNumber !== 1 && p.jerseyNumber !== 31);
+        if (outfield.length < 3) return;
+        const cx = outfield.reduce((acc, p) => acc + p.x, 0) / outfield.length;
+        const cy = outfield.reduce((acc, p) => acc + p.y, 0) / outfield.length;
+        const sorted = [...outfield].sort((a, b) => Math.atan2(a.y - cy, a.x - cx) - Math.atan2(b.y - cy, b.x - cx));
+
+        ctx.save();
+        ctx.fillStyle = fillColor;
         ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 1.2;
         ctx.setLineDash([3, 3]);
@@ -196,19 +230,41 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           else ctx.lineTo(px, py);
         });
         ctx.closePath();
+        ctx.fill();
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // Area badge at centroid
+        const tagX = pad + cx * pW;
+        const tagY = pad + cy * pH;
+        ctx.fillStyle = strokeColor;
+        ctx.font = 'bold 7px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${tagPrefix} ${areaM2}m²`, tagX, tagY);
+        ctx.restore();
       };
 
-      // Man United (Home) Hull: Crimson Outline Only
-      drawHull(homePlayers, 'rgba(239, 1, 7, 0.6)');
-      // Man City (Away) Hull: Sky Blue Outline Only
-      drawHull(awayPlayers, 'rgba(108, 171, 221, 0.6)');
+      // Man United Hull: Crimson Translucent Polygon
+      drawHullWithFill(
+        homePlayers,
+        'rgba(239, 1, 7, 0.8)',
+        'rgba(239, 1, 7, 0.12)',
+        metrics.homeCompactnessAreaM2,
+        'MUN'
+      );
+
+      // Man City Hull: Sky Blue Translucent Polygon
+      drawHullWithFill(
+        awayPlayers,
+        'rgba(108, 171, 221, 0.8)',
+        'rgba(108, 171, 221, 0.12)',
+        metrics.awayCompactnessAreaM2,
+        'MCI'
+      );
     }
 
-    // 5. Optional: Passing Lanes from ball possessor
+    // 7. Passing Lanes from closest player to ball
     if (showPassingLanes && ball && homePlayers.length > 0) {
-      // Find closest player to ball
       let closestPlayer = homePlayers[0];
       let minDist = 999;
       homePlayers.forEach((p) => {
@@ -219,11 +275,11 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         }
       });
 
-      if (minDist < 0.18) {
+      if (minDist < 0.22) {
         const fromX = pad + closestPlayer.x * pW;
         const fromY = pad + closestPlayer.y * pH;
 
-        ctx.strokeStyle = 'rgba(0, 223, 89, 0.5)';
+        ctx.strokeStyle = 'rgba(0, 223, 89, 0.55)';
         ctx.lineWidth = 1;
         ctx.setLineDash([3, 3]);
 
@@ -241,7 +297,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       }
     }
 
-    // 5.5 Optional: Broadcast Camera Field of View (FOV) Box
+    // 8. Broadcast Camera Field of View (FOV) Box
     if (showCameraFOV && ball) {
       const camW = pW * 0.36;
       const camH = pH * 0.44;
@@ -265,7 +321,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
       ctx.restore();
     }
 
-    // 6. Render Players & Ball
+    // 9. Render 11v11 Players & Ball
     activeEntities.forEach((ent) => {
       const px = pad + ent.x * pW;
       const py = pad + ent.y * pH;
@@ -273,27 +329,27 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
 
       if (ent.team === 'ball') {
         // Glowing match ball
-        ctx.shadowColor = '#00DF59';
+        ctx.shadowColor = '#FACC15';
         ctx.shadowBlur = 8;
         ctx.fillStyle = '#FFFFFF';
         ctx.beginPath();
         ctx.arc(px, py, 4, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.strokeStyle = '#00DF59';
+        ctx.strokeStyle = '#FACC15';
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.shadowBlur = 0;
       } else {
         const isHome = ent.team === 'home';
-        const teamColor = isHome ? '#EF0107' : '#6CABDD';
+        const teamColor = isHome ? '#DA291C' : '#6CABDD';
 
         // Selection Target Ring
         if (isSelected) {
-          ctx.strokeStyle = '#00DF59';
+          ctx.strokeStyle = '#CEFF00';
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(px, py, 9, 0, Math.PI * 2);
+          ctx.arc(px, py, 8.5, 0, Math.PI * 2);
           ctx.stroke();
         }
 
@@ -317,10 +373,20 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         }
       }
     });
-  }, [entities, showPassingLanes, showConvexHull, showTacticalZones, showCameraFOV, selectedEntityId]);
+  }, [
+    activeEntities,
+    showPassingLanes,
+    showConvexHull,
+    showTacticalZones,
+    showCameraFOV,
+    showDefensiveLine,
+    selectedEntityId,
+    metrics,
+  ]);
 
   return (
-    <div className={`p-4 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl space-y-3 shadow-xs transition-colors ${className}`}>
+    <div className={`p-4 bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A] rounded-xl space-y-3.5 shadow-xs transition-colors ${className}`}>
+      
       {/* Header with FIFA Specs & Tactical Phase */}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#27272A] pb-3">
         <div className="flex items-center gap-2">
@@ -328,8 +394,8 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
           <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
             2D Tactical Radar
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold">
-            DEMO SIMULATION
+          <span className="px-1.5 py-0.5 rounded bg-[#CEFF00]/15 border border-[#CEFF00]/30 text-[#CEFF00] font-mono text-[9px] font-bold">
+            11v11 CANONICAL
           </span>
         </div>
         <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2 py-0.5 rounded">
@@ -365,7 +431,7 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
             // Find closest entity within click radius
             let selectedId: number | null = null;
             let minDist = 0.08;
-            for (const ent of entities) {
+            for (const ent of activeEntities) {
               const d = Math.hypot(ent.x - clickX, ent.y - clickY);
               if (d < minDist) {
                 minDist = d;
@@ -377,63 +443,114 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         />
       </div>
 
-      {/* Visual Layer Toggles */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+      {/* Visual Layer Toggles (Cam FOV, Pass Lanes, Shapes, Def Line, Zone 14) */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 pt-0.5">
         <button
           onClick={() => setShowCameraFOV(!showCameraFOV)}
-          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[9.5px] font-mono transition-colors ${
             showCameraFOV
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle Broadcast Camera Viewport Box (FOV)"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showCameraFOV ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Cam FOV</span>
         </button>
 
         <button
           onClick={() => setShowPassingLanes(!showPassingLanes)}
-          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[9.5px] font-mono transition-colors ${
             showPassingLanes
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle Passing Lanes"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showPassingLanes ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Pass Lanes</span>
         </button>
 
         <button
           onClick={() => setShowConvexHull(!showConvexHull)}
-          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[9.5px] font-mono transition-colors ${
             showConvexHull
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle Team Shape Convex Hull"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showConvexHull ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Shapes</span>
         </button>
 
         <button
+          onClick={() => setShowDefensiveLine(!showDefensiveLine)}
+          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[9.5px] font-mono transition-colors ${
+            showDefensiveLine
+              ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
+              : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
+          }`}
+          title="Toggle Defensive Line Height Markers"
+        >
+          <span>Def Line</span>
+        </button>
+
+        <button
           onClick={() => setShowTacticalZones(!showTacticalZones)}
-          className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-[10px] font-mono transition-colors ${
+          className={`flex items-center justify-center gap-1 py-1 px-1.5 rounded-lg text-[9.5px] font-mono transition-colors ${
             showTacticalZones
               ? 'bg-[#CEFF00] text-black shadow-xs font-bold'
               : 'bg-[#18181C] text-zinc-400 border border-[#27272A] hover:text-white'
           }`}
           title="Toggle 18 Tactical Zones & Zone 14"
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${showTacticalZones ? 'bg-black' : 'bg-zinc-500'}`} />
           <span>Zone 14</span>
         </button>
       </div>
 
+      {/* ── Real-Time Tactical Kinematics Card (Defensive Line, Compactness, Inter-line) ── */}
+      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#18181C] border border-slate-200/80 dark:border-[#27272A] space-y-2">
+        <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-800 dark:text-zinc-200">
+          <div className="flex items-center gap-1.5">
+            <Activity size={12} className="text-[#CEFF00]" />
+            <span>REAL-TIME KINEMATICS</span>
+          </div>
+          <span className="text-[9px] text-zinc-400 font-normal">10 FPS Planar</span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center font-mono">
+          {/* 1. Defensive Line */}
+          <div className="p-1.5 rounded-lg bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A]">
+            <span className="text-[9px] text-zinc-400 block truncate">Def Line (m)</span>
+            <div className="text-[11px] font-extrabold mt-0.5 flex items-center justify-center gap-1">
+              <span className="text-red-400">{metrics.homeDefensiveLineMeters}m</span>
+              <span className="text-zinc-600">/</span>
+              <span className="text-sky-400">{metrics.awayDefensiveLineMeters}m</span>
+            </div>
+          </div>
+
+          {/* 2. Compactness Area */}
+          <div className="p-1.5 rounded-lg bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A]">
+            <span className="text-[9px] text-zinc-400 block truncate">Hull Area (m²)</span>
+            <div className="text-[11px] font-extrabold mt-0.5 flex items-center justify-center gap-1">
+              <span className="text-red-400">{metrics.homeCompactnessAreaM2}</span>
+              <span className="text-zinc-600">/</span>
+              <span className="text-sky-400">{metrics.awayCompactnessAreaM2}</span>
+            </div>
+          </div>
+
+          {/* 3. Inter-line Distance */}
+          <div className="p-1.5 rounded-lg bg-white dark:bg-[#121215] border border-slate-200 dark:border-[#27272A]">
+            <span className="text-[9px] text-zinc-400 block truncate">Inter-line (m)</span>
+            <div className="text-[11px] font-extrabold mt-0.5 flex items-center justify-center gap-1">
+              <span className="text-red-400">{metrics.homeInterLineDistanceMeters}m</span>
+              <span className="text-zinc-600">/</span>
+              <span className="text-sky-400">{metrics.awayInterLineDistanceMeters}m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Legend */}
-      <div className="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#27272A]">
+      <div className="flex items-center justify-between text-[10px] font-mono pt-0.5 text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#27272A]">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#DA291C]" />
           <span>Man United (11)</span>
@@ -444,9 +561,10 @@ export const TacticalMinimap: React.FC<TacticalMinimapProps> = ({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400" />
-          <span>Ball (sim)</span>
+          <span>Nike Ball</span>
         </div>
       </div>
+
     </div>
   );
 };

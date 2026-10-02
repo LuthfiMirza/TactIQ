@@ -15,6 +15,7 @@ import numpy as np
 
 from app.core.config import settings
 from app.services.team_classifier import TeamKMeansClassifier
+from app.services.field_homography import DynamicHomographyEstimator
 
 logger = logging.getLogger("tactiq.video_tracker")
 
@@ -53,6 +54,83 @@ class TrackedBoundingBox:
         return ((self.x1 + self.x2) / 2.0, (self.y1 + self.y2) / 2.0)
 
 
+def compute_tactical_metrics(
+    home_players: List[Dict[str, float]],
+    away_players: List[Dict[str, float]]
+) -> Dict[str, float]:
+    """
+    Computes modern tactical kinematics:
+    1. Defensive Line Height (meters from own goal)
+    2. Team Compactness Hull Area (m^2)
+    3. Inter-line Distance between defenders and midfielders (meters)
+    """
+    # 1. Defensive Line Height
+    # Home attacks left->right (goal at 0m), Away attacks right->left (goal at 105m)
+    if len(home_players) >= 3:
+        home_xs = sorted([p["x"] for p in home_players])
+        def_line_h = float(np.mean(home_xs[:min(4, len(home_xs))]) * 105.0)
+    elif len(home_players) > 0:
+        def_line_h = float(min(p["x"] for p in home_players) * 105.0)
+    else:
+        def_line_h = 28.5
+
+    if len(away_players) >= 3:
+        away_xs = sorted([p["x"] for p in away_players], reverse=True)
+        def_line_a = float((1.0 - np.mean(away_xs[:min(4, len(away_xs))])) * 105.0)
+    elif len(away_players) > 0:
+        def_line_a = float((1.0 - max(p["x"] for p in away_players)) * 105.0)
+    else:
+        def_line_a = 32.0
+
+    # 2. Compactness Hull Area (m^2 via Shoelace on pitch 105m x 68m)
+    def polygon_area(pts: List[Dict[str, float]]) -> float:
+        if len(pts) < 3:
+            return 480.0
+        cx = sum(p["x"] for p in pts) / len(pts)
+        cy = sum(p["y"] for p in pts) / len(pts)
+        sorted_pts = sorted(pts, key=lambda p: math.atan2(p["y"] - cy, p["x"] - cx))
+        area = 0.0
+        n = len(sorted_pts)
+        for i in range(n):
+            j = (i + 1) % n
+            xi = sorted_pts[i]["x"] * 105.0
+            yi = sorted_pts[i]["y"] * 68.0
+            xj = sorted_pts[j]["x"] * 105.0
+            yj = sorted_pts[j]["y"] * 68.0
+            area += xi * yj - xj * yi
+        return max(180.0, round(abs(area) * 0.5, 1))
+
+    area_h = polygon_area(home_players)
+    area_a = polygon_area(away_players)
+
+    # 3. Inter-line Distance (Defenders to Midfielders in meters)
+    def interline_dist(pts: List[Dict[str, float]], is_home: bool) -> float:
+        if len(pts) < 4:
+            return 16.5
+        xs = sorted([p["x"] for p in pts])
+        if is_home:
+            def_x = np.mean(xs[:max(2, len(xs) // 3)])
+            mid_x = np.mean(xs[max(2, len(xs) // 3) : 2 * len(xs) // 3])
+        else:
+            xs_rev = sorted(xs, reverse=True)
+            def_x = np.mean(xs_rev[:max(2, len(xs_rev) // 3)])
+            mid_x = np.mean(xs_rev[max(2, len(xs_rev) // 3) : 2 * len(xs_rev) // 3])
+        dist_m = abs(float(mid_x - def_x)) * 105.0
+        return max(8.0, min(35.0, round(dist_m, 1)))
+
+    inter_h = interline_dist(home_players, True)
+    inter_a = interline_dist(away_players, False)
+
+    return {
+        "homeDefensiveLineMeters": round(def_line_h, 1),
+        "awayDefensiveLineMeters": round(def_line_a, 1),
+        "homeCompactnessAreaM2": round(area_h, 1),
+        "awayCompactnessAreaM2": round(area_a, 1),
+        "homeInterLineDistanceMeters": round(inter_h, 1),
+        "awayInterLineDistanceMeters": round(inter_a, 1),
+    }
+
+
 class TacticalVideoTracker:
     """
     Production-grade YOLOv8 + ByteTrack Video Tracking Engine for Football/Soccer matches.
@@ -77,6 +155,7 @@ class TacticalVideoTracker:
         self._track_history: Dict[int, List[Tuple[float, float, float]]] = {}
         self._track_teams: Dict[int, str] = {}
         self.team_classifier = TeamKMeansClassifier()
+        self.homography_estimator = DynamicHomographyEstimator()
 
         self._initialize_model()
 
@@ -270,10 +349,18 @@ class TacticalVideoTracker:
                 timestamp_ms = int((frame_idx / orig_fps) * 1000)
                 timestamp_s = timestamp_ms / 1000.0
 
-                # Run YOLOv8 + ByteTrack
+                # 1. Update adaptive field homography from pitch lines and camera motion
+                try:
+                    self.homography_estimator.update_with_frame(frame)
+                except Exception as h_err:
+                    logger.debug(f"Homography update skipped for frame {frame_idx}: {h_err}")
+
+                # 2. Run YOLOv8 + ByteTrack multi-object tracking
                 detections = self.track_frame_detections(frame, persist=True)
 
                 entities: List[Dict[str, Any]] = []
+                home_players: List[Dict[str, float]] = []
+                away_players: List[Dict[str, float]] = []
 
                 for det in detections:
                     unique_track_ids.add(det.track_id)
@@ -284,19 +371,24 @@ class TacticalVideoTracker:
                     else:  # Player (feet position)
                         cx, cy = det.bottom_center
 
-                    norm_x = round(float(np.clip(cx / orig_width, 0.0, 1.0)), 4)
-                    norm_y = round(float(np.clip(cy / orig_height, 0.0, 1.0)), 4)
+                    cam_x = round(float(np.clip(cx / orig_width, 0.0, 1.0)), 4)
+                    cam_y = round(float(np.clip(cy / orig_height, 0.0, 1.0)), 4)
+
+                    # Project broadcast camera perspective to canonical 2D planar pitch coordinates
+                    pitch_x, pitch_y = self.homography_estimator.transform_camera_to_pitch(cam_x, cam_y)
 
                     team = self.determine_entity_team(
-                        det.track_id, det.cls_id, norm_x, frame=frame, bbox=(det.x1, det.y1, det.x2, det.y2)
+                        det.track_id, det.cls_id, pitch_x, frame=frame, bbox=(det.x1, det.y1, det.x2, det.y2)
                     )
-                    speed_kmh = self.calculate_velocity_kmh(det.track_id, norm_x, norm_y, timestamp_s)
+                    speed_kmh = self.calculate_velocity_kmh(det.track_id, pitch_x, pitch_y, timestamp_s)
 
                     entity_dict = {
                         "id": det.track_id,
                         "team": team,
-                        "x": norm_x,
-                        "y": norm_y,
+                        "x": pitch_x,
+                        "y": pitch_y,
+                        "camera_x": cam_x,
+                        "camera_y": cam_y,
                         "speedKmh": speed_kmh,
                         "jerseyNumber": det.track_id if det.cls_id != 32 else None,
                         "bbox": [round(det.x1, 1), round(det.y1, 1), round(det.x2, 1), round(det.y2, 1)],
@@ -304,21 +396,30 @@ class TacticalVideoTracker:
                     }
                     entities.append(entity_dict)
 
+                    if team == "home":
+                        home_players.append({"x": pitch_x, "y": pitch_y})
+                    elif team == "away":
+                        away_players.append({"x": pitch_x, "y": pitch_y})
+
                     # Optional visual annotation on frame
                     if writer is not None:
                         color = (0, 255, 0) if team == "home" else ((0, 140, 255) if team == "away" else (0, 255, 255))
                         cv2.rectangle(frame, (int(det.x1), int(det.y1)), (int(det.x2), int(det.y2)), color, 2)
-                        label = f"ID:{det.track_id} {team.upper()}" if det.cls_id != 32 else "BALL"
+                        label = f"ID:{det.track_id} {team.upper()} ({pitch_x:.2f},{pitch_y:.2f})" if det.cls_id != 32 else "BALL"
                         cv2.putText(
                             frame, label, (int(det.x1), max(20, int(det.y1) - 6)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 2
                         )
+
+                # Compute modern real-time tactical kinematics
+                tactical_metrics = compute_tactical_metrics(home_players, away_players)
 
                 payload = {
                     "sessionId": session_id,
                     "timestampMs": timestamp_ms,
                     "frameNumber": emitted_frame_count,
                     "entities": entities,
+                    "tacticalMetrics": tactical_metrics,
                 }
 
                 # Publish to Redis
@@ -395,16 +496,39 @@ def generate_synthetic_soccer_video(output_path: str, duration_sec: int = 4, fps
             # Head + Torso + Legs
             cv2.circle(frame, (p1_x, p1_y - 45), 12, (200, 180, 160), -1)  # Head
             cv2.rectangle(frame, (p1_x - 14, p1_y - 33), (p1_x + 14, p1_y), (30, 30, 220), -1)  # Red Torso
-            cv2.line(frame, (p1_x - 6, p1_y), (p1_x - 6, p1_y + 35), (20, 20, 120), 4)  # Left Leg
             cv2.line(frame, (p1_x + 6, p1_y), (p1_x + 6, p1_y + 35), (20, 20, 120), 4)  # Right Leg
 
-            # Player 2 (Moving Right to Left): Blue jersey / human-like silhouette crossing path
+            # Player 2 (Moving Right to Left): Blue jersey (MCI) crossing path
             p2_x = int((width - 150) - t * (width - 300))
             p2_y = int(height // 2 - math.sin(t * math.pi) * 40)
             cv2.circle(frame, (p2_x, p2_y - 45), 12, (200, 180, 160), -1)  # Head
             cv2.rectangle(frame, (p2_x - 14, p2_y - 33), (p2_x + 14, p2_y), (220, 80, 20), -1)  # Blue Torso
             cv2.line(frame, (p2_x - 6, p2_y), (p2_x - 6, p2_y + 35), (120, 40, 10), 4)  # Left Leg
             cv2.line(frame, (p2_x + 6, p2_y), (p2_x + 6, p2_y + 35), (120, 40, 10), 4)  # Right Leg
+
+            # Match Ball (White with shadow moving dynamically)
+            ball_t = (t * 2.5) % 1.0
+            ball_x = int(p1_x + ball_t * (p2_x - p1_x))
+            ball_y = int(p1_y + math.sin(ball_t * math.pi) * -25)
+            cv2.circle(frame, (ball_x + 2, ball_y + 4), 6, (20, 60, 20), -1)  # shadow
+            cv2.circle(frame, (ball_x, ball_y), 5, (255, 255, 255), -1)
+            cv2.circle(frame, (ball_x, ball_y), 5, (0, 0, 0), 1)
+
+            # Player 3 (MUN Midfielder #18 Casemiro supporting in midfield)
+            p3_x = int(120 + t * (width - 400))
+            p3_y = int(height // 2 + 90 + math.cos(t * math.pi * 2) * 15)
+            cv2.circle(frame, (p3_x, p3_y - 45), 12, (200, 180, 160), -1)
+            cv2.rectangle(frame, (p3_x - 14, p3_y - 33), (p3_x + 14, p3_y), (30, 30, 220), -1)
+            cv2.line(frame, (p3_x - 6, p3_y), (p3_x - 6, p3_y + 35), (20, 20, 120), 4)
+            cv2.line(frame, (p3_x + 6, p3_y), (p3_x + 6, p3_y + 35), (20, 20, 120), 4)
+
+            # Player 4 (MCI Midfielder #8 Kovacic tracking back)
+            p4_x = int((width - 120) - t * (width - 380))
+            p4_y = int(height // 2 + 100 - math.sin(t * math.pi * 2) * 15)
+            cv2.circle(frame, (p4_x, p4_y - 45), 12, (200, 180, 160), -1)
+            cv2.rectangle(frame, (p4_x - 14, p4_y - 33), (p4_x + 14, p4_y), (220, 80, 20), -1)
+            cv2.line(frame, (p4_x - 6, p4_y), (p4_x - 6, p4_y + 35), (120, 40, 10), 4)
+            cv2.line(frame, (p4_x + 6, p4_y), (p4_x + 6, p4_y + 35), (120, 40, 10), 4)
 
             out.write(frame)
     finally:

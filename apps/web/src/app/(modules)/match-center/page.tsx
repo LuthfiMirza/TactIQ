@@ -1040,7 +1040,8 @@ export default function MatchCenterPage() {
       .catch((err) => console.warn('[MatchCenter] Real standings fetch error:', err));
 
     // Fetch live Transfermarkt injury & suspension absentees
-    fetch('http://localhost:4000/api/v1/matches/preview/absentees?home=MCI&away=ARS')
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    fetch(`${apiBase}/api/v1/matches/preview/absentees?home=MCI&away=ARS`)
       .then((r) => r.json())
       .then((json) => {
         if (json.success && json.data) {

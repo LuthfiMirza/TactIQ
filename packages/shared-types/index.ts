@@ -152,6 +152,15 @@ export interface MatchPredictRequest {
 // 4. Computer Vision Tracking & WebSocket Payloads
 // -----------------------------------------------------------------------------
 
+export interface TacticalMetricsDTO {
+  homeDefensiveLineMeters: number;
+  awayDefensiveLineMeters: number;
+  homeCompactnessAreaM2: number;
+  awayCompactnessAreaM2: number;
+  homeInterLineDistanceMeters: number;
+  awayInterLineDistanceMeters: number;
+}
+
 export interface TrackingEntity {
   id: number;
   team: EntityTeam;
@@ -159,6 +168,10 @@ export interface TrackingEntity {
   y: number; // normalized coordinate 0.0 - 1.0 (or pitch coordinates 0 - 68m)
   speedKmh?: number;
   jerseyNumber?: number;
+  camera_x?: number;
+  camera_y?: number;
+  bbox?: [number, number, number, number];
+  confidence?: number;
 }
 
 export interface TrackingFramePayload {
@@ -166,6 +179,7 @@ export interface TrackingFramePayload {
   timestampMs: number;
   frameNumber?: number;
   entities: TrackingEntity[];
+  tacticalMetrics?: TacticalMetricsDTO;
 }
 
 export interface VideoTrackingSessionDTO {

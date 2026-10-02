@@ -14,6 +14,7 @@ from app.core.config import settings
 from app.services.video_tracker import (
     TacticalVideoTracker,
     generate_synthetic_soccer_video,
+    compute_tactical_metrics,
     ULTRALYTICS_AVAILABLE,
 )
 from app.services.field_homography import DynamicHomographyEstimator, PitchLineDetector
@@ -46,6 +47,10 @@ class TrackingEntity(BaseModel):
     y: float
     speedKmh: Optional[float] = 0.0
     jerseyNumber: Optional[int] = None
+    camera_x: Optional[float] = None
+    camera_y: Optional[float] = None
+    bbox: Optional[List[float]] = None
+    confidence: Optional[float] = None
 
 
 class FramePayload(BaseModel):
@@ -53,6 +58,7 @@ class FramePayload(BaseModel):
     timestampMs: int
     frameNumber: int
     entities: List[TrackingEntity]
+    tacticalMetrics: Optional[Dict[str, float]] = None
 
 
 async def run_tracking_simulation(session_id: str, total_frames: int = 100):
@@ -125,11 +131,17 @@ async def run_tracking_simulation(session_id: str, total_frames: int = 100):
                 )
             )
 
+        # Compute modern real-time tactical kinematics
+        h_pts = [{"x": e.x, "y": e.y} for e in entities_in_frame if e.team == "home"]
+        a_pts = [{"x": e.x, "y": e.y} for e in entities_in_frame if e.team == "away"]
+        metrics = compute_tactical_metrics(h_pts, a_pts)
+
         payload = FramePayload(
             sessionId=session_id,
             timestampMs=timestamp_ms,
             frameNumber=frame_idx,
-            entities=entities_in_frame
+            entities=entities_in_frame,
+            tacticalMetrics=metrics,
         )
 
         # Publish payload to Redis Pub/Sub channel
