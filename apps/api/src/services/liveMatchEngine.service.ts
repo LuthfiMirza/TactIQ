@@ -18,51 +18,59 @@ export class LiveMatchEngineService {
   private static tickerInterval: NodeJS.Timeout | null = null;
   private static tickCount = 0;
 
-  // Active in-memory live matches state
+  // Active in-memory live matches state (Top 5 European Leagues only)
   private static liveMatches: LiveScoreMatch[] = [
     {
-      fixtureId: '1583654',
-      league: 'Friendlies',
-      homeTeam: 'Australia',
-      homeTeamId: 1530,
-      homeLogo: 'https://media.api-sports.io/football/teams/1530.png',
-      homeScore: 0,
-      awayTeam: 'Brazil',
-      awayTeamId: 6,
-      awayLogo: 'https://media.api-sports.io/football/teams/6.png',
+      fixtureId: 'live-gw09-rma-fcb',
+      league: 'La Liga',
+      homeTeam: 'Real Madrid',
+      homeTeamId: 541,
+      homeLogo: 'https://media.api-sports.io/football/teams/541.png',
+      homeScore: 2,
+      awayTeam: 'FC Barcelona',
+      awayTeamId: 529,
+      awayLogo: 'https://media.api-sports.io/football/teams/529.png',
       awayScore: 1,
-      status: 'LIVE',
-      minute: 17,
+      status: 'FT',
+      minute: 90,
       events: [
-        { minute: 3, team: 'Brazil', player: 'Vanderson', type: 'Goal', detail: 'Normal Goal' },
-        { minute: 14, team: 'Australia', player: 'Jackson Irvine', type: 'Card', detail: 'Yellow Card' },
+        { minute: 23, team: 'Real Madrid', player: 'Vinícius Júnior', type: 'Goal', detail: 'Fast break cut-in' },
+        { minute: 51, team: 'FC Barcelona', player: 'Robert Lewandowski', type: 'Goal', detail: 'Header' },
+        { minute: 78, team: 'Real Madrid', player: 'Jude Bellingham', type: 'Goal', detail: 'Volley' },
       ],
     },
     {
       fixtureId: 'live-gw08-ars-che',
       league: 'Premier League',
       homeTeam: 'Arsenal FC',
+      homeTeamId: 42,
+      homeLogo: 'https://media.api-sports.io/football/teams/42.png',
       homeScore: 2,
       awayTeam: 'Chelsea FC',
+      awayTeamId: 49,
+      awayLogo: 'https://media.api-sports.io/football/teams/49.png',
       awayScore: 1,
-      status: 'LIVE',
-      minute: 73,
+      status: 'FT',
+      minute: 90,
       events: [
         { minute: 18, team: 'Arsenal FC', player: 'Bukayo Saka', type: 'Goal', detail: 'Left-foot curl' },
         { minute: 42, team: 'Chelsea FC', player: 'Cole Palmer', type: 'Goal', detail: 'Penalty' },
         { minute: 61, team: 'Arsenal FC', player: 'Kai Havertz', type: 'Goal', detail: 'Header' },
-        { minute: 68, team: 'Chelsea FC', player: 'Marc Cucurella', type: 'Card', detail: 'Yellow Card' },
       ],
     },
     {
       fixtureId: 'live-gw08-mci-liv',
       league: 'Premier League',
       homeTeam: 'Manchester City',
+      homeTeamId: 50,
+      homeLogo: 'https://media.api-sports.io/football/teams/50.png',
       homeScore: 1,
       awayTeam: 'Liverpool FC',
+      awayTeamId: 40,
+      awayLogo: 'https://media.api-sports.io/football/teams/40.png',
       awayScore: 1,
-      status: 'LIVE',
-      minute: 82,
+      status: 'FT',
+      minute: 90,
       events: [
         { minute: 27, team: 'Manchester City', player: 'Erling Haaland', type: 'Goal', detail: 'Box strike' },
         { minute: 54, team: 'Liverpool FC', player: 'Mohamed Salah', type: 'Goal', detail: 'Fast break counter' },
@@ -112,9 +120,26 @@ export class LiveMatchEngineService {
    * Sync and merge genuine live matches from TheSportsDB
    */
   public static syncWithRealWorldMatches(realMatches: LiveScoreMatch[]): void {
+    // STRICT TOP 5 LEAGUES FILTER
+    const TOP_5_KEYWORDS = [
+      'premier league',
+      'la liga',
+      'primera division',
+      'serie a',
+      'bundesliga',
+      'ligue 1',
+    ];
+
+    const filtered = realMatches.filter((m) => {
+      const l = (m.league || '').toLowerCase();
+      return TOP_5_KEYWORDS.some((kw) => l.includes(kw));
+    });
+
+    if (filtered.length === 0) return;
+
     let hasUpdated = false;
 
-    for (const real of realMatches) {
+    for (const real of filtered) {
       // Find if match exists by team name similarity
       const existing = this.liveMatches.find(
         (m) =>

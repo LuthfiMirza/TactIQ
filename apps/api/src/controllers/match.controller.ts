@@ -451,11 +451,32 @@ export class MatchController {
 
       if (fixtureId) {
         const result = await liveIngestionService.getMatchInjuries(fixtureId);
+        if (result && Array.isArray(result.data) && result.data.length > 0) {
+          res.json({
+            success: true,
+            data: result.data,
+            timestamp: new Date().toISOString(),
+            meta: result.meta,
+          });
+          return;
+        }
+      }
+
+      const homeCode = (req.query.home as string) || '';
+      const awayCode = (req.query.away as string) || '';
+      if (homeCode || awayCode) {
+        const { TransfermarktService } = await import('../services/transfermarkt.service.js');
+        const absentees = await TransfermarktService.getMatchPreviewAbsentees(homeCode, awayCode);
         res.json({
           success: true,
-          data: result.data,
+          data: absentees,
           timestamp: new Date().toISOString(),
-          meta: result.meta,
+          meta: {
+            source: 'transfermarkt',
+            fetchedAt: new Date().toISOString(),
+            isStale: false,
+            mode: 'cached',
+          },
         });
         return;
       }

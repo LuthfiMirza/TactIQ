@@ -27,7 +27,27 @@ export class TheSportsDbService {
         return [];
       }
 
-      return livescore.map((item: any) => {
+      // STRICT TOP 5 EUROPEAN LEAGUES FILTER (Excluding women, youth, and non-top-5 leagues)
+      const TOP_5_EXACT_NAMES = [
+        'english premier league',
+        'spanish la liga',
+        'italian serie a',
+        'german bundesliga',
+        'french ligue 1',
+      ];
+
+      const top5Matches = livescore.filter((item: any) => {
+        const leagueName = (item.strLeague || '').toLowerCase().trim();
+        const isExcluded = leagueName.includes('women') || leagueName.includes('u19') || leagueName.includes('u21') || leagueName.includes('u23') || leagueName.includes('youth') || leagueName.includes('feminin');
+        if (isExcluded) return false;
+        return TOP_5_EXACT_NAMES.some((kw) => leagueName === kw || leagueName.startsWith(kw));
+      });
+
+      if (top5Matches.length === 0) {
+        return [];
+      }
+
+      return top5Matches.map((item: any) => {
         const homeScore = parseInt(item.intHomeScore, 10) || 0;
         const awayScore = parseInt(item.intAwayScore, 10) || 0;
         const minute = parseInt(item.strProgress, 10) || (item.strStatus === '2H' ? 55 : 25);
