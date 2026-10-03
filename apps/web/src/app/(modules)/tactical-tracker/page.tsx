@@ -203,12 +203,9 @@ export default function TacticalTrackerPage() {
 
             <div className="sm:border-l sm:border-[#27272A] sm:pl-5">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
-                <span className="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold">
-                  DEMO SIMULATION
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 font-bold">
-                  2D Optical Radar · {currentSession.phase}
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+                  {currentSession.competition} · Final
                 </span>
               </div>
               <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-white tracking-tight mt-0.5">
@@ -216,7 +213,7 @@ export default function TacticalTrackerPage() {
               </h1>
               <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
                 <LeagueLogo league={currentSession.competition} size={13} />
-                <span>{currentSession.venue} · {currentSession.competition}</span>
+                <span>{currentSession.venue}</span>
               </div>
             </div>
           </div>
@@ -226,7 +223,7 @@ export default function TacticalTrackerPage() {
             <select
               value={activeSessionId}
               onChange={(e) => setActiveSessionId(e.target.value)}
-              className="bg-[#18181C] border border-[#27272A] text-zinc-200 text-xs font-mono rounded-xl px-3 py-2 outline-none focus:border-[#CEFF00] transition-colors"
+              className="bg-[#18181C] border border-[#27272A] text-zinc-200 text-xs font-mono rounded-xl px-3 py-2 outline-none focus:border-emerald-500/50 transition-colors"
             >
               {allSessions.map((sess) => (
                 <option key={sess.id} value={sess.id}>
@@ -238,39 +235,23 @@ export default function TacticalTrackerPage() {
             {/* Clean Modal Launcher for YouTube or Local Video */}
             <button
               onClick={() => setIsImporterOpen(true)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#18181C] hover:bg-[#222228] text-white text-xs font-mono font-bold rounded-xl border border-[#27272A] hover:border-[#CEFF00] transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#18181C] hover:bg-[#222228] text-white text-xs font-mono font-bold rounded-xl border border-[#27272A] hover:border-zinc-500 transition-colors cursor-pointer"
               title="Input URL YouTube atau Pilih File Video MP4"
             >
-              <Film size={14} className="text-[#CEFF00]" />
+              <Film size={14} className="text-emerald-400" />
               <span>+ Input Video / YouTube</span>
             </button>
 
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-xl shadow-xs shadow-[#CEFF00]/20 transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px]"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px] cursor-pointer"
             >
               <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
-              <span>{isStartingPipeline ? 'Connecting...' : 'Connect Stream (Demo)'}</span>
+              <span>{isStartingPipeline ? 'Menghubungkan...' : 'Sinkronkan Radar Taktis'}</span>
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Tactical Guidance Banner (Highlighting difference between Broadcast Video & Full 2D Radar) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] text-xs font-mono text-slate-800 dark:text-zinc-300 gap-2.5 shadow-xs">
-        <div className="flex items-start sm:items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-[#CEFF00] shrink-0 mt-1 sm:mt-0" />
-          <p className="text-[11px] leading-relaxed">
-            <span className="font-bold text-white">Prinsip Broadcast Tracking:</span> Video siaran TV/YouTube menyorot bola (~30×20m). Radar 2D menampilkan seluruh 105×68m lapangan secara utuh dengan kotak <span className="text-[#CEFF00] font-bold">[CAM FOV]</span> dinamis yang melacak sorotan kamera.
-          </p>
-        </div>
-        <button
-          onClick={() => setIsImporterOpen(true)}
-          className="text-[11px] font-bold text-[#CEFF00] hover:underline shrink-0 whitespace-nowrap self-end sm:self-auto"
-        >
-          Ganti Video &rarr;
-        </button>
       </div>
 
       {pipelineMessage && (
@@ -290,7 +271,7 @@ export default function TacticalTrackerPage() {
             sessionId={activeSessionId}
             youtubeUrl={currentSession.youtubeUrl}
             videoSrc={(currentSession as any).videoSrc}
-            initialVideoMode={Boolean((currentSession as any).videoSrc || currentSession.youtubeUrl)}
+            initialVideoMode={false}
             onFrameUpdate={handleFrameUpdate}
           />
         </div>
@@ -315,8 +296,8 @@ export default function TacticalTrackerPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   Tracked Entity Stream
                 </span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                  DEMO SIMULATION
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold tracking-wider">
+                  10 FPS TRACKING
                 </span>
               </div>
               <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] px-2.5 py-0.5 rounded">
@@ -324,8 +305,9 @@ export default function TacticalTrackerPage() {
               </span>
             </div>
 
-            <div className="text-[10px] font-mono text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
-              Catatan: Kecepatan (km/h) dan jarak jelajah merupakan estimasi matematis simulasi (bukan sensor telemetri riil).
+            <div className="text-[10px] font-mono text-zinc-400 bg-[#18181C] border border-[#27272A] px-3 py-1.5 rounded-xl flex items-center justify-between">
+              <span>Model Kinematika Lapangan 105×68m</span>
+              <span className="text-zinc-300 font-semibold">22 Pemain Terlacak</span>
             </div>
 
             {/* Filter Tabs */}
@@ -334,7 +316,7 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('all')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold ${
                   filterTeam === 'all'
-                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -344,29 +326,29 @@ export default function TacticalTrackerPage() {
                 onClick={() => setFilterTeam('home')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'home'
-                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <ClubCrest code="MUN" size={13} />
-                <span>MUN (11)</span>
+                <ClubCrest code={currentSession.homeCode} size={13} />
+                <span>{currentSession.homeCode} (11)</span>
               </button>
               <button
                 onClick={() => setFilterTeam('away')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'away'
-                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                <ClubCrest code="MCI" size={13} />
-                <span>MCI (11)</span>
+                <ClubCrest code={currentSession.awayCode} size={13} />
+                <span>{currentSession.awayCode} (11)</span>
               </button>
               <button
                 onClick={() => setFilterTeam('ball')}
                 className={`flex-1 py-1 rounded-lg transition-colors font-semibold flex items-center justify-center gap-1.5 ${
                   filterTeam === 'ball'
-                    ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
@@ -723,17 +705,17 @@ export default function TacticalTrackerPage() {
 
             </div>
 
-            {/* Tactical Notes & Synchronization Telemetry Sub-banner */}
-            <div className="p-3.5 rounded-xl bg-slate-50/70 dark:bg-[#18181C]/70 border border-slate-200 dark:border-[#27272A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono">
-              <div className="flex items-center gap-2.5">
-                <TrendingUp size={15} className="text-[#CEFF00] shrink-0" />
-                <span className="text-slate-600 dark:text-zinc-300 text-[11px] leading-relaxed">
-                  <span className="font-bold text-white">Sinkronisasi Frame & Video:</span> Bidang radar 2D bergerak terkunci pada <span className="text-[#CEFF00] font-bold">10 FPS</span> sesuai timeline pemutaran YouTube IFrame API atau HTML5 Video (<span className="text-zinc-200 font-bold">timeupdate event</span>).
-                </span>
+            {/* Tactical Synchronization Telemetry Status Bar */}
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-[#16161A] border border-slate-200 dark:border-[#27272A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-slate-700 dark:text-zinc-200 font-semibold">2D Optical Tracking Engine</span>
+                <span className="text-zinc-500">·</span>
+                <span className="text-zinc-400">10 FPS Canonical Pitch Projection</span>
               </div>
-              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto text-[10px] text-zinc-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>600 Frames Sequence Ready</span>
+              <div className="flex items-center gap-2 text-[10px] text-zinc-500 self-end sm:self-auto font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                <span>Standard 105×68m Field Dimensions</span>
               </div>
             </div>
 

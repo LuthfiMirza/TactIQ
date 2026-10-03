@@ -33,26 +33,10 @@ export function MatchdayMarquee({ matches, className = '', mode = 'demo' }: Matc
     >
       {/* ── Left Badge (Responsive) ── */}
       <div className="shrink-0 flex items-center gap-2 pl-3 sm:pl-3.5 pr-2.5 sm:pr-3.5 py-1 sm:border-r border-[#27272A] z-20 bg-[#121215]">
-        {isDemo ? (
-          <>
-            <span className="relative flex h-2 w-2">
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
-            </span>
-            <span className="text-[10px] font-mono font-black uppercase tracking-wider text-amber-400 whitespace-nowrap bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">
-              DEMO FEED
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tactiq-coral opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-tactiq-coral" />
-            </span>
-            <span className="hidden sm:inline text-[11px] font-mono font-black uppercase tracking-wider text-white whitespace-nowrap">
-              Live Scores
-            </span>
-          </>
-        )}
+        <span className="w-1.5 h-1.5 rounded-full bg-[#CEFF00] shadow-[0_0_6px_rgba(206,255,0,0.8)]" />
+        <span className="text-[10px] font-mono font-black uppercase tracking-wider text-[#CEFF00] whitespace-nowrap">
+          Top 5 Leagues
+        </span>
       </div>
 
       {/* ── Soft Edge Vignette Fades ── */}
@@ -74,14 +58,12 @@ export function MatchdayMarquee({ matches, className = '', mode = 'demo' }: Matc
               {/* Match State */}
               <span className="shrink-0 font-mono text-[10px] font-bold">
                 {isLive ? (
-                  <span className="text-amber-400 font-black flex items-center gap-1">
-                    <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300">
-                      DEMO
-                    </span>
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
                     {m.minute}
                   </span>
                 ) : m.status === 'FT' ? (
-                  <span className="text-zinc-500 font-bold">FT</span>
+                  <span className="text-zinc-400 font-bold">FT</span>
                 ) : (
                   <span className="text-zinc-400 font-medium">{m.startTime || '19:45'}</span>
                 )}

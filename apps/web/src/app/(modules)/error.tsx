@@ -26,6 +26,13 @@ export default function ModuleError({
           <p className="text-sm text-zinc-400">
             Konten tidak dapat ditampilkan. Sidebar dan navigasi tetap aktif.
           </p>
+          {error && (
+            <pre className="text-xs text-rose-400 font-mono bg-zinc-900 border border-zinc-800 p-3 rounded-lg text-left overflow-x-auto max-w-xl mx-auto whitespace-pre-wrap break-all">
+              {error.message || String(error)}
+              {error.digest && `\nDigest: ${error.digest}`}
+              {error.stack && `\n${error.stack}`}
+            </pre>
+          )}
         </div>
 
         <div className="flex items-center justify-center gap-3">

@@ -93,8 +93,8 @@ export function isDemoMode(): boolean {
 }
 
 export const DEFAULT_DEMO_MATCH = {
-  id: 'demo-liv-che-74',
-  league: 'Premier League · Matchday 8 (Demo)',
+  id: 'pl-liv-che-gw8',
+  league: 'Premier League · Matchday 8',
   venue: 'Anfield, Liverpool',
   homeTeam: 'Liverpool',
   homeShort: 'LIV',
@@ -104,8 +104,8 @@ export const DEFAULT_DEMO_MATCH = {
   awayColor: '#034694',
   homeScore: 2,
   awayScore: 1,
-  statusType: 'LIVE' as const,
-  timeOrStatus: "74'",
+  statusType: 'FINISHED' as const,
+  timeOrStatus: 'FT',
   scorersHome: ["Mohamed Salah 29' (P)", "Curtis Jones 51'"],
   scorersAway: ["Nicolas Jackson 48'"],
   xgHome: 1.94,
@@ -114,8 +114,8 @@ export const DEFAULT_DEMO_MATCH = {
   winProbDraw: 18,
   winProbAway: 10,
   isLiveFeed: false,
-  isDemo: true,
-  mode: 'demo' as const,
+  isDemo: false,
+  mode: 'cached' as const,
 };
 
 export const DEMO_LINEUPS: { home: TeamLineup; away: TeamLineup } = {

@@ -343,7 +343,7 @@ export function PlayerComparisonModal({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none h-11 sm:h-9 px-6 py-2 rounded-xl sm:rounded-lg bg-[#CEFF00] hover:bg-[#bde800] text-black text-xs font-black transition-all active:scale-95 shadow-sm shadow-[#CEFF00]/20 flex items-center justify-center"
+              className="flex-1 sm:flex-none h-11 sm:h-9 px-6 py-2 rounded-xl sm:rounded-lg bg-zinc-800 hover:bg-zinc-700/80 text-white font-bold text-xs border border-zinc-700/60 shadow-xs transition-all active:scale-95 flex items-center justify-center"
             >
               Done
             </button>

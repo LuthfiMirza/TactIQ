@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { findAuthenticMatch } from '@/lib/matchesRegistry';
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,6 +41,13 @@ import {
   type H2HEncounter,
   type MatchFixture,
 } from '@/lib/demoData';
+import {
+  getTeamSquad,
+  getTeamAbsentees,
+  getTeamH2H,
+  getFormationSlotCoordinates,
+  isClubMatch,
+} from '@/lib/teamSquads';
 
 // ─── TYPES & DATA ────────────────────────────────────────────────────────────
 
@@ -70,80 +79,35 @@ const RECENT_FORM_DATA: { home: FormMatchDetail[]; away: FormMatchDetail[] } = {
   ],
 };
 
+function buildTeamLineupForClub(
+  clubNameOrCode: string,
+  isHome: boolean,
+  events: any[] = []
+): TeamLineup {
+  const squad = getTeamSquad(clubNameOrCode, isHome);
+  return buildTeamLineupFromApi(squad, isHome, events);
+}
+
 function buildTeamLineupFromApi(
   rawTeam: any,
   isHome: boolean,
   events: any[] = []
 ): TeamLineup {
   if (!rawTeam || !Array.isArray(rawTeam.startXI) || rawTeam.startXI.length === 0) {
-    return isHome ? LINEUPS.home : LINEUPS.away;
+    const fallbackSquad = getTeamSquad(isHome ? 'LIV' : 'CHE', isHome);
+    return buildTeamLineupFromApi(fallbackSquad, isHome, events);
   }
 
   const formation = rawTeam.formation || (isHome ? '4-3-3' : '4-2-3-1');
   const players = rawTeam.startXI;
 
-  const rows: Record<number, any[]> = {};
-  players.forEach((p: any) => {
-    let r = 1;
-    if (p.grid) {
-      r = parseInt(p.grid.split(':')[0], 10) || 1;
-    } else {
-      r = p.pos === 'G' ? 1 : p.pos === 'D' ? 2 : p.pos === 'M' ? 3 : 4;
-    }
-    if (!rows[r]) rows[r] = [];
-    rows[r].push(p);
-  });
-
-  const rowKeys = Object.keys(rows).map(Number).sort((a, b) => a - b);
-  const maxRow = Math.max(...rowKeys, 4);
-
   const starters: LineupPlayer[] = players.map((p: any, idx: number) => {
-    let r = p.grid
-      ? parseInt(p.grid.split(':')[0], 10) || 1
-      : p.pos === 'G'
-      ? 1
-      : p.pos === 'D'
-      ? 2
-      : p.pos === 'M'
-      ? 3
-      : 4;
-    const rowPlayers = rows[r] || [p];
-    const colIdx = rowPlayers.indexOf(p);
-    const numCols = rowPlayers.length;
-
-    let y = 50;
-    if (numCols > 1) {
-      const step = 68 / (numCols - 1);
-      y = Math.round(16 + colIdx * step);
-    }
-
-    let x = 50;
-    let vx = y;
-    let vy = 50;
-
-    if (isHome) {
-      if (r === 1) {
-        x = 6;
-        y = 50;
-        vx = 50;
-        vy = 93;
-      } else {
-        const rowPct = (r - 1) / Math.max(1, maxRow - 1);
-        x = Math.round(15 + rowPct * 30);
-        vy = Math.round(83 - rowPct * 27);
-      }
-    } else {
-      if (r === 1) {
-        x = 94;
-        y = 50;
-        vx = 50;
-        vy = 7;
-      } else {
-        const rowPct = (r - 1) / Math.max(1, maxRow - 1);
-        x = Math.round(85 - rowPct * 30);
-        vy = Math.round(17 + rowPct * 27);
-      }
-    }
+    const slot = getFormationSlotCoordinates(formation, idx, isHome);
+    const x = p.x !== undefined ? p.x : slot.x;
+    const y = p.y !== undefined ? p.y : slot.y;
+    const vx = p.vx !== undefined ? p.vx : slot.vx;
+    const vy = p.vy !== undefined ? p.vy : slot.vy;
+    const pos = p.pos === 'G' ? 'GK' : slot.pos || (p.pos === 'D' ? 'CB' : p.pos === 'M' ? 'CM' : 'FW');
 
     const shortName = p.name ? p.name.split(' ').pop() || p.name : `P${p.number}`;
     const isScorer = events.some(
@@ -160,9 +124,9 @@ function buildTeamLineupFromApi(
       num: p.number || idx + 1,
       name: p.name,
       shortName,
-      pos: p.pos === 'G' ? 'GK' : p.pos === 'D' ? 'CB' : p.pos === 'M' ? 'CM' : 'FW',
+      pos,
       rating,
-      isCaptain: colIdx === 0 && r === 2,
+      isCaptain: Boolean(p.isCaptain) || (idx === 2 && !players.some((pl: any) => pl.isCaptain)),
       isScorer,
       x,
       y,
@@ -490,7 +454,9 @@ function SubstituteRow({
   );
 }
 
-export default function MatchCenterPage() {
+function MatchCenterContent() {
+  const searchParams = useSearchParams();
+  const matchIdParam = searchParams.get('id');
   const [mounted, setMounted] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<MatchStatusType>('LIVE');
   const [matchTab, setMatchTab] = useState<string>('stats');
@@ -557,7 +523,10 @@ export default function MatchCenterPage() {
     events?: Array<{ minute: number; team: string; player: string; type: string; detail?: string }>;
   }>(DEFAULT_DEMO_MATCH);
 
-  const [activeLineup, setActiveLineup] = useState<{ home: TeamLineup; away: TeamLineup }>(LINEUPS);
+  const [activeLineup, setActiveLineup] = useState<{ home: TeamLineup; away: TeamLineup }>(() => ({
+    home: buildTeamLineupForClub('LIV', true),
+    away: buildTeamLineupForClub('CHE', false),
+  }));
   const [matchStatsData, setMatchStatsData] = useState<typeof STATS_DATA>(STATS_DATA);
   const [matchH2HData, setMatchH2HData] = useState<H2HEncounter[]>(H2H_ENCOUNTERS);
   const [h2hSummary, setH2HSummary] = useState<{ homeWins: number; draws: number; awayWins: number }>({
@@ -565,6 +534,105 @@ export default function MatchCenterPage() {
     draws: 0,
     awayWins: 3,
   });
+
+  // Dynamic URL Query Params Hydration (?id=pl-tot-mun, etc.)
+  useEffect(() => {
+    if (!matchIdParam) return;
+    const match = findAuthenticMatch(matchIdParam);
+    if (match) {
+      const isUpcoming = match.status === 'UPCOMING';
+      const isFinished = match.status === 'FT';
+      const statusType: MatchStatusType = isUpcoming ? 'UPCOMING' : isFinished ? 'FINISHED' : 'LIVE';
+      const timeOrStatus = isUpcoming ? (match.startTime || '21:00') : isFinished ? 'FT' : (match.minute || "68'");
+
+      setActiveMatch({
+        id: match.id,
+        league: `${match.league} · ${match.round}`,
+        venue: match.venue || 'Stadium',
+        homeTeam: match.home,
+        homeShort: match.homeCode,
+        homeColor: match.homeColor,
+        awayTeam: match.away,
+        awayShort: match.awayCode,
+        awayColor: match.awayColor,
+        homeScore: match.homeScore ?? (isUpcoming ? 0 : 2),
+        awayScore: match.awayScore ?? (isUpcoming ? 0 : 1),
+        statusType,
+        timeOrStatus,
+        scorersHome: match.scorers?.home || (isUpcoming ? ['–'] : [`${match.home} Goal 34'`]),
+        scorersAway: match.scorers?.away || (isUpcoming ? ['–'] : [`${match.away} Goal 61'`]),
+        xgHome: match.xgHome ?? 1.65,
+        xgAway: match.xgAway ?? 1.40,
+        winProbHome: 45,
+        winProbDraw: 28,
+        winProbAway: 27,
+        isLiveFeed: false,
+      });
+
+      setCurrentStatus(statusType);
+      if (isUpcoming) {
+        setMatchTab('preview');
+      } else {
+        setMatchTab('stats');
+      }
+
+      // Synchronously set team-accurate lineups, absentees, and H2H immediately
+      const homeInit = buildTeamLineupForClub(match.homeCode || match.home, true);
+      const awayInit = buildTeamLineupForClub(match.awayCode || match.away, false);
+      setActiveLineup({ home: homeInit, away: awayInit });
+
+      setAbsentees({
+        home: getTeamAbsentees(match.homeCode || match.home),
+        away: getTeamAbsentees(match.awayCode || match.away),
+      });
+
+      const defaultH2H = getTeamH2H(match.home, match.homeCode, match.away, match.awayCode);
+      setH2HSummary(defaultH2H.summary);
+      setMatchH2HData(defaultH2H.encounters);
+
+      // Fetch dynamic lineup, stats, and H2H from API if available
+      api.getMatchLineup(match.id, { home: match.home, away: match.away })
+        .then((res) => {
+          if (res && res.home && res.away && Array.isArray(res.home.startXI) && res.home.startXI.length > 0) {
+            const homeL = buildTeamLineupFromApi(res.home, true, []);
+            const awayL = buildTeamLineupFromApi(res.away, false, []);
+            setActiveLineup({ home: homeL, away: awayL });
+          }
+        })
+        .catch((e) => console.warn('[MatchCenter] Url match lineup fetch err:', e));
+
+      api.getMatchStatistics(match.id, { home: match.home, away: match.away })
+        .then((res) => {
+          if (res && res.ALL) {
+            setMatchStatsData(res);
+          }
+        })
+        .catch((e) => console.warn('[MatchCenter] Url match stats fetch err:', e));
+
+      api.getMatchH2H(match.id, { home: match.home, away: match.away })
+        .then((res) => {
+          if (res && Array.isArray(res.encounters) && res.encounters.length > 0) {
+            setH2HSummary({
+              homeWins: res.homeWins ?? 0,
+              draws: res.draws ?? 0,
+              awayWins: res.awayWins ?? 0,
+            });
+            const mappedEncounters: H2HEncounter[] = res.encounters.map((enc: any) => ({
+              date: enc.date,
+              homeTeam: enc.homeTeam,
+              awayTeam: enc.awayTeam,
+              homeShort: enc.homeShort || enc.homeTeam.slice(0, 3).toUpperCase(),
+              awayShort: enc.awayShort || enc.awayTeam.slice(0, 3).toUpperCase(),
+              homeScore: enc.homeScore,
+              awayScore: enc.awayScore,
+              competition: enc.competition,
+            }));
+            setMatchH2HData(mappedEncounters);
+          }
+        })
+        .catch((e) => console.warn('[MatchCenter] Url match H2H fetch err:', e));
+    }
+  }, [matchIdParam]);
 
   const handleSelectLiveMatch = (m: any) => {
     const goalEvents = Array.isArray(m.events) ? m.events.filter((ev: any) => ev.type === 'Goal') : [];
@@ -1047,17 +1115,6 @@ export default function MatchCenterPage() {
       })
       .catch((err) => console.warn('[MatchCenter] Real standings fetch error:', err));
 
-    // Fetch live Transfermarkt injury & suspension absentees
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    fetch(`${apiBase}/api/v1/matches/preview/absentees?home=MCI&away=ARS`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success && json.data) {
-          setAbsentees(json.data);
-        }
-      })
-      .catch(() => {});
-
     return () => {
       clearInterval(interval);
       socket.off('connect', onConnect);
@@ -1070,6 +1127,31 @@ export default function MatchCenterPage() {
   // Auto-sync lineup, statistics, and H2H whenever activeMatch changes, plus socket room subscription
   useEffect(() => {
     if (!activeMatch.id) return;
+
+    // Immediately sync authentic team lineup & absentees for active match
+    const homeInit = buildTeamLineupForClub(activeMatch.homeShort || activeMatch.homeTeam, true, activeMatch.events || []);
+    const awayInit = buildTeamLineupForClub(activeMatch.awayShort || activeMatch.awayTeam, false, activeMatch.events || []);
+    setActiveLineup({ home: homeInit, away: awayInit });
+
+    setAbsentees({
+      home: getTeamAbsentees(activeMatch.homeShort || activeMatch.homeTeam),
+      away: getTeamAbsentees(activeMatch.awayShort || activeMatch.awayTeam),
+    });
+
+    const fallbackH2H = getTeamH2H(activeMatch.homeTeam, activeMatch.homeShort, activeMatch.awayTeam, activeMatch.awayShort);
+    setH2HSummary(fallbackH2H.summary);
+    setMatchH2HData(fallbackH2H.encounters);
+
+    // Fetch live Transfermarkt injury & suspension absentees if available
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    fetch(`${apiBase}/api/v1/matches/preview/absentees?home=${activeMatch.homeShort || 'TOT'}&away=${activeMatch.awayShort || 'MUN'}`)
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && json.data && Array.isArray(json.data.home) && Array.isArray(json.data.away) && (json.data.home.length > 0 || json.data.away.length > 0)) {
+          setAbsentees(json.data);
+        }
+      })
+      .catch(() => {});
 
     const socket = getSocket();
     const matchIdStr = String(activeMatch.id);
@@ -1092,7 +1174,7 @@ export default function MatchCenterPage() {
 
     api.getMatchLineup(activeMatch.id, { home: activeMatch.homeTeam, away: activeMatch.awayTeam })
       .then((res) => {
-        if (res && res.home && res.away) {
+        if (res && res.home && res.away && Array.isArray(res.home.startXI) && res.home.startXI.length > 0) {
           const homeL = buildTeamLineupFromApi(res.home, true, activeMatch.events || []);
           const awayL = buildTeamLineupFromApi(res.away, false, activeMatch.events || []);
           setActiveLineup({ home: homeL, away: awayL });
@@ -1300,7 +1382,7 @@ export default function MatchCenterPage() {
             title={isNotified ? 'Turn off match alerts' : 'Notify me about match events'}
             className={`min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 ${
               isNotified
-                ? 'bg-[#CEFF00] text-black border-[#CEFF00] shadow-xs shadow-[#CEFF00]/20'
+                ? 'bg-zinc-800 text-white border-zinc-700/60 shadow-xs'
                 : 'bg-white dark:bg-[#121215] border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-zinc-700'
             }`}
           >
@@ -1318,106 +1400,6 @@ export default function MatchCenterPage() {
             {copiedToast ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
             <span>{copiedToast ? 'Link Copied!' : 'Share'}</span>
           </button>
-
-          {/* Custom & Spanish Match Input Button */}
-          <button
-            type="button"
-            onClick={() => setIsCustomMatchModalOpen(true)}
-            title="Input Pertandingan Spanyol (Spain, Real Madrid, Barcelona) atau Buat Match Kustom"
-            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-[#CEFF00]/50 bg-[#CEFF00]/15 text-[#CEFF00] hover:bg-[#CEFF00]/25 hover:border-[#CEFF00] transition-all flex items-center gap-1.5 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
-          >
-            <Flame size={13} className="text-[#CEFF00] animate-pulse" />
-            <span>+ Input Match (Spain)</span>
-          </button>
-
-          {/* Live Data Sync Button */}
-          <button
-            type="button"
-            onClick={handleSyncLiveData}
-            disabled={isSyncingLive}
-            title="Sync Live Sports Data from Football-Data.org & API-Football"
-            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center gap-1.5 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
-          >
-            <RefreshCw size={13} className={isSyncingLive ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">{isSyncingLive ? 'Syncing...' : 'Sync Live'}</span>
-          </button>
-
-          {/* WebSocket Live Status Indicator */}
-          <div
-            title={isWsConnected ? 'Connected to TactIQ Real-Time WebSocket Hub (Port 4000)' : 'Connecting to WebSocket Hub...'}
-            className={`min-h-[34px] sm:min-h-[36px] px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold transition-all shadow-xs ${
-              isWsConnected
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
-                : 'border-zinc-700/50 bg-zinc-800/40 text-zinc-400'
-            }`}
-          >
-            <span className="relative flex h-2 w-2">
-              {isWsConnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />}
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${isWsConnected ? 'bg-emerald-500' : 'bg-zinc-500'}`} />
-            </span>
-            <span className="hidden md:inline">{isWsConnected ? 'LIVE WS' : 'CONNECTING'}</span>
-          </div>
-
-          {/* Real-time Goal Simulation Trigger */}
-          <button
-            type="button"
-            onClick={() => handleSimulateLiveGoal('away')}
-            disabled={isSimulatingEvent}
-            title="Klik untuk mensimulasikan gol secara langsung (Real-Time WebSocket Push)"
-            className="min-h-[34px] sm:min-h-[36px] px-2.5 sm:px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-all flex items-center gap-1.5 text-[11px] sm:text-xs font-bold cursor-pointer active:scale-95 shadow-xs"
-          >
-            <span className={isSimulatingEvent ? 'animate-spin' : ''}>⚡</span>
-            <span className="hidden sm:inline">Simulasi Gol</span>
-          </button>
-
-          {/* Prototype Scenario Switcher Popover */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsScenarioOpen((prev) => !prev)}
-              title="Switch Prototype Scenario (Upcoming / Live / Finished)"
-              className={`min-h-[34px] sm:min-h-[36px] px-2 sm:px-2.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95 shadow-xs ${
-                isScenarioOpen
-                  ? 'bg-zinc-800 text-[#CEFF00] border-zinc-600'
-                  : 'bg-white dark:bg-[#121215] border-slate-200 dark:border-[#27272A] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-zinc-700'
-              }`}
-            >
-              <FlaskConical size={14} className="text-[#CEFF00]" />
-              <span className="hidden sm:inline font-mono text-[11px]">{currentStatus}</span>
-            </button>
-
-            {isScenarioOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsScenarioOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#16161A] p-1.5 shadow-xl z-50 space-y-1">
-                  <div className="px-2 py-1 text-[10px] font-mono uppercase text-slate-400 dark:text-zinc-500 font-bold border-b border-slate-100 dark:border-zinc-800/60 mb-1">
-                    Prototype Scenario
-                  </div>
-                  {(['UPCOMING', 'LIVE', 'FINISHED'] as const).map((st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => {
-                        handleStatusChange(st);
-                        setIsScenarioOpen(false);
-                      }}
-                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                        currentStatus === st
-                          ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
-                          : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800'
-                      }`}
-                    >
-                      <span>{st}</span>
-                      {currentStatus === st && <Check size={13} className="text-black" />}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
         </div>
       </div>
 
@@ -1469,105 +1451,7 @@ export default function MatchCenterPage() {
         </div>
       )}
 
-      {/* ── Live In-Play Matches Ticker (API-Football Live Stream) / Quick Spanish Match Bar ── */}
-      {liveScores.length > 0 ? (
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 dark:bg-[#121215] p-3 sm:p-3.5 shadow-xs transition-colors">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
-                Live In-Play Matches ({liveScores.length}) · API-Football Feed
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono">
-              Auto-polled Real-Time
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
-            {liveScores.map((m: any) => {
-              const isSelected = activeMatch.id === String(m.fixtureId);
-              return (
-                <button
-                  key={m.fixtureId}
-                  type="button"
-                  onClick={() => handleSelectLiveMatch(m)}
-                  className={`shrink-0 text-left rounded-xl border px-3.5 py-2.5 flex flex-col gap-1.5 min-w-[210px] sm:min-w-[230px] transition-all cursor-pointer active:scale-95 shadow-xs ${
-                    isSelected
-                      ? 'border-emerald-400 bg-emerald-500/15 ring-2 ring-emerald-400/50 shadow-emerald-500/10'
-                      : 'border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#16161A] hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-[#1a1a20]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-mono font-bold">
-                    <span className="truncate max-w-[120px]">{m.league}</span>
-                    <span className="text-emerald-500 dark:text-emerald-400 font-extrabold flex items-center gap-1">
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                      </span>
-                      {m.status === 'HT' ? 'HT' : `${m.minute}'`}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
-                    <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                      <ClubCrest code={m.homeTeam} size={16} />
-                      <span className="truncate">{m.homeTeam}</span>
-                    </div>
-                    <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400 text-sm font-black">{m.homeScore}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
-                    <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                      <ClubCrest code={m.awayTeam} size={16} />
-                      <span className="truncate">{m.awayTeam}</span>
-                    </div>
-                    <span className="tabular-nums font-mono text-emerald-500 dark:text-emerald-400 text-sm font-black">{m.awayScore}</span>
-                  </div>
-
-                  <div className="mt-0.5 pt-1 border-t border-slate-100 dark:border-zinc-800/60 flex items-center justify-between text-[9px] font-mono">
-                    <span className={isSelected ? 'text-emerald-500 dark:text-emerald-400 font-extrabold' : 'text-slate-400 dark:text-zinc-500'}>
-                      {isSelected ? '● SEDANG AKTIF DI BOARD' : 'Klik untuk buka detail'}
-                    </span>
-                    <span className="text-slate-400 dark:text-zinc-500">
-                      {m.events?.length ? `${m.events.length} event` : ''}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:bg-[#16161A] p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs transition-colors">
-          <div className="flex items-center gap-3">
-            <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Flame size={18} />
-            </span>
-            <div>
-              <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                Ingin masukkan pertandingan Spanyol atau custom match?
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#CEFF00]/15 text-[#CEFF00] border border-[#CEFF00]/30 font-bold">
-                  Spain · La Liga · El Clásico
-                </span>
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                Pilih preset resmi Spanyol (Final Euro 2024 Spain vs England, Real Madrid vs Barcelona) atau input pertandingan bebas.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsCustomMatchModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-[#CEFF00] text-black font-extrabold text-xs hover:bg-[#CEFF00]/90 transition-all flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95"
-          >
-            <Plus size={14} />
-            <span>Pilih Match Spanyol / Input Baru</span>
-          </button>
-        </div>
-      )}
 
       {/* ── Mobile Quick Fixtures Carousel ── */}
       <div className="lg:hidden flex flex-col gap-2 -mt-1">
@@ -1636,17 +1520,13 @@ export default function MatchCenterPage() {
                 <span className="font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider text-[11px] truncate max-w-[200px] sm:max-w-none">
                   {activeMatch.league}
                 </span>
-                {activeMatch.isLiveFeed ? (
+                {activeMatch.isLiveFeed && (
                   <span className="inline-flex items-center gap-1 text-[9px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                     </span>
                     API-Football Live
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[9px] font-mono font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/30">
-                    DEMO DATA
                   </span>
                 )}
               </div>
@@ -1711,10 +1591,6 @@ export default function MatchCenterPage() {
                           ) : activeMatch.isLimited ? (
                             <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300 font-bold tracking-wider">
                               LIMITED
-                            </span>
-                          ) : !activeMatch.isLiveFeed ? (
-                            <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold">
-                              DEMO
                             </span>
                           ) : (
                             <span className="relative flex h-1.5 w-1.5">
@@ -1898,12 +1774,12 @@ export default function MatchCenterPage() {
                     {/* Legend Garis Minimalis */}
                     <div className="flex items-center gap-3 text-[11px] font-mono shrink-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#DA291C]" />
-                        <span className="font-bold text-slate-800 dark:text-zinc-200">MUN</span>
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: activeMatch.homeColor || '#DA291C' }} />
+                        <span className="font-bold text-slate-800 dark:text-zinc-200">{activeMatch.homeShort}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#6CABDD]" />
-                        <span className="font-bold text-slate-800 dark:text-zinc-200">MCI</span>
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: activeMatch.awayColor || '#6CABDD' }} />
+                        <span className="font-bold text-slate-800 dark:text-zinc-200">{activeMatch.awayShort}</span>
                       </div>
                     </div>
                   </div>
@@ -1940,21 +1816,21 @@ export default function MatchCenterPage() {
 
                       {/* Garis SVG Tren */}
                       <svg viewBox="0 0 360 120" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
-                        {/* Man United Line (Merah) */}
+                        {/* Home Line */}
                         <path
                           d={`M ${getPointsPath(RECENT_FORM_DATA.home)}`}
                           fill="none"
-                          stroke="#DA291C"
+                          stroke={activeMatch.homeColor || '#DA291C'}
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           className="drop-shadow-xs"
                         />
-                        {/* Man City Line (Biru) */}
+                        {/* Away Line */}
                         <path
                           d={`M ${getPointsPath(RECENT_FORM_DATA.away)}`}
                           fill="none"
-                          stroke="#6CABDD"
+                          stroke={activeMatch.awayColor || '#6CABDD'}
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1962,32 +1838,32 @@ export default function MatchCenterPage() {
                         />
                       </svg>
 
-                      {/* Nodes Man United (Clean Static Red Dots) */}
+                      {/* Nodes Home */}
                       {RECENT_FORM_DATA.home.map((m, idx) => {
                         const leftPercent = 8.33 + idx * 20.833;
                         const topPercent = m.points === 3 ? 16.67 : m.points === 1 ? 50 : 83.33;
                         return (
                           <div
-                            key={`mun-dot-${idx}`}
+                            key={`home-dot-${idx}`}
                             className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                             style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
                           >
-                            <div className="w-3.5 h-3.5 rounded-full bg-[#DA291C] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
+                            <div className="w-3.5 h-3.5 rounded-full ring-2 ring-white dark:ring-[#121215] shadow-xs" style={{ backgroundColor: activeMatch.homeColor || '#DA291C' }} />
                           </div>
                         );
                       })}
 
-                      {/* Nodes Man City (Clean Static Blue Dots) */}
+                      {/* Nodes Away */}
                       {RECENT_FORM_DATA.away.map((m, idx) => {
                         const leftPercent = 8.33 + idx * 20.833;
                         const topPercent = m.points === 3 ? 16.67 : m.points === 1 ? 50 : 83.33;
                         return (
                           <div
-                            key={`mci-dot-${idx}`}
+                            key={`away-dot-${idx}`}
                             className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                             style={{ left: `${leftPercent}%`, top: `${topPercent}%` }}
                           >
-                            <div className="w-3.5 h-3.5 rounded-full bg-[#6CABDD] ring-2 ring-white dark:ring-[#121215] shadow-xs" />
+                            <div className="w-3.5 h-3.5 rounded-full ring-2 ring-white dark:ring-[#121215] shadow-xs" style={{ backgroundColor: activeMatch.awayColor || '#6CABDD' }} />
                           </div>
                         );
                       })}
@@ -2001,12 +1877,12 @@ export default function MatchCenterPage() {
                     <span className="font-semibold text-slate-600 dark:text-zinc-400">Latest</span>
                   </div>
 
-                  {/* Ringkasan Performa Poin 5 Laga (Ultra-Minimalist: Summary Poin Saja) */}
+                  {/* Ringkasan Performa Poin 5 Laga */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800/60 text-xs font-mono">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <ClubCrest code="MUN" size={16} className="w-4 h-4 shrink-0" />
-                        <span className="font-semibold text-slate-800 dark:text-zinc-200">Man United</span>
+                        <ClubCrest code={activeMatch.homeShort} size={16} className="w-4 h-4 shrink-0" />
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">{activeMatch.homeTeam}</span>
                       </div>
                       <span className="font-bold text-slate-900 dark:text-white tabular-nums">
                         10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
@@ -2015,8 +1891,8 @@ export default function MatchCenterPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <ClubCrest code="MCI" size={18} className="w-4.5 h-4.5 shrink-0" />
-                        <span className="font-semibold text-slate-800 dark:text-zinc-200">Man City</span>
+                        <ClubCrest code={activeMatch.awayShort} size={18} className="w-4.5 h-4.5 shrink-0" />
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">{activeMatch.awayTeam}</span>
                       </div>
                       <span className="font-bold text-slate-900 dark:text-white tabular-nums">
                         10 / 15 Pts <span className="text-[10px] text-zinc-400 font-normal">(67%)</span>
@@ -2031,91 +1907,102 @@ export default function MatchCenterPage() {
                     Injured and suspended players
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                    {/* Home Absentees */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#27272A]">
-                        <ClubCrest code="MUN" size={16} />
-                        <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">Man United</span>
-                      </div>
-                      <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-                        {absentees.home.map((p, idx) => (
-                          <div key={idx} className="py-2.5 flex items-center gap-3">
-                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
-                              <img
-                                src={p.photoUrl}
-                                alt={p.name}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover object-top"
-                                onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                              />
-                            </div>
+                  {(() => {
+                    const homeList = (absentees && Array.isArray(absentees.home) && absentees.home.length > 0)
+                      ? absentees.home
+                      : getTeamAbsentees(activeMatch.homeShort || activeMatch.homeTeam);
+                    const awayList = (absentees && Array.isArray(absentees.away) && absentees.away.length > 0)
+                      ? absentees.away
+                      : getTeamAbsentees(activeMatch.awayShort || activeMatch.awayTeam);
 
-                            <div className="shrink-0 flex items-center justify-center">
-                              {p.type === 'injury' ? (
-                                <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-xs">
-                                  <span className="text-red-600 font-black text-[13px] leading-none select-none -mt-0.5">+</span>
-                                </div>
-                              ) : (
-                                <div className="w-2.5 h-3.5 bg-red-600 rounded-[2px] shadow-xs border border-red-400/40" />
-                              )}
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-slate-900 dark:text-white text-[12.5px] sm:text-xs leading-snug truncate">
-                                {p.name}
-                              </div>
-                              <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-normal truncate mt-0.5">
-                                {p.reason} / {p.expectedReturn}
-                              </div>
-                            </div>
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                        {/* Home Absentees */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#27272A]">
+                            <ClubCrest code={activeMatch.homeShort || 'HOM'} size={16} />
+                            <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">{activeMatch.homeTeam}</span>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Away Absentees */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#27272A]">
-                        <ClubCrest code="MCI" size={16} />
-                        <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">Man City</span>
-                      </div>
-                      <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
-                        {absentees.away.map((p, idx) => (
-                          <div key={idx} className="py-2.5 flex items-center gap-3">
-                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
-                              <img
-                                src={p.photoUrl}
-                                alt={p.name}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover object-top"
-                                onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                              />
-                            </div>
-
-                            <div className="shrink-0 flex items-center justify-center">
-                              {p.type === 'injury' ? (
-                                <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-xs">
-                                  <span className="text-red-600 font-black text-[13px] leading-none select-none -mt-0.5">+</span>
+                          <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
+                            {homeList.map((p, idx) => (
+                              <div key={idx} className="py-2.5 flex items-center gap-3">
+                                <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
+                                  <img
+                                    src={p.photoUrl}
+                                    alt={p.name}
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover object-top"
+                                    onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                  />
                                 </div>
-                              ) : (
-                                <div className="w-2.5 h-3.5 bg-red-600 rounded-[2px] shadow-xs border border-red-400/40" />
-                              )}
-                            </div>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="font-semibold text-slate-900 dark:text-white text-[12.5px] sm:text-xs leading-snug truncate">
-                                {p.name}
+                                <div className="shrink-0 flex items-center justify-center">
+                                  {p.type === 'injury' ? (
+                                    <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-xs">
+                                      <span className="text-red-600 font-black text-[13px] leading-none select-none -mt-0.5">+</span>
+                                    </div>
+                                  ) : (
+                                    <div className="w-2.5 h-3.5 bg-red-600 rounded-[2px] shadow-xs border border-red-400/40" />
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-semibold text-slate-900 dark:text-white text-[12.5px] sm:text-xs leading-snug truncate">
+                                    {p.name}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-normal truncate mt-0.5">
+                                    {p.reason} / {p.expectedReturn}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-normal truncate mt-0.5">
-                                {p.reason} / {p.expectedReturn}
-                              </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+
+                        {/* Away Absentees */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#27272A]">
+                            <ClubCrest code={activeMatch.awayShort || 'AWA'} size={16} />
+                            <span className="font-bold text-xs text-slate-700 dark:text-zinc-300">{activeMatch.awayTeam}</span>
+                          </div>
+                          <div className="divide-y divide-slate-100 dark:divide-zinc-800/50">
+                            {awayList.map((p, idx) => (
+                              <div key={idx} className="py-2.5 flex items-center gap-3">
+                                <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-800 ring-1 ring-white/10 shrink-0">
+                                  <img
+                                    src={p.photoUrl}
+                                    alt={p.name}
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover object-top"
+                                    onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                                  />
+                                </div>
+
+                                <div className="shrink-0 flex items-center justify-center">
+                                  {p.type === 'injury' ? (
+                                    <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-xs">
+                                      <span className="text-red-600 font-black text-[13px] leading-none select-none -mt-0.5">+</span>
+                                    </div>
+                                  ) : (
+                                    <div className="w-2.5 h-3.5 bg-red-600 rounded-[2px] shadow-xs border border-red-400/40" />
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-semibold text-slate-900 dark:text-white text-[12.5px] sm:text-xs leading-snug truncate">
+                                    {p.name}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 dark:text-zinc-400 font-normal truncate mt-0.5">
+                                    {p.reason} / {p.expectedReturn}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
 
               </div>
@@ -2597,42 +2484,64 @@ export default function MatchCenterPage() {
                       <span className="text-center">Form</span>
                     </div>
 
-                    {standings.map((row) => (
-                      <div
-                        key={row.code ? `${row.code}-${row.rank}` : row.rank}
-                        className="grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 hover:bg-slate-50 dark:hover:bg-[#1A1A1E] rounded-lg transition-colors"
-                      >
-                        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
-                          <span className="text-slate-500 dark:text-slate-400 w-3 font-bold text-[11px] sm:text-xs shrink-0">
-                            {row.rank}
-                          </span>
-                          <ClubCrest code={row.code || row.club} size={16} />
-                          <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
-                            {row.club}
-                          </span>
-                        </div>
+                    {standings.map((row) => {
+                      const isHome = isClubMatch(row.club, activeMatch.homeTeam, activeMatch.homeShort);
+                      const isAway = isClubMatch(row.club, activeMatch.awayTeam, activeMatch.awayShort);
+                      const isMatchClub = isHome || isAway;
 
-                        <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs">
-                          {row.played}
-                        </span>
-
-                        <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs font-semibold">
-                          {row.gd}
-                        </span>
-
-                        <span className="text-center font-bold text-slate-900 dark:text-white tabular-nums text-[11px] sm:text-xs">
-                          {row.pts}
-                        </span>
-
-                        <div className="flex items-center justify-center gap-1">
-                          {row.form.map((f, i) => (
-                            <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
-                              {f}
+                      return (
+                        <div
+                          key={row.code ? `${row.code}-${row.rank}` : row.rank}
+                          className={`grid grid-cols-[1fr_36px_46px_44px_78px] items-center py-2.5 px-2.5 sm:px-3 rounded-lg transition-colors ${
+                            isMatchClub
+                              ? isHome
+                                ? 'bg-emerald-500/10 dark:bg-emerald-950/25 border border-emerald-500/30'
+                                : 'bg-amber-500/10 dark:bg-amber-950/25 border border-amber-500/30'
+                              : 'hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 pr-2">
+                            <span className={`w-3 font-bold text-[11px] sm:text-xs shrink-0 ${isHome ? 'text-emerald-500' : isAway ? 'text-amber-500' : 'text-slate-500 dark:text-slate-400'}`}>
+                              {row.rank}
                             </span>
-                          ))}
+                            <ClubCrest code={row.code || row.club} size={16} />
+                            <span className="font-bold text-slate-900 dark:text-white truncate text-[11px] sm:text-xs">
+                              {row.club}
+                            </span>
+                            {isHome && (
+                              <span className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase px-1 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 shrink-0">
+                                Host
+                              </span>
+                            )}
+                            {isAway && (
+                              <span className="text-[9px] font-mono font-bold text-amber-600 dark:text-amber-400 uppercase px-1 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 shrink-0">
+                                Visitor
+                              </span>
+                            )}
+                          </div>
+
+                          <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs">
+                            {row.played}
+                          </span>
+
+                          <span className="text-center text-slate-600 dark:text-slate-400 tabular-nums text-[11px] sm:text-xs font-semibold">
+                            {row.gd}
+                          </span>
+
+                          <span className="text-center font-bold text-slate-900 dark:text-white tabular-nums text-[11px] sm:text-xs">
+                            {row.pts}
+                          </span>
+
+                          <div className="flex items-center justify-center gap-1">
+                            {row.form.map((f, i) => (
+                              <span key={i} className={f === 'W' ? 'tq-form-w' : f === 'D' ? 'tq-form-d' : 'tq-form-l'}>
+                                {f}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="p-4 sm:p-8 flex flex-col items-center justify-center text-center space-y-4">
@@ -2694,35 +2603,33 @@ export default function MatchCenterPage() {
               </div>
 
               {standings.map((row) => {
-                const isArsenal = row.club.includes('Arsenal');
-                const isCity = row.club.includes('City');
+                const isHome = isClubMatch(row.club, activeMatch.homeTeam, activeMatch.homeShort);
+                const isAway = isClubMatch(row.club, activeMatch.awayTeam, activeMatch.awayShort);
                 return (
                   <div
                     key={row.code ? `${row.code}-${row.rank}` : row.rank}
                     className={`grid grid-cols-[1fr_28px_36px_34px] items-center py-1.5 px-2 rounded-lg transition-colors border ${
-                      isArsenal
-                        ? 'bg-red-500/10 border-red-500/20 text-slate-900 dark:text-white'
-                        : isCity
-                        ? 'bg-sky-500/10 border-sky-500/20 text-slate-900 dark:text-white'
+                      isHome
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-slate-900 dark:text-white'
+                        : isAway
+                        ? 'bg-amber-500/10 border-amber-500/30 text-slate-900 dark:text-white'
                         : 'border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-[#1A1A1E]'
                     }`}
                   >
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 pr-1">
-                      <span className={`w-3 sm:w-3.5 text-[11px] sm:text-xs font-bold shrink-0 ${isArsenal ? 'text-red-500' : isCity ? 'text-sky-400' : 'text-slate-400'}`}>
+                      <span className={`w-3 sm:w-3.5 text-[11px] sm:text-xs font-bold shrink-0 ${isHome ? 'text-emerald-500' : isAway ? 'text-amber-500' : 'text-slate-400'}`}>
                         {row.rank}
                       </span>
                       <ClubCrest code={row.code || row.club} size={16} />
                       <span className="font-bold text-[11px] sm:text-xs truncate">{row.club}</span>
-                      {isArsenal && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-300 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none shrink-0">
-                          <TrendingUp size={10} className="text-emerald-400 shrink-0" />
-                          1
+                      {isHome && (
+                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/20 border border-emerald-500/40 px-1 py-0.5 rounded leading-none shrink-0">
+                          HOME
                         </span>
                       )}
-                      {isCity && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-zinc-400 bg-zinc-800 border border-zinc-700/50 px-1 py-0.5 rounded leading-none shrink-0">
-                          <TrendingDown size={10} className="text-rose-400 shrink-0" />
-                          1
+                      {isAway && (
+                        <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-amber-400 bg-amber-500/20 border border-amber-500/40 px-1 py-0.5 rounded leading-none shrink-0">
+                          AWAY
                         </span>
                       )}
                     </div>
@@ -2738,7 +2645,9 @@ export default function MatchCenterPage() {
 
             <div className="mt-3 pt-3 border-t border-slate-100 dark:border-[#27272A] text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Info size={13} className="text-zinc-400 shrink-0" />
-              <span className="leading-tight">Arsenal overtake City to lead the table by +2 pts.</span>
+              <span className="leading-tight">
+                {activeMatch.homeTeam} vs {activeMatch.awayTeam} — dampak posisi klasemen Premier League GW08.
+              </span>
             </div>
           </div>
 
@@ -3106,5 +3015,20 @@ export default function MatchCenterPage() {
         onApplyMatch={handleApplyCustomMatch}
       />
     </div>
+  );
+}
+
+export default function MatchCenterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-3 text-zinc-500 font-mono text-xs">
+          <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          <span>Memuat data pertandingan...</span>
+        </div>
+      }
+    >
+      <MatchCenterContent />
+    </Suspense>
   );
 }

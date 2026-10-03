@@ -63,6 +63,62 @@ export default function PlayerProfilePage() {
     }
   }, [playerId]);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        {/* Back button */}
+        <div className="w-36 h-4 bg-zinc-800 rounded" />
+
+        {/* Main Dossier Header Skeleton */}
+        <div className="p-6 sm:p-8 bg-tactiq-card border border-tactiq-border rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center space-x-5">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-zinc-800 shrink-0" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-48 h-8 bg-zinc-800 rounded" />
+                <div className="w-12 h-6 bg-zinc-800 rounded-full" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-24 h-4 bg-zinc-800/70 rounded" />
+                <div className="w-24 h-4 bg-zinc-800/70 rounded" />
+                <div className="w-16 h-4 bg-zinc-800/70 rounded" />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2 text-right">
+            <div className="w-32 h-3.5 bg-zinc-800/70 rounded ml-auto" />
+            <div className="w-20 h-8 bg-zinc-800 rounded ml-auto" />
+          </div>
+        </div>
+
+        {/* Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-6 h-96 p-6 bg-tactiq-card border border-tactiq-border rounded-2xl flex items-center justify-center">
+            <div className="w-56 h-56 rounded-full border-4 border-zinc-800/60 bg-zinc-900/50" />
+          </div>
+          <div className="lg:col-span-6 space-y-4">
+            <div className="p-6 bg-tactiq-card border border-tactiq-border rounded-2xl space-y-4">
+              <div className="w-44 h-4 bg-zinc-800 rounded" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="p-3.5 rounded-xl bg-tactiq-surface/50 border border-tactiq-border space-y-2">
+                    <div className="w-14 h-3 bg-zinc-800 rounded" />
+                    <div className="w-10 h-6 bg-zinc-800 rounded" />
+                    <div className="w-full h-1.5 bg-zinc-800 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-5 bg-tactiq-card border border-tactiq-border rounded-2xl space-y-2">
+              <div className="w-28 h-4 bg-zinc-800 rounded" />
+              <div className="w-full h-10 bg-zinc-800/50 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Back button */}

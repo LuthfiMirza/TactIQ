@@ -801,7 +801,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
                 onClick={() => handleTempoChange(rate)}
                 className={`px-1.5 sm:px-2 py-0.5 rounded transition-all font-bold ${
                   tempo === rate
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
                 title={`Playback Speed ${rate}x`}
@@ -820,7 +820,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             }}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] ${
               showVideoBackground
-                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold shadow-xs'
                 : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
             }`}
           >
@@ -840,7 +840,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             onClick={() => setIsDrawMode(!isDrawMode)}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold font-mono transition-all shrink-0 min-h-[30px] ${
               isDrawMode
-                ? 'bg-[#CEFF00] text-black font-extrabold shadow-xs shadow-[#CEFF00]/20'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold shadow-xs'
                 : 'bg-[#121215] text-zinc-300 border border-[#27272A] hover:bg-[#1A1A1E]'
             }`}
             title="Tactical Telestrator / Canvas Drawing Tools"
@@ -849,7 +849,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
             <span className="hidden sm:inline">Coret Taktik</span>
             <span className="sm:hidden">Draw</span>
             {drawings.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-black text-[#CEFF00] font-bold">
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-700/60 font-bold">
                 {drawings.length}
               </span>
             )}
@@ -882,10 +882,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
 
       {/* Telestrator Drawing Toolbar (When isDrawMode is active) */}
       {isDrawMode && (
-        <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2 bg-[#1A1A22] border-b border-[#CEFF00]/20 text-xs font-mono gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="flex flex-wrap items-center justify-between px-3 sm:px-4 py-2 bg-[#1A1A22] border-b border-zinc-700/40 text-xs font-mono gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="flex items-center gap-1 sm:gap-2">
-            <span className="text-[10px] text-[#CEFF00] font-bold uppercase tracking-wider hidden md:inline">
-              TELESTRATOR TOOLS:
+            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider hidden md:inline">
+              TELESTRATOR:
             </span>
 
             {/* Tool Selection Buttons */}
@@ -894,7 +894,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
                 onClick={() => setActiveDrawTool('arrow')}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
                   activeDrawTool === 'arrow'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
                 title="Panah Lari / Movement Arrow"
@@ -907,7 +907,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
                 onClick={() => setActiveDrawTool('spotlight')}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
                   activeDrawTool === 'spotlight'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
                 title="Player Spotlight / Halo Ring"
@@ -920,7 +920,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
                 onClick={() => setActiveDrawTool('zone')}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
                   activeDrawTool === 'zone'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
                 title="Tactical Zone / Half-space Box"
@@ -933,7 +933,7 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
                 onClick={() => setActiveDrawTool('pen')}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-bold transition-all ${
                   activeDrawTool === 'pen'
-                    ? 'bg-[#CEFF00] text-black shadow-xs'
+                    ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
                     : 'text-zinc-400 hover:text-white'
                 }`}
                 title="Freehand Pen"
@@ -1040,10 +1040,10 @@ export const VideoOverlayCanvas: React.FC<VideoOverlayCanvasProps> = ({
         {/* Live Status Pill in Viewport */}
         <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/80 border border-white/10 text-[11px] font-mono text-white backdrop-blur-xs shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#CEFF00] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>2D Optical Radar</span>
             <span className="text-zinc-500">·</span>
-            <span className="text-[#CEFF00] font-bold">11v11 COMMUNITY SHIELD</span>
+            <span className="text-emerald-400 font-bold">11v11 CANONICAL</span>
           </span>
         </div>
 

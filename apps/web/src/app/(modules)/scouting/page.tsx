@@ -599,6 +599,7 @@ export default function ScoutingPage() {
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [modalPlayerB, setModalPlayerB] = useState<PlayerDTO | undefined>(undefined);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isClusterLoading, setIsClusterLoading] = useState(false);
 
   const [anchorSearchQuery, setAnchorSearchQuery] = useState('');
   const [searchedApiPlayers, setSearchedApiPlayers] = useState<PlayerDTO[]>([]);
@@ -662,6 +663,7 @@ export default function ScoutingPage() {
   };
 
   const handleClusterSelect = async (cluster: 'GK' | 'DF' | 'MF' | 'FW') => {
+    setIsClusterLoading(true);
     setSelectedCluster(cluster);
     const list = CLUSTER_RECOMMENDATIONS[cluster] || [];
     setRecommendations(list);
@@ -686,6 +688,8 @@ export default function ScoutingPage() {
       }
     } catch {
       // Keep static benchmark
+    } finally {
+      setTimeout(() => setIsClusterLoading(false), 200);
     }
   };
 
@@ -949,11 +953,11 @@ export default function ScoutingPage() {
                   {isActive && (
                     <motion.div
                       layoutId="scoutingClusterActive"
-                      className="absolute inset-0 bg-[#CEFF00] rounded-md shadow-xs -z-0"
+                      className="absolute inset-0 bg-zinc-800 border border-zinc-700/60 rounded-md shadow-xs -z-0"
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
                     />
                   )}
-                  <span className={`relative z-10 ${isActive ? 'text-black font-extrabold' : ''}`}>{pos}</span>
+                  <span className={`relative z-10 ${isActive ? 'text-white font-bold' : ''}`}>{pos}</span>
                 </button>
               );
             })}
@@ -967,7 +971,7 @@ export default function ScoutingPage() {
               setModalPlayerB(comparisonTarget.player);
               setIsCompareModalOpen(true);
             }}
-            className="h-9 flex items-center gap-1.5 px-3.5 bg-[#CEFF00] hover:bg-[#b8e600] text-black text-xs font-black rounded-lg shadow-xs shadow-[#CEFF00]/20 transition-all active:scale-[0.98]"
+            className="h-9 flex items-center gap-1.5 px-3.5 bg-zinc-800 hover:bg-zinc-700/80 text-white font-bold text-xs rounded-lg border border-zinc-700/60 shadow-xs transition-all active:scale-[0.98]"
           >
             <ArrowLeftRight size={13} />
             <span>Compare Matrix</span>
@@ -1027,94 +1031,121 @@ export default function ScoutingPage() {
 
             {/* Candidate List */}
             <div className="space-y-2 mt-2.5">
-              {sortedRecommendations.map((rec) => {
-                const isSelected = comparisonTarget.player.id === rec.player.id;
-                const valueFormatted = rec.player.marketValue ? `€${(rec.player.marketValue / 1e6).toFixed(0)}M` : '–';
-
-                return (
+              {isClusterLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
                   <div
-                    key={rec.player.id}
-                    onClick={() => handleSelectCandidate(rec)}
-                    className={`p-3 rounded-xl cursor-pointer transition-all border active:scale-[0.99] ${
-                      isSelected
-                        ? 'border-[#CEFF00] bg-[#18181D] shadow-sm shadow-[#CEFF00]/10'
-                        : 'border-[#27272A] bg-[#151518] hover:border-zinc-700 hover:bg-[#1A1A1E]'
-                    }`}
+                    key={i}
+                    className="p-3 rounded-xl border border-zinc-800/80 bg-[#151518] animate-pulse space-y-2.5"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      
-                      {/* Left: Player Avatar + Details */}
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="relative shrink-0 w-9 h-9 rounded-xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center">
-                          <PlayerAvatar
-                            src={rec.player.photoUrl}
-                            alt={rec.player.name}
-                            className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-xs"
-                          />
-                        </div>
-
-                        <div className="min-w-0">
-                          <div className="text-xs font-bold text-white truncate">
-                            {rec.player.name}
-                          </div>
-                          <div className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
-                            <ClubCrest code={rec.player.team?.code || rec.player.team?.name || ''} size={13} />
-                            <span>{rec.player.team?.name} · {rec.player.nationality} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
-                          </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-800 shrink-0" />
+                        <div className="space-y-1">
+                          <div className="w-24 h-3.5 bg-zinc-800 rounded" />
+                          <div className="w-32 h-2.5 bg-zinc-800/60 rounded" />
                         </div>
                       </div>
-
-                      {/* Right: Match Percentage (Clean Editorial Style) */}
-                      <div className="text-right shrink-0 px-2.5 py-1 rounded-lg bg-[#18181C] border border-[#27272A] font-mono">
-                        <div className={`text-xs font-black tabular-nums leading-none ${rec.matchPercentage >= 85 ? 'text-[#CEFF00]' : 'text-zinc-100'}`}>
-                          {rec.matchPercentage.toFixed(1)}%
-                        </div>
-                        <span className="text-[8px] uppercase tracking-wider font-bold text-zinc-500 block mt-0.5">
-                          Match
-                        </span>
-                      </div>
-
+                      <div className="w-14 h-4 bg-zinc-800 rounded" />
                     </div>
-
-                    {/* Metric Badges & Action Button */}
-                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[#222227]">
-                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                        {rec.highlightMetrics.slice(0, 2).map((m, idx) => (
-                          <span key={idx} className="px-1.5 py-0.5 rounded bg-[#1E1E24] text-zinc-400 text-[10px] font-mono truncate">
-                            {m.label}: <strong className="text-zinc-200">{m.value}</strong>
-                          </span>
-                        ))}
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-800/80">
+                      <div className="flex gap-1.5">
+                        <div className="w-16 h-3 bg-zinc-800/50 rounded" />
+                        <div className="w-16 h-3 bg-zinc-800/50 rounded" />
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSelectCandidate(rec);
-                        }}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold font-mono transition-all shrink-0 active:scale-95 ${
-                          isSelected
-                            ? 'bg-[#CEFF00] text-black font-black shadow-xs'
-                            : 'bg-[#25252B] text-zinc-300 hover:bg-[#2F2F36]'
-                        }`}
-                      >
-                        {isSelected ? (
-                          <>
-                            <Check size={11} className="stroke-[2.5]" />
-                            <span>Comparing</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Compare</span>
-                            <ArrowRight size={11} />
-                          </>
-                        )}
-                      </button>
+                      <div className="w-16 h-5 bg-zinc-800 rounded-md" />
                     </div>
-
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                sortedRecommendations.map((rec) => {
+                  const isSelected = comparisonTarget.player.id === rec.player.id;
+                  const valueFormatted = rec.player.marketValue ? `€${(rec.player.marketValue / 1e6).toFixed(0)}M` : '–';
+
+                  return (
+                    <div
+                      key={rec.player.id}
+                      onClick={() => handleSelectCandidate(rec)}
+                      className={`p-3 rounded-xl cursor-pointer transition-all border active:scale-[0.99] ${
+                        isSelected
+                          ? 'border-zinc-500 bg-[#18181D] shadow-xs'
+                          : 'border-[#27272A] bg-[#151518] hover:border-zinc-700 hover:bg-[#1A1A1E]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        
+                        {/* Left: Player Avatar + Details */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="relative shrink-0 w-9 h-9 rounded-xl overflow-hidden bg-[#18181C] border border-[#27272A] flex items-center justify-center">
+                            <PlayerAvatar
+                              src={rec.player.photoUrl}
+                              alt={rec.player.name}
+                              className="w-full h-full object-cover object-[center_top] [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] drop-shadow-xs"
+                            />
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white truncate">
+                              {rec.player.name}
+                            </div>
+                            <div className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono flex items-center gap-1.5">
+                              <ClubCrest code={rec.player.team?.code || rec.player.team?.name || ''} size={13} />
+                              <span>{rec.player.team?.name} · {rec.player.nationality} · {rec.player.age}y · <strong>{valueFormatted}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Match Percentage (Clean Editorial Style) */}
+                        <div className="text-right shrink-0 px-2.5 py-1 rounded-lg bg-[#18181C] border border-[#27272A] font-mono">
+                          <div className={`text-xs font-black tabular-nums leading-none ${rec.matchPercentage >= 85 ? 'text-[#CEFF00]' : 'text-zinc-100'}`}>
+                            {rec.matchPercentage.toFixed(1)}%
+                          </div>
+                          <span className="text-[8px] uppercase tracking-wider font-bold text-zinc-500 block mt-0.5">
+                            Match
+                          </span>
+                        </div>
+
+                      </div>
+
+                      {/* Metric Badges & Action Button */}
+                      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[#222227]">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          {rec.highlightMetrics.slice(0, 2).map((m, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 rounded bg-[#1E1E24] text-zinc-400 text-[10px] font-mono truncate">
+                              {m.label}: <strong className="text-zinc-200">{m.value}</strong>
+                            </span>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectCandidate(rec);
+                          }}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold font-mono transition-all shrink-0 active:scale-95 ${
+                            isSelected
+                              ? 'bg-zinc-800 text-white font-bold border border-zinc-700/60 shadow-xs'
+                              : 'bg-[#25252B] text-zinc-300 hover:bg-[#2F2F36]'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <>
+                              <Check size={11} className="stroke-[2.5]" />
+                              <span>Comparing</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Compare</span>
+                              <ArrowRight size={11} />
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                    </div>
+                  );
+                })
+              )}
             </div>
 
           </div>
