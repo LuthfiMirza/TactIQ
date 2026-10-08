@@ -1143,7 +1143,10 @@ function MatchCenterContent() {
     setMatchH2HData(fallbackH2H.encounters);
 
     // Fetch live Transfermarkt injury & suspension absentees if available
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const apiBase =
+      typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+        ? `${window.location.protocol}//${window.location.hostname}:4000`
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
     fetch(`${apiBase}/api/v1/matches/preview/absentees?home=${activeMatch.homeShort || 'TOT'}&away=${activeMatch.awayShort || 'MUN'}`)
       .then((r) => r.json())
       .then((json) => {

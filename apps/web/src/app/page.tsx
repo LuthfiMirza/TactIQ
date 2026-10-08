@@ -11,7 +11,7 @@ import {
   Flame,
   Radio,
 } from 'lucide-react';
-import { ClubCrest, LeagueLogo, SoccerBallIcon } from '@/components/ui/club-crest';
+import { ClubCrest, LeagueLogo, SoccerBallIcon, CountryFlag } from '@/components/ui/club-crest';
 import { MatchdayMarquee } from '@/components/matchday-marquee';
 import { api } from '@/lib/api';
 import { type Match, INITIAL_AUTHENTIC_MATCHES, CALENDAR_DAYS, getMatchesByDateKey } from '@/lib/matchesRegistry';
@@ -266,7 +266,6 @@ export default function HomePage() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
                   Top 5 European Leagues
                 </span>
-                <span className="text-[10px] text-zinc-500 font-mono">Elit</span>
               </div>
               <div className="space-y-0.5">
                 {TOP_5_LEAGUES.filter((l) => l.id !== 'all').map((league) => {
@@ -286,9 +285,7 @@ export default function HomePage() {
                         <LeagueLogo league={league.name} size={16} />
                         <span className="truncate">{league.name}</span>
                       </span>
-                      <span className={`text-[11px] font-mono ${isActive ? 'text-zinc-300 font-bold' : 'text-zinc-500'}`}>
-                        {league.country}
-                      </span>
+                      <CountryFlag country={league.country} width={18} height={12} />
                     </button>
                   );
                 })}
@@ -349,23 +346,23 @@ export default function HomePage() {
               })}
             </div>
 
-            {/* 1. Date Selector: FotMob/Flashscore Calendar Strip */}
-            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs p-1.5 sm:p-2 flex items-center justify-between gap-1.5 transition-colors">
+            {/* 1. Date Selector: FotMob/Flashscore Calendar Strip (Compact & Centered) */}
+            <div className="bg-[#121215] rounded-xl border border-[#27272A] shadow-xs px-2 py-1.5 flex items-center justify-between gap-1 transition-colors">
               <button
                 type="button"
                 onClick={handlePrevDate}
                 disabled={selectedDateKey === CALENDAR_DAYS[0]?.dateKey}
                 aria-label="Previous day"
-                className={`w-8 h-9 sm:h-10 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
                   selectedDateKey === CALENDAR_DAYS[0]?.dateKey
                     ? 'text-zinc-600 opacity-40 cursor-not-allowed'
                     : 'text-zinc-400 hover:text-white hover:bg-[#1A1A1E] cursor-pointer'
                 }`}
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={15} />
               </button>
 
-              <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1 justify-between sm:justify-start">
+              <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
                 {CALENDAR_DAYS.map((day) => {
                   const isSelected = day.dateKey === selectedDateKey;
                   return (
@@ -373,20 +370,23 @@ export default function HomePage() {
                       key={day.dateKey}
                       type="button"
                       onClick={() => handleSelectDateKey(day.dateKey)}
-                      className={`flex flex-col items-center justify-center px-2 sm:px-3 py-1 rounded-lg text-xs transition-all cursor-pointer min-w-[50px] sm:min-w-[58px] ${
+                      className={`flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer min-w-[46px] sm:min-w-[54px] ${
                         isSelected
                           ? 'bg-[#1E1E24] text-white font-bold border border-emerald-500/40 shadow-xs'
                           : 'text-zinc-400 hover:text-zinc-200 hover:bg-[#18181C]'
                       }`}
                     >
-                      <span className="text-[10px] uppercase tracking-wider font-semibold opacity-80">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold opacity-75 leading-tight flex items-center gap-1">
                         {day.dayName}
+                        {day.isToday && (
+                          <span className={`w-1 h-1 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
+                        )}
                       </span>
-                      <span className="font-mono text-xs sm:text-[13px] font-bold tracking-tight">
+                      <span className="font-mono text-[11px] sm:text-xs font-bold tracking-tight leading-tight mt-0.5">
                         {day.dateLabel}
                       </span>
                       {day.isToday && (
-                        <span className={`text-[8px] font-mono uppercase tracking-widest font-black ${
+                        <span className={`text-[7.5px] font-mono uppercase tracking-widest font-black leading-none mt-0.5 ${
                           isSelected ? 'text-emerald-400' : 'text-zinc-500'
                         }`}>
                           TODAY
@@ -402,13 +402,13 @@ export default function HomePage() {
                 onClick={handleNextDate}
                 disabled={selectedDateKey === CALENDAR_DAYS[CALENDAR_DAYS.length - 1]?.dateKey}
                 aria-label="Next day"
-                className={`w-8 h-9 sm:h-10 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
                   selectedDateKey === CALENDAR_DAYS[CALENDAR_DAYS.length - 1]?.dateKey
                     ? 'text-zinc-600 opacity-40 cursor-not-allowed'
                     : 'text-zinc-400 hover:text-white hover:bg-[#1A1A1E] cursor-pointer'
                 }`}
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={15} />
               </button>
             </div>
 
@@ -426,71 +426,77 @@ export default function HomePage() {
                         
                         {/* League Subheader */}
                         <div className="px-4 py-2.5 bg-[#16161A] border-b border-[#27272A] flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <LeagueLogo league={leagueName} size={16} />
-                            <span className="text-sm font-bold text-white">{leagueName}</span>
-                            <span className="text-xs text-zinc-400">· {matchesInLeague[0].leagueCountry}</span>
+                          <div className="flex items-center gap-2.5">
+                            <LeagueLogo league={leagueName} size={18} />
+                            <span className="text-sm font-bold text-white tracking-tight">{leagueName}</span>
+                            <CountryFlag country={matchesInLeague[0]?.leagueCountry} width={16} height={11} />
                           </div>
                           <Link
                             href={`/match-center?league=${encodeURIComponent(leagueName)}`}
-                            className="text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
+                            className="text-[11px] font-semibold text-zinc-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-zinc-800/60"
                           >
                             <span>Klasemen Detail</span>
                             <ChevronRight size={12} />
                           </Link>
                         </div>
 
-                        {/* Match List Rows */}
+                        {/* Match List Rows (FotMob / SofaScore Pro Style) */}
                         <div className="divide-y divide-[#27272A]">
                           {matchesInLeague.map((match) => (
                             <Link
                               key={match.id}
                               href={`/match-center?id=${match.id}&league=${encodeURIComponent(match.league)}`}
-                              className="block p-3.5 hover:bg-[#1A1A1E] transition-colors group"
+                              className="group block px-3.5 py-3 sm:px-4 sm:py-3.5 hover:bg-[#18181D] transition-all relative overflow-hidden"
                             >
-                              <div className="grid grid-cols-[54px_1fr] items-center gap-3">
+                              {/* Left accent hover indicator */}
+                              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-transparent group-hover:bg-lime-400 transition-colors" />
+
+                              <div className="flex items-center justify-between gap-3 sm:gap-4">
                                 
-                                {/* Status Column */}
-                                <div className="text-center font-mono">
+                                {/* Status / Kickoff Column */}
+                                <div className="w-14 sm:w-16 shrink-0 flex flex-col items-center justify-center font-mono border-r border-[#27272A]/80 pr-2.5 sm:pr-3">
                                   {match.status === 'LIVE' ? (
-                                    <span className="inline-flex items-center gap-1 font-bold text-xs sm:text-[13px] text-emerald-400 tracking-tight">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                      {match.minute}
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-black tracking-tight text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 animate-pulse">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                      {match.minute}'
                                     </span>
                                   ) : match.status === 'HT' ? (
-                                    <span className="font-bold text-xs text-amber-400 tracking-tight">
+                                    <span className="px-2 py-0.5 rounded text-[11px] font-bold tracking-tight text-amber-400 bg-amber-500/10 border border-amber-500/30">
                                       HT
                                     </span>
                                   ) : match.status === 'FT' ? (
-                                    <span className="text-xs font-bold text-zinc-400">
+                                    <span className="px-2 py-0.5 rounded text-[10.5px] font-bold text-zinc-400 bg-zinc-800/80 border border-zinc-700/50">
                                       FT
                                     </span>
                                   ) : (
-                                    <div className="flex flex-col items-center">
-                                      <span className="text-xs font-semibold text-zinc-300">
-                                        {match.startTime}
-                                      </span>
-                                      {match.dateLabel && (
-                                        <span className="text-[9px] text-zinc-500 font-mono leading-none mt-0.5">
-                                          {match.dateLabel.split(', ')[1] || match.dateLabel}
-                                        </span>
-                                      )}
-                                    </div>
+                                    <span className="text-xs sm:text-[13px] font-bold text-zinc-200 tracking-tight group-hover:text-white transition-colors">
+                                      {match.startTime || '20:00'}
+                                    </span>
                                   )}
                                 </div>
 
                                 {/* Teams & Scores */}
-                                <div className="space-y-1.5 min-w-0 pr-1">
+                                <div className="flex-1 min-w-0 space-y-1.5">
                                   {/* Home Row */}
                                   <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <ClubCrest code={match.homeCode} size={18} />
-                                      <span className="text-xs sm:text-sm font-semibold text-white group-hover:text-lime-400 transition-colors truncate">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <ClubCrest code={match.homeCode} size={20} className="shrink-0 drop-shadow-xs" />
+                                      <span className={`text-xs sm:text-[13px] truncate transition-colors ${
+                                        match.status === 'FT' && match.homeScore !== undefined && match.awayScore !== undefined && match.homeScore < match.awayScore
+                                          ? 'text-zinc-400 font-medium'
+                                          : 'text-zinc-100 font-semibold group-hover:text-lime-400'
+                                      }`}>
                                         {match.home}
                                       </span>
                                     </div>
                                     {match.homeScore !== undefined && (
-                                      <span className="font-mono font-bold text-sm text-white">
+                                      <span className={`font-mono text-sm px-1.5 py-0.2 rounded font-bold ${
+                                        match.awayScore !== undefined && match.homeScore > match.awayScore
+                                          ? 'text-white font-extrabold bg-zinc-800/90'
+                                          : match.awayScore !== undefined && match.homeScore < match.awayScore
+                                          ? 'text-zinc-500'
+                                          : 'text-zinc-200'
+                                      }`}>
                                         {match.homeScore}
                                       </span>
                                     )}
@@ -498,17 +504,54 @@ export default function HomePage() {
 
                                   {/* Away Row */}
                                   <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <ClubCrest code={match.awayCode} size={18} />
-                                      <span className="text-xs sm:text-sm font-semibold text-white group-hover:text-lime-400 transition-colors truncate">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <ClubCrest code={match.awayCode} size={20} className="shrink-0 drop-shadow-xs" />
+                                      <span className={`text-xs sm:text-[13px] truncate transition-colors ${
+                                        match.status === 'FT' && match.homeScore !== undefined && match.awayScore !== undefined && match.awayScore < match.homeScore
+                                          ? 'text-zinc-400 font-medium'
+                                          : 'text-zinc-100 font-semibold group-hover:text-lime-400'
+                                      }`}>
                                         {match.away}
                                       </span>
                                     </div>
                                     {match.awayScore !== undefined && (
-                                      <span className="font-mono font-bold text-sm text-white">
+                                      <span className={`font-mono text-sm px-1.5 py-0.2 rounded font-bold ${
+                                        match.homeScore !== undefined && match.awayScore > match.homeScore
+                                          ? 'text-white font-extrabold bg-zinc-800/90'
+                                          : match.homeScore !== undefined && match.awayScore < match.homeScore
+                                          ? 'text-zinc-500'
+                                          : 'text-zinc-200'
+                                      }`}>
                                         {match.awayScore}
                                       </span>
                                     )}
+                                  </div>
+                                </div>
+
+                                {/* Right Side: Round/Venue & Match Center Action */}
+                                <div className="shrink-0 flex items-center gap-3 pl-2 sm:pl-3 border-l border-[#27272A]/40">
+                                  <div className="hidden sm:flex flex-col items-end text-right">
+                                    {match.round && (
+                                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-medium">
+                                        {match.round}
+                                      </span>
+                                    )}
+                                    {match.venue ? (
+                                      <span className="text-[11px] text-zinc-500 truncate max-w-[130px] lg:max-w-[160px]">
+                                        {match.venue}
+                                      </span>
+                                    ) : match.status === 'FT' && match.xgHome !== undefined && match.xgAway !== undefined ? (
+                                      <span className="text-[10px] font-mono text-zinc-500">
+                                        xG {match.xgHome.toFixed(2)} - {match.xgAway.toFixed(2)}
+                                      </span>
+                                    ) : null}
+                                  </div>
+
+                                  <div className="flex items-center">
+                                    <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md text-[11px] font-semibold text-zinc-400 group-hover:text-lime-400 bg-zinc-900 group-hover:bg-lime-400/10 border border-zinc-800 group-hover:border-lime-400/30 transition-all shadow-2xs">
+                                      <span className="hidden md:inline">Match Center</span>
+                                      <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+                                    </span>
                                   </div>
                                 </div>
 

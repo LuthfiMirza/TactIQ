@@ -681,13 +681,13 @@ export interface CalendarDay {
 }
 
 export const CALENDAR_DAYS: CalendarDay[] = [
+  { dateKey: '2026-10-07', dayName: 'Rab', dateLabel: '7 Okt', fullLabel: 'Rabu, 7 Oktober 2026' },
   { dateKey: '2026-10-08', dayName: 'Kam', dateLabel: '8 Okt', fullLabel: 'Kamis, 8 Oktober 2026' },
   { dateKey: '2026-10-09', dayName: 'Jum', dateLabel: '9 Okt', fullLabel: 'Jumat, 9 Oktober 2026' },
   { dateKey: '2026-10-10', dayName: 'Sab', dateLabel: '10 Okt', fullLabel: 'Sabtu, 10 Oktober 2026', isToday: true },
   { dateKey: '2026-10-11', dayName: 'Min', dateLabel: '11 Okt', fullLabel: 'Minggu, 11 Oktober 2026' },
   { dateKey: '2026-10-12', dayName: 'Sen', dateLabel: '12 Okt', fullLabel: 'Senin, 12 Oktober 2026' },
   { dateKey: '2026-10-13', dayName: 'Sel', dateLabel: '13 Okt', fullLabel: 'Selasa, 13 Oktober 2026' },
-  { dateKey: '2026-10-14', dayName: 'Rab', dateLabel: '14 Okt', fullLabel: 'Rabu, 14 Oktober 2026' },
 ];
 
 export function getMatchesByDateKey(dateKey: string): Match[] {
@@ -696,8 +696,10 @@ export function getMatchesByDateKey(dateKey: string): Match[] {
   if (dateKey === '2026-10-10') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'today');
   if (dateKey === '2026-10-09') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'yesterday').slice(0, 5);
   if (dateKey === '2026-10-08') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'yesterday').slice(5);
+  if (dateKey === '2026-10-07') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'yesterday');
   if (dateKey === '2026-10-11') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'tomorrow').slice(0, 5);
   if (dateKey === '2026-10-12') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'tomorrow').slice(5);
+  if (dateKey === '2026-10-13') return ALL_AUTHENTIC_MATCHES.filter((m) => m.date === 'tomorrow');
   return [];
 }
 

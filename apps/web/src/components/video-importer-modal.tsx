@@ -187,9 +187,11 @@ export const VideoImporterModal: React.FC<VideoImporterModalProps> = ({
           setUploadProgress(65);
           const res = await api.uploadTrackingVideo(formData);
           setUploadProgress(100);
-          setUploadSuccessMessage(res.message);
-
-          const finalVideoUrl = localVideoPreviewUrl || `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${res.videoUrl}`;
+          const apiBase =
+            typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+              ? `${window.location.protocol}//${window.location.hostname}:4000`
+              : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
+          const finalVideoUrl = localVideoPreviewUrl || `${apiBase}${res.videoUrl}`;
 
           onApplyVideo({
             id: res.sessionId || generatedSessionId,

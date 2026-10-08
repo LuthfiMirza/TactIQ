@@ -6,11 +6,17 @@ import type {
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000';
+export const getWsUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:4000`;
+  }
+  return process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000';
+};
 
 export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   if (!socket) {
-    socket = io(WS_URL, {
+    const wsUrl = getWsUrl();
+    socket = io(wsUrl, {
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 10,
@@ -19,7 +25,7 @@ export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> 
     });
 
     socket.on('connect', () => {
-      console.log('⚡ Connected to TactIQ WebSocket Hub at', WS_URL, 'ID:', socket?.id);
+      console.log('⚡ Connected to TactIQ WebSocket Hub at', wsUrl, 'ID:', socket?.id);
     });
 
     socket.on('connect_error', (err) => {

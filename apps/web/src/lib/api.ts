@@ -11,7 +11,12 @@ import type {
   ApiResponse,
 } from '@tactiq/shared-types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+export const getBaseApiUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:4000`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+};
 
 export class ApiError extends Error {
   public statusCode: number;
@@ -29,13 +34,17 @@ class ApiClient {
   private baseUrl: string;
   private timeoutMs: number;
 
-  constructor(baseUrl: string, timeoutMs = 10000) {
+  constructor(baseUrl = '', timeoutMs = 10000) {
     this.baseUrl = baseUrl;
     this.timeoutMs = timeoutMs;
   }
 
+  private getResolvedBaseUrl(): string {
+    return this.baseUrl || getBaseApiUrl();
+  }
+
   public async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+    const url = `${this.getResolvedBaseUrl()}${endpoint}`;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -206,7 +215,7 @@ class ApiClient {
     tracker: string;
     message: string;
   }> {
-    const url = `${this.baseUrl}/api/v1/tracking/upload-video`;
+    const url = `${this.getResolvedBaseUrl()}/api/v1/tracking/upload-video`;
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
@@ -226,4 +235,4 @@ class ApiClient {
   }
 }
 
-export const api = new ApiClient(API_BASE_URL);
+export const api = new ApiClient();

@@ -182,48 +182,55 @@ export default function TacticalTrackerPage() {
   return (
     <div className="w-full flex flex-col gap-5 sm:gap-6 pb-24 sm:pb-16">
       
-      {/* ── Top Match Pass Header (Matchday Banner) ── */}
-      <div className="relative rounded-2xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] p-3.5 sm:p-5 lg:p-6 shadow-xs overflow-hidden transition-colors">
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6">
-          {/* Match & Room Badge */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+      {/* ── Top Match Pass Header (Broadcast Bar) ── */}
+      <div className="relative rounded-xl border border-slate-200 dark:border-[#27272A] bg-white dark:bg-[#121215] px-4 py-2.5 sm:px-5 sm:py-3 shadow-xs overflow-hidden transition-colors">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Match Scorecard & Information */}
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {/* Flat Scorecard */}
-            <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
-              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                <ClubCrest code={currentSession.homeCode} size={38} className="drop-shadow-xs" />
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <ClubCrest code={currentSession.homeCode} size={28} className="drop-shadow-xs" />
               </div>
-              <div className="flex flex-col items-center justify-center min-w-[56px] sm:min-w-[64px] px-1 text-center">
-                <span className="font-mono font-black text-xl sm:text-2xl text-white tracking-tight tabular-nums">{currentSession.score}</span>
-                <span className="text-[10px] font-mono text-tactiq-coral font-bold whitespace-nowrap">{currentSession.statusBadge}</span>
+              <div className="flex flex-col items-center justify-center min-w-[48px] px-0.5 text-center">
+                <span className="font-mono font-black text-lg sm:text-xl text-slate-900 dark:text-white tracking-tight tabular-nums leading-none">
+                  {currentSession.score}
+                </span>
+                <span className="text-[9px] font-mono text-tactiq-coral font-bold whitespace-nowrap mt-0.5">
+                  {currentSession.statusBadge}
+                </span>
               </div>
-              <div className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                <ClubCrest code={currentSession.awayCode} size={38} className="drop-shadow-xs" />
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <ClubCrest code={currentSession.awayCode} size={28} className="drop-shadow-xs" />
               </div>
             </div>
 
-            <div className="sm:border-l sm:border-[#27272A] sm:pl-5">
+            <div className="h-7 w-px bg-slate-200 dark:bg-[#27272A] hidden sm:block shrink-0" />
+
+            {/* Match Title & Metadata */}
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-zinc-400 font-semibold truncate">
                   {currentSession.competition} · Final
                 </span>
               </div>
-              <h1 className="font-extrabold text-base sm:text-xl lg:text-2xl text-white tracking-tight mt-0.5">
+              <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white tracking-tight truncate leading-snug">
                 {currentSession.title}
               </h1>
-              <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
-                <LeagueLogo league={currentSession.competition} size={13} />
-                <span>{currentSession.venue}</span>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                <LeagueLogo league={currentSession.competition} size={12} />
+                <span className="truncate">{currentSession.venue}</span>
               </div>
             </div>
           </div>
 
           {/* Controls & Session Switcher */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1 md:pt-0">
+          <div className="flex flex-wrap items-center gap-2 pt-1 md:pt-0 shrink-0">
             <select
               value={activeSessionId}
               onChange={(e) => setActiveSessionId(e.target.value)}
-              className="bg-[#18181C] border border-[#27272A] text-zinc-200 text-xs font-mono rounded-xl px-3 py-2 outline-none focus:border-emerald-500/50 transition-colors"
+              className="bg-slate-50 dark:bg-[#18181C] border border-slate-200 dark:border-[#27272A] text-slate-800 dark:text-zinc-200 text-xs font-mono rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
             >
               {allSessions.map((sess) => (
                 <option key={sess.id} value={sess.id}>
@@ -232,23 +239,23 @@ export default function TacticalTrackerPage() {
               ))}
             </select>
 
-            {/* Clean Modal Launcher for YouTube or Local Video */}
+            {/* Modal Launcher for YouTube or Local Video */}
             <button
               onClick={() => setIsImporterOpen(true)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#18181C] hover:bg-[#222228] text-white text-xs font-mono font-bold rounded-xl border border-[#27272A] hover:border-zinc-500 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-50 dark:bg-[#18181C] hover:bg-slate-100 dark:hover:bg-[#222228] text-slate-700 dark:text-zinc-200 text-xs font-mono font-medium rounded-lg border border-slate-200 dark:border-[#27272A] hover:border-slate-300 dark:hover:border-zinc-500 transition-colors cursor-pointer"
               title="Input URL YouTube atau Pilih File Video MP4"
             >
-              <Film size={14} className="text-emerald-400" />
-              <span>+ Input Video / YouTube</span>
+              <Film size={13} className="text-emerald-500 dark:text-emerald-400" />
+              <span>+ Input Video</span>
             </button>
 
             <button
               onClick={handleStartPipeline}
               disabled={isStartingPipeline}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-xl shadow-xs transition-all disabled:opacity-50 w-full sm:w-auto min-h-[38px] cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold rounded-lg shadow-xs transition-all disabled:opacity-50 cursor-pointer"
             >
-              <Radio size={14} className={isStartingPipeline ? 'animate-spin' : ''} />
-              <span>{isStartingPipeline ? 'Menghubungkan...' : 'Sinkronkan Radar Taktis'}</span>
+              <Radio size={13} className={isStartingPipeline ? 'animate-spin' : ''} />
+              <span>{isStartingPipeline ? 'Menghubungkan...' : 'Sinkronkan Radar'}</span>
             </button>
           </div>
         </div>

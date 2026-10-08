@@ -810,3 +810,119 @@ export function SoccerBallIcon({
   );
 }
 
+export function CountryFlag({
+  country,
+  width = 17,
+  height = 11,
+  className = '',
+}: {
+  country?: string;
+  width?: number;
+  height?: number;
+  className?: string;
+}) {
+  const norm = (country || '').toLowerCase().trim();
+
+  // England / Great Britain (St George's Cross)
+  if (norm === 'england' || norm === 'eng' || norm === 'great britain' || norm === 'uk') {
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 60 40"
+        className={`shrink-0 rounded-[2px] ring-1 ring-white/15 overflow-hidden select-none ${className}`}
+      >
+        <rect width="60" height="40" fill="#FFFFFF" />
+        <rect x="25" width="10" height="40" fill="#CE1124" />
+        <rect y="15" width="60" height="10" fill="#CE1124" />
+      </svg>
+    );
+  }
+
+  // Spain (Rojigualda with official Coat of Arms)
+  if (norm === 'spain' || norm === 'esp' || norm === 'espana') {
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 60 40"
+        className={`shrink-0 rounded-[2px] ring-1 ring-white/15 overflow-hidden select-none ${className}`}
+      >
+        <rect width="60" height="10" fill="#C60B1E" />
+        <rect y="10" width="60" height="20" fill="#FFC400" />
+        <rect y="30" width="60" height="10" fill="#C60B1E" />
+
+        {/* Pillars of Hercules & Ribbons */}
+        <line x1="12" y1="14" x2="12" y2="26" stroke="#D1D5DB" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="24" y1="14" x2="24" y2="26" stroke="#D1D5DB" strokeWidth="1.2" strokeLinecap="round" />
+        <rect x="10.5" y="13" width="3" height="1.2" rx="0.5" fill="#FFC400" />
+        <rect x="22.5" y="13" width="3" height="1.2" rx="0.5" fill="#FFC400" />
+        <rect x="10.5" y="26" width="3" height="1.2" rx="0.5" fill="#FFC400" />
+        <rect x="22.5" y="26" width="3" height="1.2" rx="0.5" fill="#FFC400" />
+        <path d="M 10 18 Q 12 17 14 18" stroke="#C60B1E" strokeWidth="0.8" fill="none" />
+        <path d="M 22 22 Q 24 21 26 22" stroke="#C60B1E" strokeWidth="0.8" fill="none" />
+
+        {/* Royal Crown */}
+        <path d="M 15 14 Q 18 11.5 21 14 L 20.5 15 H 15.5 Z" fill="#C60B1E" stroke="#FFC400" strokeWidth="0.6" />
+        <circle cx="18" cy="11.8" r="0.7" fill="#FFC400" />
+
+        {/* Shield */}
+        <path d="M 14.5 15 H 21.5 V 20 Q 21.5 24.5 18 25.5 Q 14.5 24.5 14.5 20 Z" fill="#C60B1E" stroke="#FFC400" strokeWidth="0.7" />
+        <line x1="18" y1="15" x2="18" y2="24" stroke="#FFC400" strokeWidth="0.5" />
+        <line x1="14.5" y1="19.5" x2="21.5" y2="19.5" stroke="#FFC400" strokeWidth="0.5" />
+        <circle cx="18" cy="19.5" r="0.9" fill="#002395" stroke="#FFC400" strokeWidth="0.3" />
+      </svg>
+    );
+  }
+
+  // Italy (Tricolore)
+  if (norm === 'italy' || norm === 'ita' || norm === 'italia') {
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 60 40"
+        className={`shrink-0 rounded-[2px] ring-1 ring-white/15 overflow-hidden select-none ${className}`}
+      >
+        <rect width="20" height="40" fill="#009246" />
+        <rect x="20" width="20" height="40" fill="#FFFFFF" />
+        <rect x="40" width="20" height="40" fill="#CE2B37" />
+      </svg>
+    );
+  }
+
+  // Germany
+  if (norm === 'germany' || norm === 'ger' || norm === 'deutschland') {
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 60 40"
+        className={`shrink-0 rounded-[2px] ring-1 ring-white/15 overflow-hidden select-none ${className}`}
+      >
+        <rect width="60" height="13.33" fill="#1A1A1A" />
+        <rect y="13.33" width="60" height="13.33" fill="#DD0000" />
+        <rect y="26.66" width="60" height="13.34" fill="#FFCE00" />
+      </svg>
+    );
+  }
+
+  // France (Tricolore)
+  if (norm === 'france' || norm === 'fra') {
+    return (
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 60 40"
+        className={`shrink-0 rounded-[2px] ring-1 ring-white/15 overflow-hidden select-none ${className}`}
+      >
+        <rect width="20" height="40" fill="#002395" />
+        <rect x="20" width="20" height="40" fill="#FFFFFF" />
+        <rect x="40" width="20" height="40" fill="#ED2939" />
+      </svg>
+    );
+  }
+
+  return null;
+}
+
